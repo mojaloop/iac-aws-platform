@@ -1,0 +1,5 @@
+- hosts: balancer
+  gather_facts: yes
+  become: true
+  roles:
+    - { role: haproxy}

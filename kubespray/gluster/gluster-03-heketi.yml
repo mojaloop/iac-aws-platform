@@ -1,0 +1,41 @@
+---
+# Run on K8s master
+
+- hosts: 'kube-master'
+  vars:
+    dir_target: "{{ ansible_env.HOME }}/gluster-kubernetes"
+    #gk_github_version: 'v1.2.0'
+    gluster_topo: '~/.kubespray/inventory/topology.json'
+    dir_gk: "{{ dir_target }}/deploy"
+  remote_user: solidfire
+  become: true
+  run_once: true
+  environment:
+    PATH: /usr/local/bin:{{ ansible_env.PATH }}
+
+  tasks:
+
+  # Check for existenz of raw storage devices
+
+  - name: Package git
+    package:
+      name: 'git'
+
+  - name: Clone gluster-kubernetes repo
+    git:
+      repo: 'https://github.com/gluster/gluster-kubernetes.git'
+      dest: "{{ dir_target }}"
+      #version: "{{ gk_github_version }}"
+      force: yes
+
+  - name: Copy custom topology
+    copy:
+      src: "{{ gluster_topo }}"
+      dest: "{{ dir_gk }}"
+      mode: 0644
+
+  - name: Deploy gluster-kubernetes
+    shell: ./gk-deploy -g -y
+    args:
+      chdir: "{{ dir_gk }}"
+

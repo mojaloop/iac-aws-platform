@@ -1,0 +1,42 @@
+---
+- name: "Load lvm kernel modules"
+  become: true
+  with_items:
+    - "dm_snapshot"
+    - "dm_mirror"
+    - "dm_thin_pool"
+  modprobe:
+    name: "{{ item }}"
+    state: "present"
+
+- name: "Install glusterfs mount utils (RedHat)"
+  become: true
+  yum:
+    name: "glusterfs-fuse"
+    state: "present"
+  when: "ansible_os_family == 'RedHat'"
+
+#- name: "Add gluster 4.1 repo"
+  #  become: true
+    #apt_repository:
+    #repo: "ppa:gluster/glusterfs-4.1"
+  #state: "present"
+  #when: "ansible_os_family == 'Debian'"
+
+- name: "Install glusterfs mount utils (Debian)"
+  become: true
+  apt:
+    name: "glusterfs-client"
+    state: "present"
+    #update_cache: yes
+  when: "ansible_os_family == 'Debian'"
+
+  #- name: "stop glusterd service"
+    #systemd:
+    #daemon_reload: false
+    #enabled: no
+    #name: glusterd
+  #state: stopped
+
+
+

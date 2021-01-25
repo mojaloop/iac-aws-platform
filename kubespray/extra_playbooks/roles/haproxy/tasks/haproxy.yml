@@ -1,0 +1,18 @@
+---
+- name: "Installing HA Proxy"
+  apt: name={{item}} state=present update_cache=yes
+  with_items:
+       - haproxy
+       - liblua5.3-0
+       - vim-haproxy
+       - haproxy-doc
+
+- name: "Configure HA Proxy"
+  vars:
+    masterservers: "{{ groups['kube-master'] }}"
+    workerservers: "{{ groups['kube-node'] }}"
+  template:
+    src: etc-haproxy-haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    mode: 0644
+  notify: restart haproxy

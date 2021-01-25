@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <!-- static / jdbc --> <!-- whitelistmode can only be changed at startup -->
+    <whitelistmode>static</whitelistmode>
+    <expiryminutes>1</expiryminutes>
+    <static>
+    	<whitelistpath>/vault/secrets/</whitelistpath>    	
+    </static>
+</config> 

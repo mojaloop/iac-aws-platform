@@ -1,0 +1,13 @@
+[template]
+src = "whitelist_mcm.tmpl"
+dest = "/etc/haproxy/whitelist_mcm"
+uid = 0
+gid = 0
+mode = "0644"
+keys = [
+  "whitelist_nat",
+  "whitelist_vpn",
+  "whitelist_mcm"
+]
+#check_cmd = "haproxy check new config  {{.src}}" - Might be handy in the future but not for now
+reload_cmd = "/etc/init.d/haproxy reload"

@@ -1,0 +1,37 @@
+productVersion: 5.7.0
+image:
+  tag: v1.2.0
+  pullPolicy: IfNotPresent
+persistentVolume:
+  pvEnabled: false
+  pvcEnabled: false
+  mountToSubPath: repository/deployment/server
+  accessMode: ReadWriteMany
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 180
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 500
+service:
+  type: NodePort
+  ports:
+    wso2:
+      name: wso2
+      externalPort: 9443
+      internalPort: 31443
+      targetPort: 9443
+  sessionAffinity:
+    enabled: true
+    affinityType: ClientIP
+secret:
+  externalSecretVolMountEnabled: true
+  wso2amSecretVolPath: /home/wso2carbon/wso2-secret-volume
+  externalSecretName: wso2iskm-secret
+configmap:
+  externalConfigMapVolMountEnabled: true
+  wso2amConfigVolPath: /home/wso2carbon/wso2-config-volume
+  externalConfigMapName: wso2iskm-confmap
+binconfigmap:
+  externalConfigMapVolMountEnabled: true
+  externalConfigMapName: wso2iskm-binmap

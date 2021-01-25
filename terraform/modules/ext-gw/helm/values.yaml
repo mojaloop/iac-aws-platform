@@ -1,0 +1,56 @@
+productVersion: 2.6.0
+image:
+  tag: v1.3.8
+  pullPolicy: IfNotPresent
+  repositoryPath: mojaloop
+persistentVolume:
+  pvEnabled: false
+  pvcEnabled: true
+  accessMode: ReadWriteMany
+  storageClass: efs
+  mountToSubPath: repository/deployment/server/synapse-configs
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 150
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 180
+service:
+  type: NodePort
+  ports:
+    wso2:
+      name: wso2
+      externalPort: 9443
+      internalPort: 32443
+      targetPort: 9443
+    wso2https:
+      name: wso2https
+      externalPort: 8243
+      internalPort: 32243
+      targetPort: 8243
+    https:
+      name: https
+      externalPort: 443
+      internalPort: 32443
+      targetPort: 443
+    wso2http:
+      name: wso2http
+      externalPort: 8280
+      internalPort: 32280
+      targetPort: 8280
+      enabled: true
+  sessionAffinity:
+    enabled: true
+    affinityType: ClientIP
+secret:
+  externalSecretVolMountEnabled: true
+  wso2amSecretVolPath: /home/wso2carbon/wso2-secret-volume
+  externalSecretName: wso2am-secret
+configmap:
+  externalConfigMapVolMountEnabled: true
+  wso2amConfigVolPath: /home/wso2carbon/wso2-config-volume
+  externalConfigMapName: wso2am-confmap
+binconfigmap:
+  externalConfigMapVolMountEnabled: true
+  externalConfigMapName: wso2am-binmap
+annotations: {}

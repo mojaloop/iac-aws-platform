@@ -1,0 +1,78 @@
+---
+# Ansible for installing GlusterFS requirements on K8s cluster machines.
+
+- hosts: 'kube-master'
+  vars:
+    sc_yml: 'sc-gluster.yml'
+    sc_name: 'gluster'
+    dir_target: "{{ ansible_env.HOME }}/heketi"
+    dir_heketi: "{{ dir_target }}/extras/kubernetes"
+    heketi_cli: "{{ ansible_env.HOME }}/heketi-client/bin/heketi-cli"
+    heketi_file: heketi-nodeport.yaml
+  remote_user: solidfire
+  become: true
+  run_once: true
+  environment:
+    PATH: /usr/local/bin:{{ ansible_env.PATH }}
+
+  tasks:
+
+  #- name: Role Facts
+  #  set_fact:
+  #    block_device: '/dev/sdb'
+
+  - name: Pods wait for
+    shell: "kubectl get svc --no-headers heketi"
+    register: heketi_ready
+    retries: 24 
+    delay: 5
+    until: heketi_ready.rc == 0
+
+  - name: Export Heketi yaml
+    shell: kubectl get svc heketi -o yaml > "{{ heketi_file }}"
+
+  - name: Modify Heketi yaml service type
+    lineinfile:
+      dest: "{{ heketi_file }}"
+      regexp: '^  type: '
+      line:    '  type: NodePort'
+
+  - name: Change heketi service to NodePort
+    command: kubectl apply -f "{{ heketi_file }}" --validate
+
+  - name: Get Heketi port
+    shell: kubectl get svc heketi -o yaml | grep '\ nodePort:' | cut -d' ' -f6
+    register: heketi_port
+
+  - debug: msg="{{ heketi_port.stdout }}"
+
+  - name: Pause 30 seconds for heketi server
+    pause:
+      seconds: 30 
+
+  - name: Check Heketi server
+    shell: "{{ heketi_cli }} -s http://{{ ansible_ssh_host }}:{{ heketi_port.stdout }} cluster list"
+    register: out
+
+  - debug: var=out.stdout_lines
+
+  - name: Copy storage class yaml
+    copy:
+      src: "{{ sc_yml }}"
+      dest: "{{ dir_heketi }}"
+      mode: 0644
+
+  - name: Update storage class yaml with heketi server rest url
+    lineinfile:
+      dest: "{{ dir_heketi }}/{{ sc_yml }}"
+      state: present
+      regexp: '^  resturl:'
+      line: '  resturl: "http://{{ ansible_ssh_host }}:{{ heketi_port.stdout }}"'
+
+  - name: Create storage class
+    shell: kubectl create -f "{{ dir_heketi }}/{{ sc_yml }}"
+
+  - name: Make default storage class
+    shell: |
+      kubectl patch storageclass "{{ sc_name }}" -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+

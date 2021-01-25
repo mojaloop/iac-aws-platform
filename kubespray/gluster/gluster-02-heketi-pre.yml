@@ -1,0 +1,162 @@
+---
+# Ansible for installing GlusterFS requirements on K8s cluster machines.
+
+- hosts: 'gluster'
+  vars:
+    #gluster_repo: 'ppa:gluster/glusterfs-3.13'
+    #gluster_repo: 'ppa:gluster/glusterfs-3.12'
+    gluster_repo: 'ppa:gluster/glusterfs-4.0'
+    #glusterfs_client_ubu: '3.13.2-ubuntu1~xenial2'
+    #glusterfs_client_ubu: '3.12.9-ubuntu1~xenial1'
+    glusterfs_client_ubu: '4.0.2-ubuntu1~xenial1'
+  remote_user: solidfire
+  become: true
+
+  tasks:
+
+  #- name: Role Facts
+  #  set_fact:
+  #    block_device: '/dev/sdb'
+
+  - name: Run iptables for Heketi Debian
+    script: gluster-iptables-debian.sh
+    ignore_errors: true
+    when: ansible_os_family == 'Debian'
+
+  - name: Persistent iptables for Heketi Debian
+    copy: 
+      src: gluster-iptables-debian.sh
+      dest: /etc/network/if-up.d/gluster-iptables-debian
+      owner: root
+      group: root
+      mode: 0755
+    when: ansible_os_family == 'Debian'
+
+  - name: Run iptables for Heketi RedHat
+    script: gluster-iptables-redhat.sh
+    when: ansible_os_family == 'RedHat'
+
+  # Need RedHat iptables startup script?
+
+  - name: Install Kernel Modules
+    modprobe:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - dm_snapshot
+      - dm_mirror
+      - dm_thin_pool
+
+  - name: Persist Debian Kernel Module dm_snapshot
+    lineinfile:
+      dest: /etc/modules
+      state: present
+      regexp: '^dm_snapshot'
+      line: 'dm_snapshot'
+    when: ansible_os_family == 'Debian'
+
+  - name: Persist RedHat Kernel Module dm_snapshot
+    lineinfile:
+      dest: /etc/modules-load.d/dm_snapshot.conf
+      state: present
+      create: yes
+      regexp: '^dm_snapshot'
+      line: 'dm_snapshot'
+    when: ansible_os_family == 'RedHat'
+
+  - name: Persist Debian Kernel Module dm_mirror
+    lineinfile:
+      dest: /etc/modules
+      state: present
+      regexp: '^dm_mirror'
+      line: 'dm_mirror'
+    when: ansible_os_family == 'Debian'
+
+  - name: Persist RedHat Kernel Module dm_mirror
+    lineinfile:
+      dest: /etc/modules-load.d/dm_mirror.conf
+      state: present
+      create: yes
+      regexp: '^dm_mirror'
+      line: 'dm_mirror'
+    when: ansible_os_family == 'RedHat'
+
+  - name: Persist Debian Kernel Module dm_thin_pool
+    lineinfile:
+      dest: /etc/modules
+      state: present
+      regexp: '^dm_thin_pool'
+      line: 'dm_thin_pool'
+    when: ansible_os_family == 'Debian'
+
+  - name: Persist RedHat Kernel Module dm_thin_pool
+    lineinfile:
+      dest: /etc/modules-load.d/dm_thin_pool.conf
+      state: present
+      create: yes
+      regexp: '^dm_thin_pool'
+      line: 'dm_thin_pool'
+    when: ansible_os_family == 'RedHat'
+
+  - name: Package RedHat centos-release-gluster312
+    package:
+      name: centos-release-gluster312
+    when: ansible_os_family == 'RedHat'
+
+  - name: Package 
+    package:
+      name: "{{ item }}"
+    with_items:
+      - glusterfs
+      - glusterfs-fuse
+    when: ansible_os_family == 'RedHat'
+
+  - name: Install Kernel Module Gluster FUSE
+    modprobe:
+      name: fuse
+      state: present
+    when: ansible_os_family == 'RedHat'
+
+  - name: Persist RedHat Kernel Module fuse
+    lineinfile:
+      dest: /etc/modules-load.d/fuse.conf
+      state: present
+      create: yes
+      regexp: '^fuse'
+      line: 'fues'
+    when: ansible_os_family == 'RedHat'
+
+  - name: Add Apt Repo
+    shell: |
+      add-apt-repository "{{ gluster_repo }}"
+      apt-get update
+    when: ansible_os_family == 'Debian'
+
+  - name: Install Packages
+    apt: 
+      name: "glusterfs-client={{ glusterfs_client_ubu }}"
+      #name: "glusterfs-client"
+    when: ansible_os_family == 'Debian'
+
+  - name: Make sure netfilter-persistent running
+    service: 
+      name: netfilter-persistent
+      enabled: yes
+      state: started
+    ignore_errors: true
+    when: ansible_os_family == 'Debian'
+
+  - name: Enable lvm2-lvmetad.service
+    systemd: 
+      name: lvm2-lvmetad.service
+      enabled: yes
+      state: started
+    when: ansible_os_family == 'Debian'
+
+  - name: Config LVM for lvmetad
+    lineinfile:
+      dest: /etc/lvm/lvm.conf
+      state: present
+      regexp: '^	use_lvmetad = 1'
+      line:    '	use_lvmetad = 0'
+    when: ansible_os_family == 'Debian'

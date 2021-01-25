@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence xmlns="http://ws.apache.org/ns/synapse" name="add_accept_header">
+   <log level="custom" category="DEBUG">
+      <property name="elected resource" expression="$ctx:API_ELECTED_RESOURCE"/>
+   </log>
+   <filter source="$ctx:API_ELECTED_RESOURCE" regex="^\/parties\/[\{]Type[\}]\/[\{]ID[\}].*$">
+      <then>
+         <filter source="$ctx:REST_SUB_REQUEST_PATH" regex="^\/parties\/[A-Za-z0-9]*\/[A-Za-z0-9]*\/error$">
+            <then>
+               <log level="custom" category="DEBUG">
+                  <property name="elected resource" expression="$trp:Accept"/>
+               </log>
+               <filter xpath="$trp:Accept">
+                  <then></then>
+                  <else>
+                     <header name="Accept" value="application/vnd.interoperability.parties+json;version=1.0" scope="transport"/>
+                  </else>
+               </filter>
+            </then>
+         </filter>
+      </then>
+   </filter>
+</sequence>

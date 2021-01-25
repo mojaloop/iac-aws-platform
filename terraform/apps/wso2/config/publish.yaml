@@ -1,0 +1,48 @@
+- name: Publish APIs
+  hosts: localhost
+  vars:
+  environment:
+    PYTHONPATH: ./py_mods
+  tasks:
+    - name: Admin API
+      wso2_api_publisher:
+        username: admin
+        password: "{{ wso2_admin_pw }}"
+        hostname: "extgw.{{ env_domain }}"
+        api_template: apis/admin/api_template.json
+        swagger_url: "http://interop-switch.{{ env_domain }}.internal:30000/admin/swagger.json"
+        endpoint_url: "http://interop-switch.{{ env_domain }}.internal:30000/admin"
+        inbound_mediation:
+          - apis/admin/remove-fspiop-source.xml
+      tags: admin
+    - name: ALS Admin API
+      wso2_api_publisher:
+        username: admin
+        password: "{{ wso2_admin_pw }}"
+        hostname: "extgw.{{ env_domain }}"
+        api_template: apis/als-admin/api_template.json
+        swagger_url: "https://raw.githubusercontent.com/mojaloop/account-lookup-service/master/src/interface/admin-swagger.yaml"
+        endpoint_url: "http://account-lookup-service-admin.{{ env_domain }}.internal:30000"
+      tags: alsadmin
+    - name: FSPIOP API
+      wso2_api_publisher:
+        username: admin
+        password: "{{ wso2_admin_pw }}"
+        hostname: "extgw.{{ env_domain }}"
+        api_template: apis/fspiop/api_template.json
+        swagger_url: "https://raw.githubusercontent.com/mojaloop/mojaloop-specification/master/fspiop-api/documents/v1.0-document-set/fspiop-rest-v1.0-OpenAPI.yaml"
+        endpoint_url: "http://interop-switch.{{ env_domain }}.internal:30000"
+        inbound_mediation:
+          - apis/fspiop/add_accept_header.xml
+      tags: fspiop
+    - name: Settlement API
+      wso2_api_publisher:
+        username: admin
+        password: "{{ wso2_admin_pw }}"
+        hostname: "extgw.{{ env_domain }}"
+        api_template: apis/settlements/api_template.json
+        swagger_url: "http://interop-switch.{{ env_domain }}.internal:30000/settlements/api-docs"
+        endpoint_url: "http://interop-switch.{{ env_domain }}.internal:30000/settlements"
+        inbound_mediation:
+          - apis/settlements/remove-fspiop-source.xml
+      tags: settlement

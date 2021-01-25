@@ -1,0 +1,68 @@
+{
+    "name": "ALSAdminAPI",
+    "description": "Open API for ALS Admin API",
+    "context": "/alsadmin",
+    "version": "1.0",
+    "provider": "admin",
+    "apiDefinition": "",
+    "wsdlUri": null,
+    "status": "CREATED",
+    "responseCaching": "Disabled",
+    "cacheTimeout": 0,
+    "destinationStatsEnabled": false,
+    "isDefaultVersion": false,
+    "type": "HTTP",
+    "transport": [
+        "http",
+        "https"
+    ],
+    "tags": [],
+    "tiers": [
+        "Unlimited"
+    ],
+    "maxTps": {
+        "sandbox": 500,
+        "production": 5000
+    },
+    "visibility": "PUBLIC",
+    "visibleRoles": [],
+    "endpointConfig": {
+        "production_endpoints": {
+            "url": "",
+            "config": null
+        },
+        "endpoint_type": "http"
+    },
+    "endpointSecurity": null,
+    "gatewayEnvironments": "Production and Sandbox",
+    "sequences": [],
+    "subscriptionAvailability": null,
+    "subscriptionAvailableTenants": [],
+    "businessInformation": {
+        "businessOwner": null,
+        "businessOwnerEmail": null,
+        "technicalOwner": null,
+        "technicalOwnerEmail": null
+    },
+    "corsConfiguration": {
+        "accessControlAllowOrigins": [
+            "*"
+        ],
+        "accessControlAllowHeaders": [
+            "authorization",
+            "Access-Control-Allow-Origin",
+            "Content-Type",
+            "SOAPAction"
+        ],
+        "accessControlAllowMethods": [
+            "GET",
+            "PUT",
+            "POST",
+            "DELETE",
+            "PATCH",
+            "OPTIONS"
+        ],
+        "accessControlAllowCredentials": false,
+        "corsConfigurationEnabled": false
+    }
+}

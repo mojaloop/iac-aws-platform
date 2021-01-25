@@ -1,0 +1,11 @@
+---
+- hosts: kube-node
+  gather_facts: True
+  tasks:
+  - name: "Install nfs-client (Debian)"
+    become: true
+    apt:
+      name: "nfs-client"
+      state: "present"
+      #update_cache: yes
+    when: "ansible_os_family == 'Debian'"

@@ -1,0 +1,101 @@
+- name: Without mediations
+  hosts: localhost
+  environment:
+    PYTHONPATH: ./py_mods
+  tasks:
+    - name: publish
+      wso2_api_publisher:
+        hostname: "extgw.{{ env_domain }}"
+        verify_ssl: false
+        api_template: apis/fspiop/api_template.json
+        swagger_url: "https://raw.githubusercontent.com/mojaloop/sdk-scheme-adapter/{{ mj_version }}/src/InboundServer/api.yaml"
+        endpoint_url: "http://account-lookup-service-admin.{{ env_domain }}.internal:30000"
+      register: api
+
+    - assert:
+        that:
+          - api.status == 'published'
+          - api.mediations | length == 0
+
+    - name: delete
+      wso2_api_publisher:
+        hostname: "extgw.{{ env_domain }}"
+        verify_ssl: false
+        api_template: apis/fspiop/api_template.json
+        state: absent
+      register: api
+
+    - assert:
+        that:
+          - api.status == 'absent'
+          - api.mediations | length == 0
+
+- name: With mediations
+  hosts: localhost
+  environment:
+    PYTHONPATH: ./py_mods
+  tasks:
+    - name: publish
+      wso2_api_publisher:
+        hostname: "extgw.{{ env_domain }}"
+        verify_ssl: false
+        api_template: apis/fspiop/api_template.json
+        swagger_url: "https://raw.githubusercontent.com/mojaloop/sdk-scheme-adapter/{{ mj_version }}/src/InboundServer/api.yaml"
+        endpoint_url: "http://account-lookup-service-admin.{{ env_domain }}.internal:30000"
+        inbound_mediation:
+          - apis/fspiop/add_accept_header.xml
+      register: api
+
+    - assert:
+        that:
+          - api.status == 'published'
+          - api.mediations | length == 1
+
+    - name: delete
+      wso2_api_publisher:
+        hostname: "extgw.{{ env_domain }}"
+        verify_ssl: false
+        api_template: apis/fspiop/api_template.json
+        inbound_mediation:
+          - apis/fspiop/add_accept_header.xml
+        state: absent
+      register: api
+
+    - assert:
+        that:
+          - api.status == 'absent'
+          - api.mediations | length == 1
+
+- name: With mediations
+  hosts: localhost
+  environment:
+    PYTHONPATH: ./py_mods
+  tasks:
+    - name: publish
+      wso2_api_publisher:
+        hostname: "extgw.{{ env_domain }}"
+        verify_ssl: false
+        api_template: apis/fspiop/api_template.json
+        swagger_url: "https://raw.githubusercontent.com/mojaloop/sdk-scheme-adapter/{{ mj_version }}/src/InboundServer/api.yaml"
+        endpoint_url: "http://account-lookup-service-admin.{{ env_domain }}.internal:30000"
+        inbound_mediation:
+          - apis/fspiop/add_accept_header.xml
+      register: api
+
+    - assert:
+        that:
+          - api.status == 'published'
+          - api.mediations | length == 1
+
+    - name: delete without referencing mediations
+      wso2_api_publisher:
+        hostname: "extgw.{{ env_domain }}"
+        verify_ssl: false
+        api_template: apis/fspiop/api_template.json
+        state: absent
+      register: api
+
+    - assert:
+        that:
+          - api.status == 'absent'
+          - api.mediations | length == 1

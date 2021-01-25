@@ -1,0 +1,29 @@
+- name: Delete APIs
+  hosts: localhost
+  environment:
+    PYTHONPATH: ./py_mods
+  tasks:
+    - name: Admin API
+      wso2_api_publisher:
+        hostname: "extgw.{{ env_domain }}"
+        api_template: apis/admin/api_template.json
+        state: absent
+      tags: admin
+    - name: ALS Admin API
+      wso2_api_publisher:
+        hostname: "extgw.{{ env_domain }}"
+        api_template: apis/als-admin/api_template.json
+        state: absent
+      tags: alsadmin
+    - name: backend API
+      wso2_api_publisher:
+        hostname: "extgw.{{ env_domain }}"
+        api_template: apis/fspiop/api_template.json
+        state: absent
+      tags: fspiop
+    - name: backend API
+      wso2_api_publisher:
+        hostname: "extgw.{{ env_domain }}"
+        api_template: apis/settlements/api_template.json
+        state: absent
+      tags: settlement
