@@ -6,7 +6,7 @@ A collection of tips to make operating a deployment easier.
 
 Having your local environment setup with certain variables will make you life at the command line a lot easier. Most shells can be configured to automatically loading environment variables from a `.env`. If you don't do that already it is highly recommended you do.
 
-### Requirements
+### Dependencies
 
 None
 
@@ -23,7 +23,7 @@ AWS_PROFILE=<AWS profile name>
 
 The admin kubeconfigs are stored the S3 bucket created for the tenant. You will need these kubeconfigs to interact with the clusters.
 
-### Requirements
+### Dependencies
 
 - [AWS CLI](https://aws.amazon.com/cli/)
 - [Set Environment variables](#set-environment-variables)
@@ -42,11 +42,11 @@ cd -
 
 To make working with the Kubernetes clusters at the command line a lot easier, it is recommended you install Krew.
 
-## Requirements
+### Dependencies
 
 - Installation of `kubectl`
 
-## Process
+### Process
 
 Follow the [install instructions](https://github.com/kubernetes-sigs/krew/). Then install the following plugins:
 
@@ -59,7 +59,7 @@ kubectl krew install images
 
 The `admin` password is randomly generated at deploy time and stored in a Kubernetes Secret object.
 
-### Requirements
+### Dependencies
 
 - [Get Kubeconfigs](#get-kube-configs)
 - For Linux OSes (not MacOS) you will need to [install and setup pbcopy](https://ostechnix.com/how-to-use-pbcopy-and-pbpaste-commands-on-linux/)
@@ -79,7 +79,7 @@ You can then paste the password into the login page.
 
 A lot of endpoints are created for each of the clusters. It can be challenging to know what all are. The following command makes that process a lot easier.
 
-### Requirements
+### Dependencies
 
 - Installation of `kubectl`
 - Installation of `jq`
