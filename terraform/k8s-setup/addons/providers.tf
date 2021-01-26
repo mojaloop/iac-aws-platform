@@ -26,6 +26,7 @@ provider "helm" {
 }
 
 provider "kubernetes" {
+  version     = "~> 1.13"
   config_path = "${var.project_root_path}/admin-add-ons.conf"
 }
 

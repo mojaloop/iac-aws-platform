@@ -1,5 +1,5 @@
 provider "kubernetes" {
-  version     = "~> 1.11"
+  version     = "~> 1.13"
   config_path = var.kubeconfig
 }
 

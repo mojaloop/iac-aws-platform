@@ -25,6 +25,7 @@ provider "helm" {
   }
 }
 provider "kubernetes" {
+  version     = "~> 1.13"
   alias       = "k8s-add-ons"
   config_path = "${var.project_root_path}/admin-add-ons.conf"
 }
@@ -40,6 +41,7 @@ provider "helm" {
   }
 }
 provider "kubernetes" {
+  version     = "~> 1.13"
   alias       = "k8s-mojaloop"
   config_path = "${var.project_root_path}/admin-mojaloop.conf"
 }
@@ -55,6 +57,7 @@ provider "helm" {
   }
 }
 provider "kubernetes" {
+  version     = "~> 1.13"
   alias       = "k8s-gateway"
   config_path = "${var.project_root_path}/admin-gateway.conf"
 }
@@ -69,6 +72,7 @@ provider "helm" {
   }
 }
 provider "kubernetes" {
+  version     = "~> 1.13"
   alias       = "k8s-support-services"
   config_path = "${var.project_root_path}/admin-support-services.conf"
 }

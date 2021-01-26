@@ -9,6 +9,7 @@ provider "helm" {
   }
 }
 provider "kubernetes" {
+  version     = "~> 1.13"
   alias       = "k8s-support-services"
   config_path = "${var.project_root_path}/admin-support-services.conf"
 }

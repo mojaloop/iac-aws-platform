@@ -7,9 +7,8 @@ provider "tls" {
   version = "~> 2.0"
 }
 
-
 provider "kubernetes" {
-  version     = "~> 1.11"
+  version     = "~> 1.13"
   config_path = var.kubeconfig
 }
 
