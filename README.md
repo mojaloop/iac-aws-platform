@@ -19,3 +19,7 @@ This [guide](./documents/d20.deploy_into_tenancy.md) walk you through creating a
 ## Additional Reading
 
 [Some notes on Vault](./documents/d90.vault.md)
+
+## Operational Snipets
+
+A collection of tips and tricks for working with the infrastructure can be found [here](./documents/ops.md)
