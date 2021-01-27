@@ -29,11 +29,11 @@ data "terraform_remote_state" "tenant" {
 }
 
 module "sdk_vms" {
-  source            = "git::git@github.com:mojaloop/iac-shared-modules.git//aws/sdks?ref=v0.0.2"
+  source            = "git::git@github.com:mojaloop/iac-shared-modules.git//aws/sdks?ref=v0.0.5"
   region            = var.region
   domain            = data.terraform_remote_state.infrastructure.outputs.public_subdomain
   client_node_count = 0
-  client            = var.tenant
+  tenant            = var.tenant
   environment       = var.environment
   allow_cbs_access = [
     "${data.terraform_remote_state.tenant.outputs.wireguard_public_ip}/32",

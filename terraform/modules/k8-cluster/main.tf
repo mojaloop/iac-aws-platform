@@ -150,7 +150,7 @@ resource "aws_route53_record" "k8-masters" {
   name    = "k8-master-${var.name}-${count.index}.${var.route53_private_zone_name}"
   type    = "A"
   ttl     = "300"
-  records = ["${element(aws_instance.k8s-master.*.private_ip, count.index)}"]
+  records = [element(aws_instance.k8s-master.*.private_ip, count.index)]
 }
 
 resource "aws_route53_record" "k8-workers" {
@@ -164,7 +164,7 @@ resource "aws_route53_record" "k8-workers" {
 }
 
 resource "aws_route53_record" "k8-haproxy" {
-  count   = var.haproxy_enabled ? length(var.haproxy_aliases) : 0
+  count = var.haproxy_enabled ? length(var.haproxy_aliases) : 0
 
   zone_id = var.route53_private_zone_id
   name    = "${var.haproxy_aliases[count.index]}.${var.route53_private_zone_name}"

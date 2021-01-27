@@ -21,13 +21,14 @@ data "terraform_remote_state" "tenant" {
     key    = "bootstrap/terraform.tfstate"
   }
 }
+
 #creating nexus entries json file for kubespray execution (requires bootstrap version >= v0.5.3)
 resource "local_file" "kubespray_extra_vars" {
   content = templatefile("${path.module}/templates/extra-vars.json.tpl", {
-    nexus_ip   = data.terraform_remote_state.tenant.outputs.nexus_fqdn
-    nexus_port = data.terraform_remote_state.tenant.outputs.nexus_docker_repo_listening_port
+    nexus_fqdn                       = data.terraform_remote_state.tenant.outputs.nexus_fqdn
+    nexus_docker_repo_listening_port = data.terraform_remote_state.tenant.outputs.nexus_docker_repo_listening_port
   })
-  filename = "${path.module}/../scripts/extra-vars.json"
+  filename = "${path.module}/extra-vars.json"
 }
 
 data "aws_vpc" "selected" {
@@ -61,10 +62,8 @@ resource "aws_security_group" "internet" {
   }
 }
 
-# TODO: was is this even for?
 module "aws-iam" {
-  source = "git@github.com:modusintegration/terraform-shared-modules.git//aws/iam"
-
+  source           = "git@github.com:mojaloop/iac-shared-modules.git//aws/iam?ref=v0.0.2"
   aws_cluster_name = "${var.environment}-${var.name}"
 }
 

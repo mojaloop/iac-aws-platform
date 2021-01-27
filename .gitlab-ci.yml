@@ -1,11 +1,12 @@
-image: modusbox/mojaloop-platform-terraform:0.4.3
+image: ghcr.io/mojaloop/iac-runner:0.0.1
 
 before_script:
   - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
   - test -n "$BUCKET"
   - test -n "$TF_VAR_environment"
   - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/ . --sse || true
-  - eval `ssh-agent`
+  - eval $(ssh-agent -s)
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
   - mkdir -p ~/.ssh
   - chmod 700 ~/.ssh
   - test -f terraform/ssh_provisioner_key &&  chmod 0600 terraform/ssh_provisioner_key &&  ssh-add terraform/ssh_provisioner_key
@@ -98,11 +99,13 @@ Deploy AWS Infrastructure:
     - terraform apply -auto-approve
     - aws s3 sync $CI_PROJECT_DIR/kubespray/inventory s3://${BUCKET}/${TF_VAR_environment}/kubespray/inventory/ --sse
     - aws s3 cp $CI_PROJECT_DIR/terraform/ssh_provisioner_key s3://${BUCKET}/${TF_VAR_environment}/terraform/ --sse
+    - aws s3 cp extra-vars.json s3://${BUCKET}/${TF_VAR_environment}/extra-vars.json --sse
   when: manual
 
 Create Mojaloop Cluster:
   stage: "Run Kubespray"
   script:
+    - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/extra-vars.json scripts/extra-vars.json --sse
     - chmod 755 scripts/*
     - cd kubespray
     - ../scripts/create-mojaloop-k8-cluster.sh
@@ -112,6 +115,7 @@ Create Mojaloop Cluster:
 Create Addons Cluster:
   stage: "Run Kubespray"
   script:
+    - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/extra-vars.json scripts/extra-vars.json --sse
     - chmod 755 scripts/*
     - cd kubespray
     - ../scripts/create-add-ons-k8-cluster.sh
@@ -121,6 +125,7 @@ Create Addons Cluster:
 Create Support Services Cluster:
   stage: "Run Kubespray"
   script:
+    - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/extra-vars.json scripts/extra-vars.json --sse
     - chmod 755 scripts/*
     - cd kubespray
     - ../scripts/create-support-services-k8-cluster.sh
@@ -130,6 +135,7 @@ Create Support Services Cluster:
 Create Gateway Cluster:
   stage: "Run Kubespray"
   script:
+    - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/extra-vars.json scripts/extra-vars.json --sse
     - chmod 755 scripts/*
     - cd kubespray
     - ../scripts/create-wso2-k8-cluster.sh
@@ -205,22 +211,22 @@ Plan Post Deployment:
 
 1. Prepare Tests Hub Setup:
   stage: "Run Tests"
-  script:
+  before_script:
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_PROJECT_DIR/sim_tests --sse
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_PROJECT_DIR/secrets_chart --sse
+  script:
     - cd sim_tests
-    - curl -LJ -o ./MojaloopHub_Setup.postman_collection.json https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopHub_Setup.postman_collection.json
-    - newman run ./MojaloopHub_Setup.postman_collection.json --ssl-client-cert-list sim_cert_list.json --insecure -e Lab.postman_environment.json
+    - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopHub_Setup.postman_collection.json --ssl-client-cert-list sim_cert_list.json --insecure -e Lab.postman_environment.json
   when: manual
 
 2. Prepare Tests Sims Onboarding:
   stage: "Run Tests"
-  script:
+  before_script:
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_PROJECT_DIR/sim_tests --sse
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_PROJECT_DIR/secrets_chart --sse
+  script:
     - cd sim_tests
-    - curl -LJ -o ./MojaloopSims_Onboarding.postman_collection.json https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopSims_Onboarding.postman_collection.json
-    - newman run ./MojaloopSims_Onboarding.postman_collection.json --ssl-client-cert-list sim_cert_list.json --insecure -e Lab.postman_environment.json
+    - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopSims_Onboarding.postman_collection.json --ssl-client-cert-list sim_cert_list.json --insecure -e Lab.postman_environment.json
   when: manual
 
 Prepare Tests PM4ML Sims Onboarding:
@@ -234,12 +240,12 @@ Prepare Tests PM4ML Sims Onboarding:
 
 3. Run ML GP Tests:
   stage: "Run Tests"
-  script:
+  before_script:
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_PROJECT_DIR/sim_tests --sse
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_PROJECT_DIR/secrets_chart --sse
+    - npm install -g newman-reporter-html
+  script:
     - cd sim_tests
-    - curl -sL https://deb.nodesource.com/setup_12.x | bash - && apt-get install -y nodejs && npm install -g newman@5.0.0 newman-reporter-html
-    #- curl -LJ -o ./Golden_Path_Mojaloop.postman_collection.json https://raw.githubusercontent.com/mojaloop/postman/v10.6.0/Golden_Path_Mojaloop.postman_collection.json
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/Golden_Path_Mojaloop.postman_collection.json --ssl-client-cert-list sim_cert_list.json --insecure -e Lab.postman_environment.json --reporters html,junit,cli --reporter-html-export report.html --reporter-junit-export report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
   when: manual
   artifacts:
