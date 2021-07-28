@@ -11,6 +11,7 @@ variable "wso2_mysql_database" {
 variable "wso2_namespace" {
   description = "Kubernetes namespace to install WSO2 into"
   type        = string
+  default     = "wso2"
 }
 
 variable "wso2_mysql_host" {
@@ -33,16 +34,10 @@ variable "wso2_mysql_username" {
   default     = "wso2"
 }
 
-variable "wso2_mysql_root_password" {
-  description = "Root password for WSO2 MySQL Server"
+variable "wso2_email" {
+  description = "email address for wso2"
   type        = string
-  default     = "123soleil"
-}
-
-variable "wso2_mysql_password" {
-  description = "User password for WSO2 MySQL Server"
-  type        = string
-  default     = "123soleil"
+  default     = "cicd@modusbox.com"
 }
 
 variable "helm_efs_provisioner_version" {
@@ -57,10 +52,11 @@ variable "region" {
   description = "AWS region"
 }
 
-variable "tenant" {
-  description = "Tenant name"
+variable "client" {
+  description = "Name of client"
   type        = string
 }
+
 
 # variable "subdomain" {
 #   description = "Mojaloop subdomain"
@@ -73,10 +69,6 @@ variable "tenant" {
 variable "environment" {
   description = "Environment name"
   type        = string
-}
-
-variable "name" {
-  description = "VPC name"
 }
 
 variable "helm_mcm_connection_manager_version" {
@@ -131,6 +123,10 @@ variable "whitelist_secret_name_prefix" {
   default = "secret/whitelist"
 }
 
+variable "onboarding_secret_name_prefix" {
+  default = "secret/onboarding"
+}
+
 variable "hub_currency_code" {
   description = "currency code for the hub"
 }
@@ -153,4 +149,106 @@ variable "kafka" {
 variable "grafana_slack_notifier_url" {
   description = "URL for slack notifier. In the form of https://hooks.slack.com/services/<VALUE>"
   type        = string
+}
+
+variable "private_registry_pw" {
+  description = "pw for private registry"
+  type        = string
+  default     = "override this for private image repo usage"
+}
+
+variable "mcm-name" {
+  description = "Hostname of Connection Manager service"
+  type        = string
+  default     = "mcmweb"
+}
+
+variable "mcm-totp-issuer" {
+  description = "Name to associate with Connection Manaager TOTP"
+  type        = string
+  default     = "HACKATHON"
+}
+
+variable "ghcr_private_registry_pw" {
+  description = "pw for private registry"
+  type        = string
+  default     = "override this for private image repo usage"
+}
+
+variable "ghcr_private_registry_user" {
+  description = "pw for private registry"
+  type        = string
+  default     = "override this for private image repo usage"
+}
+
+variable "ghcr_private_registry_reg" {
+  description = "pw for private registry"
+  type        = string
+  default     = "override this for private image repo usage"
+}
+
+variable "private_helm_repo_read_user" {
+  description = "user for private helm repo"
+  type        = string
+  default     = ""
+}
+
+variable "private_helm_repo_read_key" {
+  description = "key for private helm repo"
+  type        = string
+  default     = ""
+}
+
+variable "helm_finance_portal_version" {
+  description = "version for finance portal helm chart and image tag"
+  type        = string
+  default     = ""
+}
+variable "finance_portal_users" {
+  description = "finance portal users list"
+  type = list(object({
+    username  = string
+    roles     = list(string)
+  }))
+  default = []
+}
+
+variable "alias_oracle_name" {
+  description = "host name for alias oracle"
+  type        = string
+  default     = "alias-oracle"
+}
+
+
+variable "helm_alias_oracle_version" {
+  description = "helm version for alias oracle"
+  type        = string
+}
+
+variable "helm_mojaloop_reporting_service_version" {
+  description = "helm version for reporting service"
+  type        = string
+}
+
+variable "use_alias_oracle_endpoint" {
+  description = "use alias oracle instead of internal"
+  type        = string
+  default     = "no"
+}
+
+variable "mfi_account_oracle_name" {
+  description = "host name for MFI account oracle"
+  type        = string
+  default     = "mfi-account-oracle"
+}
+
+variable "helm_mfi_account_oracle_version" {
+  description = "helm version for MFI account oracle"
+  type        = string
+}
+
+variable "use_mfi_account_oracle_endpoint" {
+  description = "use MFI account oracle instead of internal"
+  type        = string
+  default     = "no"
 }

@@ -1,4 +1,7 @@
-{{- range gets "/whitelist_fsp/*"}}
+{{- range gets "/whitelist_fsps/*"}}
+{{ replace .Value "," "\n" -1 }}
+{{- end}}
+{{- range gets "/whitelist_pm4mls/*"}}
 {{ replace .Value "," "\n" -1 }}
 {{- end}}
 {{- range gets "/whitelist_sims/*"}}
@@ -10,12 +13,9 @@
 {{- range gets "/whitelist_vpn/*"}}
 {{ replace .Value "," "\n" -1 }}
 {{- end}}
-{{- range gets "/whitelist_support_services/*"}}
+{{- range gets "/whitelist_gateway/*"}}
 {{ replace .Value "," "\n" -1 }}
 {{- end}}
 {{- range gets "/whitelist_addons/*"}}
-{{ replace .Value "," "\n" -1 }}
-{{- end}}
-{{- range gets "/whitelist_mojaloop/*"}}
 {{ replace .Value "," "\n" -1 }}
 {{- end}}

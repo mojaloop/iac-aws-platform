@@ -25,26 +25,26 @@ resource "vault_generic_secret" "whitelist_nat" {
   })
 }
 resource "vault_generic_secret" "whitelist_fsp" {
-  path = "${var.whitelist_secret_name_prefix}_fsp"
+  path = "${var.whitelist_secret_name_prefix}_fsps"
 
   data_json = jsonencode({ "dummy_fsp" : "127.0.0.1,127.0.0.2" })
+  disable_read = true
 }
 
 resource "vault_generic_secret" "whitelist_sims" {
   path = "${var.whitelist_secret_name_prefix}_sims"
 
   data_json = jsonencode({ "dummy_fsp" : "127.0.0.1,127.0.0.2" })
+  disable_read = true
 }
 
-resource "vault_generic_secret" "whitelist_support_services" {
-  path = "${var.whitelist_secret_name_prefix}_support_services"
+resource "vault_generic_secret" "whitelist_pm4mls" {
+  path = "${var.whitelist_secret_name_prefix}_pm4mls"
 
-  data_json = jsonencode({
-    "k8s-workernodes" = join(",", local.env.support_services_k8s_worker_nodes_private_ip)
-    "gitlab"          = local.tenant.gitlab_ci_private_ip
-    "gitlab_public"   = local.tenant.gitlab_ci_public_ip
-  })
+  data_json = jsonencode({ "dummy_fsp" : "127.0.0.1,127.0.0.2" })
+  disable_read = true
 }
+
 resource "vault_generic_secret" "whitelist_addons" {
   path = "${var.whitelist_secret_name_prefix}_addons"
 
@@ -52,18 +52,14 @@ resource "vault_generic_secret" "whitelist_addons" {
     "k8s-workernodes" = join(",", local.env.addons_k8s_worker_nodes_private_ip)
   })
 }
-resource "vault_generic_secret" "whitelist_mojaloop" {
-  path = "${var.whitelist_secret_name_prefix}_mojaloop"
 
-  data_json = jsonencode({
-    "k8s-workernodes" = join(",", local.env.mojaloop_k8s_worker_nodes_private_ip)
-  })
-}
 resource "vault_generic_secret" "whitelist_gateway" {
   path = "${var.whitelist_secret_name_prefix}_gateway"
 
   data_json = jsonencode({
-    "k8s-workernodes" = join(",", local.env.mojaloop_k8s_worker_nodes_private_ip)
+    "k8s-workernodes" = join(",", local.env.gateway_k8s_worker_nodes_private_ip)
+    "gitlab"          = local.tenant.gitlab_ci_private_ip
+    "gitlab_public"   = local.tenant.gitlab_ci_public_ip
   })
 }
 resource "vault_generic_secret" "whitelist_mcm" {

@@ -20,6 +20,7 @@ resource "helm_release" "prometheus-add-ons" {
   version      = var.helm_prometheus_version
   namespace    = "monitoring"
   force_update = true
+  create_namespace = true
 
   values = [
     file("${var.project_root_path}/helm/values-workload-clusters-prometheus.yaml")
@@ -27,6 +28,7 @@ resource "helm_release" "prometheus-add-ons" {
   set {
     name  = "server.ingress.hosts"
     value = "{${data.terraform_remote_state.infrastructure.outputs.prometheus-add-ons-private-fqdn}}"
+    type  = "string"
   }
   provider = helm.helm-add-ons
 
@@ -40,6 +42,7 @@ resource "helm_release" "fluentd-add-ons" {
   version      = var.helm_fluentd_version
   namespace    = "logging"
   force_update = true
+  create_namespace = true
 
   values = [
     file("${var.project_root_path}/helm/values-workload-clusters-efk-fluentd.yaml")
@@ -47,26 +50,27 @@ resource "helm_release" "fluentd-add-ons" {
   set {
     name  = "elasticsearch.host"
     value = data.terraform_remote_state.infrastructure.outputs.elasticsearch-services-private-fqdn
+    type  = "string"
   }
   set {
     name  = "elasticsearch.port"
     value = "30000"
+    type  = "string"
   }
   provider = helm.helm-add-ons
-
-  depends_on = [helm_release.kafka-support-services]
 }
 
 resource "helm_release" "deploy-addons-nginx-ingress-controller" {
-  namespace  = "kube-public"
   name       = "nginx-ingress"
-  repository = "https://charts.helm.sh/stable"
-  chart      = "nginx-ingress"
+  repository = "https://charts.bitnami.com/bitnami"
+  chart      = "nginx-ingress-controller"
   version    = var.helm_nginx_version
+  namespace  = "default"
   wait       = false
+  create_namespace = true
 
   set {
-    name  = "controller.service.nodePorts.http"
+    name  = "service.nodePorts.http"
     value = 30001
   }
   provider = helm.helm-add-ons

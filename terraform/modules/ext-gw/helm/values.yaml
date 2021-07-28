@@ -1,6 +1,6 @@
 productVersion: 2.6.0
 image:
-  tag: v1.3.8
+  tag: v1.3.9
   pullPolicy: IfNotPresent
   repositoryPath: mojaloop
 persistentVolume:

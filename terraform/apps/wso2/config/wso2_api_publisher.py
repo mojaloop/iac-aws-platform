@@ -140,7 +140,7 @@ EXAMPLES = """
 # delete API specifying mediations to also delete
 - name: delete API with mediations
   wso2_api_publisher:
-    hostname: extgw.dev.example.com
+    hostname: extgw.otc-546.infra.modusbox.io
     api_template: fspiop/api_template.json
     inbound_mediation:
         - "fspiop/add_accept_header.xml"
@@ -149,25 +149,25 @@ EXAMPLES = """
 # delete API without specifying mediations. Mediations will still be deleted
 - name: delete API without mediations
   wso2_api_publisher:
-    hostname: extgw.dev.example.com
+    hostname: extgw.otc-546.infra.modusbox.io
     api_template: fspiop/api_template.json
     state: absent
 
 # publish API with no mediations
 - name: publish API without mediations
   wso2_api_publisher:
-    hostname: extgw.dev.example.com
+    hostname: extgw.otc-546.infra.modusbox.io
     api_template: fspiop/api_template.json
-    swagger_url: "http://account-lookup-service.dev.example.com.internal:30000/api-docs"
-    endpoint_url: "http://account-lookup-service-admin.dev.example.com.internal:30000"
+    swagger_url: "http://account-lookup-service.otc-546.infra.modusbox.io.internal:30000/api-docs"
+    endpoint_url: "http://account-lookup-service-admin.otc-546.infra.modusbox.io.internal:30000"
 
 # publish API with mediations
 - name: publish API with mediations
   wso2_api_publisher:
-    hostname: extgw.dev.example.com
+    hostname: extgw.otc-546.infra.modusbox.io
     api_template: fspiop/api_template.json
-    swagger_url: "http://account-lookup-service.dev.example.com.internal:30000/api-docs"
-    endpoint_url: "http://account-lookup-service-admin.dev.example.com.internal:30000"
+    swagger_url: "http://account-lookup-service.otc-546.infra.modusbox.io.internal:30000/api-docs"
+    endpoint_url: "http://account-lookup-service-admin.otc-546.infra.modusbox.io.internal:30000"
     inbound_mediation:
         - "fspiop/add_accept_header.xml"
 """

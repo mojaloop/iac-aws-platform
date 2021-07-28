@@ -32,7 +32,7 @@ resource "vault_pki_secret_backend_root_sign_intermediate" "intermediate_simulat
   common_name          = "${each.value}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain} ${each.value} Intermediate CA"
   exclude_cn_from_sans = true
   ou                   = "Infrastructure Team"
-  organization         = "Infra"
+  organization         = "ModusBox"
   ttl                  = 252288000 #8 years
   depends_on           = [vault_pki_secret_backend_intermediate_cert_request.intermediate_simulators]
 }

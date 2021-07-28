@@ -1,0 +1,395 @@
+default: 
+  image: 
+    name: ghcr.io/modusintegration/mojaloop-platform-iac:3.8.6
+  before_script:
+    - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+    - test -n "$BUCKET"
+    - test -n "$TF_VAR_environment"
+    - cd $CI_IMAGE_PROJECT_DIR
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/ . --sse || true
+    - eval `ssh-agent`
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$GITHUB_SSH_KEY" | tr -d '\r' | ssh-add -
+    - test -f terraform/ssh_provisioner_key &&  chmod 0600 terraform/ssh_provisioner_key &&  ssh-add terraform/ssh_provisioner_key
+    - chmod +x ./searchandreplace.sh
+    - if [ -d ${CI_PROJECT_DIR}/iac-sync-dir ]; then cp -r ${CI_PROJECT_DIR}/iac-sync-dir/. .; else echo "not local files to copy"; fi 
+    - cp $CI_PROJECT_DIR/workbench-config.json .
+    - ./searchandreplace.sh
+    # Define the contents of the workbench-config file as environment variables for use in gitlab and optionally in terraform
+    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+
+variables:
+  ANSIBLE_FEATURE_TOGGLES: "-e helm_enabled=True -e dashboard_enabled=True -e helm_version=v3.2.4 -e kube_proxy_mode=iptables -e artifacts_dir=inventory/artifacts/cluster -e cloud_provider=aws -e ansible_user=ubuntu -b --become-user=root --flush-cache -e kubeconfig_localhost=true"
+stages:
+  - Validate
+  - Destroy
+  - "Deploy AWS infrastructure"
+  - "Run Kubespray"
+  - "Run k3s"
+  - "Deploy Vault"
+  - "Deploy Platform"
+  - "Run Tests"
+  - "Maintain Platform"
+
+Validate and Plan:
+  stage: Validate
+  script:
+    - cd terraform
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform validate
+    - terraform plan -out=plan.cache
+    - terraform show -json plan.cache | jq -r '([.resource_changes[]?.change.actions?]|flatten)|{"create":(map(select(.=="create"))|length),"update":(map(select(.=="update"))|length),"delete":(map(select(.=="delete"))|length)}' > ${CI_PROJECT_DIR}/plan.json
+  artifacts:
+    reports:
+      terraform: plan.json
+
+Destroy AWS:
+  stage: Destroy
+  script:
+    - cd terraform
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform validate
+    - terraform destroy -auto-approve
+  when: manual
+
+Destroy Mojaloop K8s Stack:
+  stage: Destroy
+  script:
+    - cd terraform/k8s-setup
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform validate
+    - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+  when: manual
+
+Destroy Add-On Apps:
+  stage: Destroy
+  script:
+    - cd terraform/k8s-setup/addons
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform validate
+    - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - aws s3 rm --recursive s3://$BUCKET/$ENVIRONMENT/k8s-cluster
+    - aws s3 rm s3://$BUCKET/$ENVIRONMENT/k3saddons/onboarding_pm4ml_output.json
+    - aws s3 rm s3://$BUCKET/$ENVIRONMENT/k3saddons/ansible_pm4ml_output.yaml
+  when: manual
+
+Destroy Vault:
+  stage: Destroy
+  script:
+    - cd terraform/k8s-setup/vault-deploy
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform validate
+    - terraform destroy -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+  when: manual
+
+Destroy Environment:
+  stage: Destroy
+  script:
+    - $CI_IMAGE_PROJECT_DIR/teardown.sh
+  when: manual
+
+Destroy k3s Cluster:
+    
+  image: 
+    name: ghcr.io/modusintegration/k3sbootstrap:0.9.2
+  before_script:
+    - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+    - eval `ssh-agent`
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$GITHUB_SSH_KEY" | tr -d '\r' | ssh-add -
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - mkdir -p ~/.aws && echo "$AWS_CONFIG_FILE" >> ~/.aws/credentials
+    - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
+    - aws s3 sync s3://$BUCKET/$ENVIRONMENT ./k8ss3/ --sse || true
+    - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
+    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+
+  stage: "Destroy"
+  script:
+    - export
+    - cd /k3s-boot
+    - sed -i "s/##client##/${client}/g" .env
+    - sed -i "s/##domain##/${domain}/g" .env
+    - sed -i "s/##environment##/${environment}/g" .env
+    - sed -i "s/##region##/${region}/g" .env
+    - make backend -- -auto-approve
+    - make destroy -- -auto-approve
+    - aws s3 rm --recursive s3://$BUCKET/$ENVIRONMENT/k3saddons
+  when: manual
+
+Deploy AWS Infrastructure:
+  stage: "Deploy AWS infrastructure"
+  script:
+    - cd terraform
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform apply -auto-approve
+    - aws s3 sync $CI_IMAGE_PROJECT_DIR/kubespray-inventory s3://${BUCKET}/${TF_VAR_environment}/kubespray-inventory/ --sse
+    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/ssh_provisioner_key s3://${BUCKET}/${TF_VAR_environment}/terraform/ --sse
+  when: manual
+
+Create k3s Cluster:
+  image: 
+    name: ghcr.io/modusintegration/k3sbootstrap:0.9.2
+  before_script:
+    - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+    - eval `ssh-agent`
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$GITHUB_SSH_KEY" | tr -d '\r' | ssh-add -
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - mkdir -p ~/.aws && echo "$AWS_CONFIG_FILE" >> ~/.aws/credentials
+    - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
+    - aws s3 sync s3://$BUCKET/$ENVIRONMENT ./k8ss3/ --sse || true
+    - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
+    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    
+  stage: "Run k3s"
+  script:
+    - export
+    - cd /k3s-boot
+    - sed -i "s/##client##/${client}/g" .env
+    - sed -i "s/##domain##/${domain}/g" .env
+    - sed -i "s/##environment##/${environment}/g" .env
+    - sed -i "s/##region##/${region}/g" .env
+    - make backend -- -auto-approve
+    - make apply -- -auto-approve
+    - make k3s 
+    - make kubeconfig
+    - aws s3 cp /k3s-boot/kubeconfig s3://$BUCKET/$ENVIRONMENT/k3saddons/ --sse
+    - aws s3 cp /k3s-boot/ssh-key s3://${BUCKET}/$ENVIRONMENT/k3saddons/ --sse
+    - aws s3 sync s3://$BUCKET/$ENVIRONMENT/k3saddons /k3s-boot/k3saddons --sse
+    - cp -r /k3s-boot/k3saddons/* /k3s-boot/   
+    - make wireguard
+    - aws s3 sync /k3s-boot/wireguard.clients s3://$BUCKET/$ENVIRONMENT/k3saddons/wireguard.clients --sse
+    - aws s3 cp /k3s-boot/wireguard.private.key s3://$BUCKET/$ENVIRONMENT/k3saddons/ --sse
+    - aws s3 cp /k3s-boot/wireguard.public.key s3://$BUCKET/$ENVIRONMENT/k3saddons/ --sse
+    - if [ ! -f /k3s-boot/vault-keys.json ]; then make vault; else echo "found vault, skipping make vault"; fi 
+    - aws s3 cp /k3s-boot/vault-keys.json s3://$BUCKET/$ENVIRONMENT/k3saddons/ --sse
+  when: manual
+
+Create Addons Cluster:
+  stage: "Run Kubespray"
+  script:
+    - cd /kubespray
+    - ansible-playbook -i $CI_IMAGE_PROJECT_DIR/kubespray-inventory/hosts-add-ons -e @$CI_IMAGE_PROJECT_DIR/kubespray-inventory/extra-vars.json ./cluster.yml $ANSIBLE_FEATURE_TOGGLES
+    - aws s3 cp inventory/artifacts/cluster/admin.conf s3://$BUCKET/$ENVIRONMENT/admin-add-ons.conf --sse
+  when: manual
+
+Create Gateway Cluster:
+  stage: "Run Kubespray"
+  script:
+    - cd /kubespray
+    - ansible-playbook -i $CI_IMAGE_PROJECT_DIR/kubespray-inventory/hosts-gateway -e @$CI_IMAGE_PROJECT_DIR/kubespray-inventory/extra-vars.json ./cluster.yml $ANSIBLE_FEATURE_TOGGLES
+    - aws s3 cp inventory/artifacts/cluster/admin.conf s3://$BUCKET/$ENVIRONMENT/admin-gateway.conf --sse
+  when: manual
+
+Deploy Vault:
+  stage: "Deploy Vault"
+  script:
+    - cd terraform/k8s-setup/vault-deploy
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform apply -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - aws s3 cp $CI_IMAGE_PROJECT_DIR/vault_seal_key s3://${BUCKET}/${TF_VAR_environment}/ --sse
+  when: manual
+
+1. Initial Install Base Platform:
+  stage: "Deploy Platform"
+  script:
+    - cd terraform/k8s-setup
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - chmod o-w $CI_IMAGE_PROJECT_DIR/terraform/apps/wso2/config/
+    - cd $CI_IMAGE_PROJECT_DIR/terraform/apps/wso2/config/
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - ansible-playbook publish.yaml
+  when: manual
+
+2. Install Post Deployment:
+  stage: "Deploy Platform"
+  script:
+  #todo remove hardcoded values here
+    - aws s3 sync s3://${client}${environment}k3s-pm4mladdons-state/k3s ./k3sstate --sse || true
+    - if [ -f k3sstate/terraform.tfstate ]; then export pm4ml_nat_ips_tmp=$(terraform output -state=k3sstate/terraform.tfstate nat_public_ips); else ls -la ./k3sstate; fi 
+    - echo $pm4ml_nat_ips_tmp
+    - if [ $(echo $pm4ml_nat_ips_tmp | grep --quiet Warning) ]; then echo "nats not found"; else export TF_VAR_pm4ml_nat_ips=$pm4ml_nat_ips_tmp; fi
+    - cd terraform/k8s-setup/addons
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/secrets_chart s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart --sse
+    - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/sim_tests s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests --sse
+    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/ansible_internal_pm4ml_output.yaml s3://${BUCKET}/${TF_VAR_environment}/k3saddons/ --sse
+    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/onboarding_internal_pm4ml_output.json s3://${BUCKET}/${TF_VAR_environment}/k3saddons/ --sse
+    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/ansible_external_pm4ml_output.yaml s3://${BUCKET}/${TF_VAR_environment}/k3saddons/ --sse
+    - find . -type f -iname '*_results' -exec cat '{}' \;
+  when: manual
+
+3. Install PM4MLs:
+  stage: "Deploy Platform"
+  image: 
+    name: ghcr.io/modusintegration/k3sbootstrap:0.9.2
+  before_script:
+    - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+    - eval `ssh-agent`
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$GITHUB_SSH_KEY" | tr -d '\r' | ssh-add -
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - mkdir -p ~/.aws && echo "$AWS_CONFIG_FILE" >> ~/.aws/credentials
+    - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
+    - aws s3 sync s3://$BUCKET/$ENVIRONMENT ./k8ss3/ --sse || true
+    - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
+    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+  script:
+    - aws s3 cp s3://$BUCKET/$ENVIRONMENT/k3saddons/ssh-key /k3s-boot/ssh-key --sse
+    - chmod 400 /k3s-boot/ssh-key
+    - cd /k3s-boot
+    - sed -i "s/##client##/${client}/g" .env
+    - sed -i "s/##domain##/${domain}/g" .env
+    - sed -i "s/##environment##/${environment}/g" .env
+    - sed -i "s/##region##/${region}/g" .env
+    #TODO: static value needs addressing
+    - sed -i "s/##pm4ml_client_cert_local_dir##/\/k3s-boot\/pm4ml-certoutput\//g" .env
+    - aws s3 cp s3://$BUCKET/$ENVIRONMENT/k3saddons/ansible_internal_pm4ml_output.yaml ./ansible_pm4ml_output.yaml --sse
+    - make backend -- -auto-approve
+    - make apply -- -auto-approve
+    - make pm4ml
+    - aws s3 sync /k3s-boot/pm4ml-certoutput s3://$BUCKET/$ENVIRONMENT/k3saddons/pm4ml-certoutput --sse
+  when: manual
+
+
+
+
+
+1. Prepare Tests Hub Setup:
+  stage: "Run Tests"
+  script:
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+    - cd sim_tests
+    - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopHub_Setup.postman_collection.json --ssl-client-cert-list sim_cert_list.json --insecure -e Lab.postman_environment.json
+  when: manual
+
+2-a. Prepare Tests Sims Onboarding:
+  stage: "Run Tests"
+  script:
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+    - cd sim_tests
+    - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopSims_Onboarding.postman_collection.json --ssl-client-cert-list sim_cert_list.json --insecure -e Lab.postman_environment.json
+  when: manual
+
+2-b. Prepare Tests PM4ML Onboarding:
+  stage: "Run Tests"
+  script:
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+    - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+    - cd sim_tests
+    - newman run $CI_IMAGE_PROJECT_DIR/tests/Onboard-Generic-FSP.postman_collection.json --insecure -e Lab.postman_environment.json -d onboarding_pm4ml_output.json
+  when: manual
+
+3-a. Run ML Happy Path Tests:
+  stage: "Run Tests"
+  script:
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+    - cd sim_tests
+    - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/Golden_Path_Mojaloop.postman_collection.json --ssl-client-cert-list sim_cert_list.json --insecure -e Lab.postman_environment.json --folder p2p_happy_path_RECEIVE_quote --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/hp_report.html --reporter-junit-export ${CI_PROJECT_DIR}/hp_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
+  when: manual
+  artifacts:
+    paths:
+      - hp_report.html
+    reports:
+      junit: hp_report.xml
+
+3. Run ML GP Tests:
+  stage: "Run Tests"
+  script:
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+    - cd sim_tests
+    - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/Golden_Path_Mojaloop.postman_collection.json --ssl-client-cert-list sim_cert_list.json --insecure -e Lab.postman_environment.json --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/gp_report.html --reporter-junit-export ${CI_PROJECT_DIR}/gp_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
+  when: manual
+  # after_script:
+  #   - curl https://slack.com/api/files.upload
+  #     -F file=@"gp_report.html"
+  #     -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}"
+  #     -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
+  #     -F title="Mojaloop Goldenpath Test (Postman) Results"
+  #     -F filetype="html"
+  artifacts:
+    paths:
+      - gp_report.html
+    reports:
+      junit: gp_report.xml
+
+
+# .addon_pre: &addon_pre
+#   - cd addons
+#   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+# .addon_post: &addon_post
+#   - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+#   - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/secrets_chart s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart --sse
+#   - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/sim_tests s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests --sse
+# .refresh_sim_certs: &refresh_sim_certs
+#   - terraform state list | grep simulators-personal-client | sed 's/"/\\"/g' | xargs -I {} terraform taint {} || true
+# .taint_cb_and_addons_haproxies: &taint_cb_and_addons_haproxies
+#   - terraform taint null_resource.haproxy-wso2-calbacks || true
+#   - terraform state list | grep haproxy-callback-client-simulators | sed 's/"/\\"/g' | xargs -I {} terraform taint {} || true
+#   - terraform state list | grep deploy-simulators-ca-bundles | sed 's/"/\\"/g' | xargs -I {} terraform taint {} || true
+#   - terraform state list | grep deploy_simulators_client_ca_cert_to_addons | sed 's/"/\\"/g' | xargs -I {} terraform taint {} || true
+#   - terraform state list | grep deploy-simulator-server-certificates | sed 's/"/\\"/g' | xargs -I {} terraform taint {} || true
+#   - terraform taint null_resource.deploy-haproxy-addons-cfg || true
+#   - terraform taint local_file.gp_postman_environment_file || true
+#   - terraform taint local_file.mojaloop_backend_newman || true
+#   - terraform taint local_file.gp_postman_certlist_file || true
+#   - terraform taint local_file.token_env_file || true
+
+# Modify Base Platform:
+#   stage: "Maintain Platform"
+#   script:
+#     - cd terraform/k8s-setup
+#     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+#     - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+#     - *addon_pre
+#     - *taint_cb_and_addons_haproxies
+#     - *addon_post
+#   when: manual
+
+# Renew Callback certificates:
+#   stage: "Maintain Platform"
+#   script:
+#     - cd terraform/k8s-setup
+#     - *addon_pre
+#     - *refresh_sim_certs
+#     - *addon_post
+#   when: manual
+
+# Refresh Whitelist Only:
+#   stage: "Maintain Platform"
+#   script:
+#     - cd terraform/k8s-setup
+#     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+#     - terraform apply -auto-approve -target vault_generic_secret.whitelist_vpn -target=vault_generic_secret.whitelist_gateway -target=vault_generic_secret.whitelist_addons -target=vault_generic_secret.whitelist_fsp -target=vault_generic_secret.whitelist_vpn -target=vault_generic_secret.whitelist_nat  -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+#   when: manual
+
+# Refresh Test Files Only:
+#   stage: "Maintain Platform"
+#   script:
+#     - cd terraform/k8s-setup
+#     - *addon_pre
+#     - terraform taint local_file.gp_postman_environment_file || true
+#     - terraform taint local_file.mojaloop_backend_newman || true
+#     - terraform taint local_file.gp_postman_certlist_file || true
+#     - terraform taint local_file.token_env_file || true
+#     - terraform apply -auto-approve -target=local_file.gp_postman_environment_file -target=local_file.mojaloop_backend_newman -target=local_file.gp_postman_certlist_file -target=local_file.token_env_file -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+#     - *addon_post
+#   when: manual

@@ -34,7 +34,7 @@ resource tls_self_signed_cert ca_cert {
   key_algorithm   = "RSA"
   subject {
     common_name         = "${var.environment} Root CA"
-    organization        = "Infra"
+    organization        = "ModusBox"
     organizational_unit = "Infrastructure Team"
   }
   validity_period_hours = 175200

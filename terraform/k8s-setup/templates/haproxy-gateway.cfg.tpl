@@ -1,12 +1,12 @@
 global
-    log /dev/log    local0 debug
-    log /dev/log    local1 notice
+    log 127.0.0.1:514  local0  info
     chroot /var/lib/haproxy
     stats socket /run/haproxy/admin.sock mode 660 level admin
     stats timeout 30s
     user haproxy
     group haproxy
     daemon
+    maxconn 4096
 
     # Default SSL material locations
     ca-base /etc/ssl/certs
@@ -44,13 +44,17 @@ frontend localnodes
     bind *:6443
     mode tcp
     default_backend nodes
-    timeout client          1m
+
+frontend http-80
+    bind *:80
+    mode http
+    default_backend nginx-ingress
 
 frontend http-30000
     bind *:30000
     mode http
     default_backend nginx-ingress
-    timeout client 1m
+
 
 backend nginx-ingress
     mode http
@@ -58,8 +62,6 @@ backend nginx-ingress
 %{ for host in keys(workerservers) ~}
      server ${workerservers[host]} ${host}:30001;
 %{ endfor ~}
-    timeout connect        10s
-    timeout server          1m
 
 backend nodes
     mode tcp
@@ -71,22 +73,24 @@ backend nodes
     timeout server          1m
 
 
-
 frontend wso2
     bind *:9443 ssl crt /etc/haproxy/certs/${trimsuffix(extgw_host, ".internal")}.fullchain.crt  crt /etc/haproxy/certs/${trimsuffix(intgw_host, ".internal")}.fullchain.crt crt /etc/haproxy/certs/${trimsuffix(iskm_host, ".internal")}.fullchain.crt ca-file /etc/haproxy/certs/CA.crt verify optional crt-ignore-err all
     bind *:9843 ssl crt /etc/haproxy/certs/${trimsuffix(extgw_host, ".internal")}.fullchain.crt  crt /etc/haproxy/certs/${trimsuffix(intgw_host, ".internal")}.fullchain.crt crt /etc/haproxy/certs/${trimsuffix(iskm_host, ".internal")}.fullchain.crt ca-file /etc/haproxy/certs/CA.crt verify optional crt-ignore-err all
-    bind *:9543 ssl crt /etc/haproxy/certs/${trimsuffix(extgw_host, ".internal")}.fullchain.crt  crt /etc/haproxy/certs/${trimsuffix(intgw_host, ".internal")}.fullchain.crt crt /etc/haproxy/certs/${trimsuffix(iskm_host, ".internal")}.fullchain.crt ca-file /etc/haproxy/certs/CA.crt verify optional crt-ignore-err all
-    mode http
+    #bind *:9543 ssl crt /etc/haproxy/certs/${trimsuffix(extgw_host, ".internal")}.fullchain.crt  crt /etc/haproxy/certs/${trimsuffix(intgw_host, ".internal")}.fullchain.crt crt /etc/haproxy/certs/${trimsuffix(iskm_host, ".internal")}.fullchain.crt ca-file /etc/haproxy/certs/CA.crt verify optional crt-ignore-err all
     acl restricted_path path_beg,url_dec { -m beg -i /publisher/ } || { -m beg -i /carbon/ } || { -m beg -i /admin/ }
-    #acl extgw-acl ssl_fc_sni ${trimsuffix(extgw_host, ".internal")}
     acl extgw-acl ssl_fc_sni ${trimsuffix(extgw_host, ".internal")}
     acl intgw-acl ssl_fc_sni ${intgw_host}
     acl iskm-acl ssl_fc_sni ${iskm_host}
+    acl has-cert ssl_fc_has_crt
+    acl has-good-cert ssl_c_verify 0
+    acl Trusted_EXTGW_acl src -f /etc/haproxy/whitelist_extgw
+    acl Trusted_INTGW_acl src -f /etc/haproxy/whitelist_intgw
+    acl Trusted_ISKM_acl src -f /etc/haproxy/whitelist_iskm
+    acl Trusted_PRIV_acl src -f /etc/haproxy/whitelist_priv
     #redirect location /certmissing.html if restricted_path !{ ssl_c_used 1 }
     #redirect location /certexpired.html if restricted_path { ssl_c_verify 10 }
     #redirect location /certrevoked.html if restricted_path { ssl_c_verify 23 }
     #redirect location /othererrors.html if restricted_path !{ ssl_c_verify 0 }
-    option forwardfor
     http-request set-header X-Forwarded-Proto https
     http-response set-header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
     http-request set-header X-SSL                       %[ssl_fc]
@@ -99,16 +103,13 @@ frontend wso2
     http-request set-header X-SSL-Client-Not-Before     %%{+Q}[ssl_c_notbefore]
     http-request set-header X-SSL-Client-Not-After      %%{+Q}[ssl_c_notafter]
 
-    acl                     Trusted_EXTGW_acl        src -f /etc/haproxy/whitelist_extgw
-    acl                     Trusted_INTGW_acl         src -f /etc/haproxy/whitelist_intgw
-    acl                     Trusted_ISKM_acl         src -f /etc/haproxy/whitelist_iskm
-
     #default_backend wso2-backend
+    #use_backend wso2-backend if extgw-acl Trusted_EXTGW_acl has-cert has-good-cert || extgw-acl Trusted_PRIV_acl
+    #use_backend wso2-iskm if iskm-acl Trusted_ISKM_acl has-cert has-good-cert || iskm-acl Trusted_PRIV_acl
+    #use_backend wso2-backend-internal if intgw-acl Trusted_INTGW_acl has-cert has-good-cert || intgw-acl Trusted_PRIV_acl
     use_backend wso2-backend if extgw-acl Trusted_EXTGW_acl
     use_backend wso2-iskm if iskm-acl Trusted_ISKM_acl
     use_backend wso2-backend-internal if intgw-acl Trusted_INTGW_acl
-
-    timeout client          1m
 
 backend wso2-backend
     mode http
@@ -116,9 +117,6 @@ backend wso2-backend
 %{ for host in keys(workerservers) ~}
     server ${workerservers[host]} ${host}:32443 ssl verify none
 %{ endfor ~}
-    timeout connect        10s
-    timeout server          1m
-
 
 backend wso2-iskm
     mode http
@@ -126,8 +124,6 @@ backend wso2-iskm
 %{ for host in keys(workerservers) ~}
     server ${workerservers[host]} ${host}:31443 ssl verify none
 %{ endfor ~}
-    timeout connect        10s
-    timeout server          1m
 
 backend wso2-backend-internal
     mode http
@@ -135,16 +131,12 @@ backend wso2-backend-internal
 %{ for host in keys(workerservers) ~}
     server ${workerservers[host]} ${host}:30443 ssl verify none
 %{ endfor ~}
-    timeout connect        10s
-    timeout server          1m
 
 frontend wso2-api-service
     bind *:8843 ssl crt /etc/haproxy/certs/${trimsuffix(extgw_host, ".internal")}.fullchain.crt  crt /etc/haproxy/certs/${trimsuffix(intgw_host, ".internal")}.fullchain.crt ca-file /etc/haproxy/certs/CA.crt verify optional crt-ignore-err all
     bind *:8243 ssl crt /etc/haproxy/certs/${trimsuffix(extgw_host, ".internal")}.fullchain.crt  crt /etc/haproxy/certs/${trimsuffix(intgw_host, ".internal")}.fullchain.crt ca-file /etc/haproxy/certs/CA.crt verify optional crt-ignore-err all
 
-    mode http
-    acl extgw-acl ssl_fc_sni ${trimsuffix(extgw_host, ".internal")}
-    acl intgw-acl ssl_fc_sni ${intgw_host}
+    
     http-request set-header X-Forwarded-Proto https
     http-response set-header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
     http-request set-header X-SSL                       %[ssl_fc]
@@ -157,13 +149,19 @@ frontend wso2-api-service
     http-request set-header X-SSL-Client-Not-Before     %%{+Q}[ssl_c_notbefore]
     http-request set-header X-SSL-Client-Not-After      %%{+Q}[ssl_c_notafter]
 
-    acl                     Trusted_EXTGW_acl        src -f /etc/haproxy/whitelist_extgw
-    acl                     Trusted_INTGW_acl         src -f /etc/haproxy/whitelist_intgw
-
+    acl Trusted_EXTGW_acl src -f /etc/haproxy/whitelist_extgw
+    acl Trusted_INTGW_acl src -f /etc/haproxy/whitelist_intgw
+    acl Trusted_PRIV_acl src -f /etc/haproxy/whitelist_priv
+    acl has-cert ssl_fc_has_crt
+    acl has-good-cert ssl_c_verify 0
+    acl extgw-acl ssl_fc_sni ${trimsuffix(extgw_host, ".internal")}
+    acl intgw-acl ssl_fc_sni ${intgw_host}
+    
     #default_backend wso2-backend
+    #use_backend wso2-api-service-backend if extgw-acl Trusted_EXTGW_acl has-cert has-good-cert || extgw-acl Trusted_PRIV_acl
+    #use_backend wso2-api-service-backend-internal if intgw-acl Trusted_INTGW_acl has-cert has-good-cert || intgw-acl Trusted_PRIV_acl
     use_backend wso2-api-service-backend if extgw-acl Trusted_EXTGW_acl
-    use_backend wso2-api-service-backend-internal if intgw-acl Trusted_INTGW_acl
-    timeout client          1m
+    use_backend wso2-api-service-backend-internal if intgw-acl Trusted_INTGW_acl 
 
 backend wso2-api-service-backend
     mode http
@@ -171,8 +169,6 @@ backend wso2-api-service-backend
 %{ for host in keys(workerservers) ~}
      server ${workerservers[host]} ${host}:32243 ssl verify none
 %{ endfor ~}
-    timeout connect        10s
-    timeout server          1m
 
 backend wso2-api-service-backend-internal
     mode http
@@ -180,14 +176,11 @@ backend wso2-api-service-backend-internal
 %{ for host in keys(workerservers) ~}
      server ${workerservers[host]} ${host}:32244 ssl verify none
 %{ endfor ~}
-    timeout connect        10s
-    timeout server          1m
 
 frontend wso2-http-internal
     bind *:8844
     mode tcp
     default_backend wso2-http-backend-internal
-    timeout client          1m
 
 backend wso2-http-backend-internal
     mode tcp
@@ -195,20 +188,15 @@ backend wso2-http-backend-internal
 %{ for host in keys(workerservers) ~}
      server ${workerservers[host]} ${host}:32245;
 %{ endfor ~}
-    timeout connect        10s
-    timeout server          1m
 
 frontend wso2-http-http
     bind *:8280
     mode tcp
     default_backend wso2-http-backend-http
-    timeout client          1m
+
 backend wso2-http-backend-http
     mode tcp
     balance roundrobin
 %{ for host in keys(workerservers) ~}
     server ${workerservers[host]} ${host}:32280;
 %{ endfor ~}
-    timeout connect        10s
-    timeout server          1m
-

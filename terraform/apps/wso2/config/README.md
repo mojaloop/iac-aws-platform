@@ -8,7 +8,7 @@ With a given API template file (JSON) will publish or delete API. When publishin
 
 ## Requirements
 
-The ansible module, it's dependencies and playbooks are all self contained. The only parameter you need to provide is the domain name for the environment it needs to work in.
+The ansible module, it's dependencies and playbooks are all self contained. The only parameter you need to provide is the domain name for the environment it needs to work in. 
 
 ## Usage
 
@@ -17,8 +17,8 @@ Execute one of the two provided playbooks: `publish.yaml` or `delete.yaml` to pu
 For example:
 
 ```bash
-ansible-playbook publish.yaml -e env_domain=dev.example.com -e mj_version=v10.1.0
-ansible-playbook delete.yaml -e env_domain=dev.example.com -e mj_version=v10.1.0
+ansible-playbook publish.yaml -e env_domain=otc-546.infra.modusbox.io -e mj_version=v10.1.0
+ansible-playbook delete.yaml -e env_domain=otc-546.infra.modusbox.io -e mj_version=v10.1.0
 ```
 
 ## Variables
@@ -64,5 +64,5 @@ The `tests.yaml` playbook is an integration test playbook. It requires a working
 To execute the tests use:
 
 ```bash
-ansible-playbook tests.yaml -e env_domain=<env_domain> -e mj_version=v10.1.0
+ansible-playbook tests.yaml -e env_domain=otc-546.infra.modusbox.io -e mj_version=v10.1.0
 ```

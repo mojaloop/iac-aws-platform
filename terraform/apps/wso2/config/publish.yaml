@@ -10,7 +10,7 @@
         password: "{{ wso2_admin_pw }}"
         hostname: "extgw.{{ env_domain }}"
         api_template: apis/admin/api_template.json
-        swagger_url: "http://interop-switch.{{ env_domain }}.internal:30000/admin/swagger.json"
+        swagger_url: "https://raw.githubusercontent.com/mojaloop/central-ledger/master/src/api/interface/swagger.json"
         endpoint_url: "http://interop-switch.{{ env_domain }}.internal:30000/admin"
         inbound_mediation:
           - apis/admin/remove-fspiop-source.xml
@@ -30,7 +30,7 @@
         password: "{{ wso2_admin_pw }}"
         hostname: "extgw.{{ env_domain }}"
         api_template: apis/fspiop/api_template.json
-        swagger_url: "https://raw.githubusercontent.com/mojaloop/mojaloop-specification/master/fspiop-api/documents/v1.0-document-set/fspiop-rest-v1.0-OpenAPI.yaml"
+        swagger_url: "https://raw.githubusercontent.com/mojaloop/mojaloop-specification/master/fspiop-api/documents/v1.1-document-set/fspiop-v1.1-openapi2.yaml"
         endpoint_url: "http://interop-switch.{{ env_domain }}.internal:30000"
         inbound_mediation:
           - apis/fspiop/add_accept_header.xml

@@ -6,4 +6,4 @@
     <static>
     	<whitelistpath>/vault/secrets/</whitelistpath>    	
     </static>
-</config> 
+</config>

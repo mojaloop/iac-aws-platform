@@ -1,0 +1,1702 @@
+{
+	"info": {
+		"_postman_id": "1b215bf9-058d-4b26-8812-942f3028e071",
+		"name": "Myanmar-Golden-Path",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "feature-tests",
+			"item": [
+				{
+					"name": "loan-repayment",
+					"item": [
+						{
+							"name": "positive",
+							"item": [
+								{
+									"name": "demowallet-to-demomfi-core-conn",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 200\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});",
+													"",
+													"var jsonData = pm.response.json();",
+													"",
+													"pm.test(\"Current state on quote is COMPLETED\", function () {",
+													"",
+													"  pm.expect(jsonData.currentState).to.eql(\"COMPLETED\");",
+													"});",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"from\": {\n        \"displayName\": \"PayerFirst PayerLast\",\n        \"idType\": \"MSISDN\",\n        \"idValue\": \"{{DEMO_WALLET_MSISDN}}\"\n    },\n    \"to\": {\n        \"idType\": \"ACCOUNT_ID\",\n        \"idValue\": \"{{DEMO_MFI_ACCOUNT_ID}}\"\n    },\n    \"amountType\": \"SEND\",\n    \"currency\": \"MMK\",\n    \"amount\": \"10\",\n    \"transactionType\": \"TRANSFER\",\n    \"note\": \"test payment\",\n    \"homeTransactionId\": \"{{$guid}}\"\n}"
+										},
+										"url": {
+											"raw": "{{DEMO_WALLET_CBS_URL}}/sendmoney",
+											"host": [
+												"{{DEMO_WALLET_CBS_URL}}"
+											],
+											"path": [
+												"sendmoney"
+											]
+										},
+										"description": "The HTTP request `POST /sendmoney` is used by the Payer DFSP to request the movement of funds from the Payer DFSP to the Payee DFSP. The underlying Mojaloop API has three stages for money transfer:\n  1. Party lookup (discovery phase). This facilitates a check by the sending party that the destination party is correct before proceeding with a money movement.\n  2. Quotation (agreement phase). This facilitates the exchange of fee information and the construction of a cryptographic \"contract\" between the Payee and Payer DFSPs before funds are transferred.\n  3. Transfer (transfer phase). The enactment of the previously agreed \"contract\".\nThis method has several modes of operation. - If the configuration variable `AUTO_ACCEPT_PARTY` is set to `\"false\"`, this method will terminate when the Payee party has been resolved and Payee party details have been returned.\n  If the Payer wishes to proceed with the transfer, then a subsequent `PUT /sendmoney/{transferId}` request (accepting the Payee party) is required to continue the operation.\n  The Payment Manager will then proceed to the quotation stage.\n- If the configuration variable `AUTO_ACCEPT_QUOTES` is set to `\"false\"`, this method will terminate and return the quotation when it has been received from the Payee DFSP.\n  If the Payee wishes to proceed with the transfer, then a subsequent `PUT /sendmoney/{transferId}` request (accepting the quote) is required to continue the operation.\n  The Payment Manager will then proceed to the transfer state.\nIf the configuration variables `AUTO_ACCEPT_PARTY` and `AUTO_ACCEPT_QUOTES` are both set to `\"true\"`, this method will block until all three transfer stages are complete. Upon completion, it will return the entire set of transfer details received during the operation. Combinations of settings for `AUTO_ACCEPT...` configuration variables allow the Payment Manager user to decide which mode of operation best suits their use cases. i.e., the Payment Manager can be configured to \"break\" the three-stage transfer at these points in order to execute backend logic such as party verification, quoted fees assessments, etc.\n"
+									},
+									"response": []
+								},
+								{
+									"name": "demowallet-to-demomfi-ml-conn",
+									"event": [
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"var uuid = require('uuid');",
+													"var generatedUUID = uuid.v4();",
+													"pm.environment.set('quoteId', generatedUUID);",
+													"pm.environment.set('transfer_ID', pm.environment.get('transactionId'));",
+													"",
+													"",
+													"pm.variables.set('transferDate', (new Date()).toUTCString());",
+													"",
+													"pm.environment.set(\"transferExpiration\",new Date(new Date().getTime() + 600000))",
+													"",
+													"pm.variables.set('payerName', 'PayerFirst PayerLast');",
+													"pm.variables.set('payerMSISDN', '918381008987');",
+													"",
+													"pm.variables.set('expectedPayeeFirstName', 'GoldenFirst');",
+													"pm.variables.set('expectedPayeeLastName', 'GoldenLast');",
+													"pm.variables.set('expectedPayeeDOB', '2010-10-10');",
+													"",
+													"",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 200\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});",
+													"",
+													"var jsonData = pm.response.json();",
+													"",
+													"pm.test(`Payer name is ${pm.variables.get('payerName')}`, function () {",
+													"    ",
+													"    pm.expect(jsonData.from.displayName).to.eql(pm.variables.get('payerName'));",
+													"});",
+													"pm.test(\"payer idType is MSISDN\", function () {",
+													"    pm.expect(jsonData.from.idType).to.eql(\"MSISDN\");",
+													"});",
+													"pm.test(\"payer idValue is 17031278383\", function () {",
+													"    pm.expect(jsonData.from.idValue).to.eql(pm.variables.get('DEMO_WALLET_MSISDN'));",
+													"});",
+													"",
+													"pm.test(\"Payee idType is ACCOUNT_ID\", function () {",
+													"     pm.expect(jsonData.to.idType).to.eql(\"ACCOUNT_ID\");",
+													"});",
+													"",
+													"pm.test(`Payee idValue is ${pm.environment.get('DEMO_MFI_ACCOUNT_NUMBER')}`, function () {",
+													"   ",
+													"    pm.expect(jsonData.to.idValue).to.eql(pm.environment.get('DEMO_MFI_ACCOUNT_NUMBER'));",
+													"});",
+													"",
+													"pm.test(\"payee fspId is DEMOMFI\", function () {",
+													"",
+													"    pm.expect(jsonData.to.fspId).to.eql(\"demomfi\");",
+													"});",
+													"",
+													"pm.test(\"payee First name is SimDemoMfiFirstFirst \", function () {",
+													"   ",
+													"    pm.expect(jsonData.to.firstName).to.eql(\"DemoMfiFirst\");",
+													"});   ",
+													"",
+													"pm.test(\"payee Last name is DemoMfiLast\", function () {",
+													"",
+													"    pm.expect(jsonData.to.lastName).to.eql(\"DemoMfiLast\");",
+													"});",
+													"",
+													"pm.test(\"payee DOB is 2010-10-10\", function () {",
+													"",
+													"    pm.expect(jsonData.to.dateOfBirth).to.eql(\"2010-10-10\");",
+													"});",
+													"",
+													"pm.test(\"amount type is SEND\", function () {",
+													"",
+													"    pm.expect(jsonData.amountType).to.eql(\"SEND\");",
+													"});",
+													"",
+													"// pm.test(`Currency is ${pm.environment.get('currency')}`, function () {",
+													"",
+													"//     pm.expect(jsonData.currency).to.eql(pm.environment.get('currency'));",
+													"// });",
+													" pm.test(`Currency is MMK`, function () {",
+													"",
+													"     pm.expect(jsonData.currency).to.eql(\"MMK\");",
+													" });",
+													"",
+													"pm.test(\"Transfer Amount is 10\", function () {",
+													"",
+													"    pm.expect(jsonData.amount).to.eql(\"10\");",
+													"});",
+													"",
+													"pm.test(\"Transaction type is Transfer\", function () {",
+													"",
+													"    pm.expect(jsonData.transactionType).to.eql(\"TRANSFER\");",
+													"});",
+													"   ",
+													"   pm.test(\"Initiator type is CONSUMER\", function () {",
+													"",
+													"    pm.expect(jsonData.initiatorType).to.eql(\"CONSUMER\");",
+													" });  ",
+													" ",
+													" pm.test(\"Note is TESTPAYMENT\", function () {",
+													"",
+													"    pm.expect(jsonData.note).to.eql(\"test payment\");",
+													"});",
+													"",
+													"pm.test(\"Home transaction Id is present\", function () {",
+													"",
+													"    pm.expect(jsonData.homeTransactionId).not.eql(null);",
+													"});",
+													"    ",
+													"pm.test(\"Current state on quote is COMPLETED\", function () {",
+													"",
+													"  pm.expect(jsonData.currentState).to.eql(\"COMPLETED\");",
+													"});",
+													"",
+													"pm.test(\"Transfer amount is \", function () {",
+													" ",
+													"  pm.expect(jsonData.amount).to.eql(\"10\");",
+													"});",
+													"",
+													"pm.test(\"Transfer amount is \", function () {",
+													" ",
+													"  pm.expect(jsonData.quoteResponse.body.transferAmount.amount).to.eql(\"10\");",
+													"});",
+													"",
+													"// pm.test(\"Currency is ${pm.environment.get('currency')\", function () {",
+													" ",
+													"//   pm.expect(jsonData.quoteResponse.transferAmount.currency).to.eql(pm.environment.get('currency'));",
+													"// });",
+													"  ",
+													"pm.test(\"Quote response expiration is not null\", function () {",
+													"",
+													"pm.expect(jsonData.quoteResponse.body.expiration).not.eql(null);",
+													"});",
+													"",
+													"pm.test(\"Qupte request ILP packet is not null\", function () {",
+													"",
+													"pm.expect(jsonData.quoteResponse.ilpPacket).not.eql(null);",
+													"});",
+													"",
+													"pm.test(\"Quote response condition is not null\", function () {",
+													"",
+													"pm.expect(jsonData.quoteResponse.condition).not.eql(null);",
+													"});",
+													"  ",
+													"// pm.test(\"Payeefsp Fee amount is 0\", function () {",
+													"",
+													"// pm.expect(jsonData.quoteResponse.payeeFspFee.amount).to.eql('0');",
+													"// });",
+													"",
+													"// pm.test(\"PayeeFSP fee currency is \", function () {",
+													"",
+													"// pm.expect(jsonData.quoteResponse.body.currency).to.eql(pm.environment.get('currency'));",
+													"// });",
+													"",
+													"// pm.test(\" Payeefsp Commission amount is 0\", function () {",
+													"",
+													"// pm.expect(jsonData.quoteResponse.payeeFspCommission.amount).to.eql(\"0\");",
+													"// });",
+													"",
+													"// pm.test(`Currency is ${pm.environment.get('currency')}`, function () {",
+													"",
+													"// pm.expect(jsonData.quoteResponse['body'].currency).to.eql('MMK');",
+													"// });",
+													"  ",
+													"",
+													"",
+													"// pm.test(\"payer fsp nameis:${pm.environment.get('payerName')\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.from.displayName).to.eql(pm.variables.get('payerName'));",
+													"// });",
+													" ",
+													"// pm.test(\"IdType is MSISDN\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.from.idType).to.eql(\"MSISDN\");",
+													"// });",
+													"   ",
+													"// pm.test(`Payer MSISDN is ${pm.environment.get('payerMSISDN')} `, function () {",
+													"// var jsonData = pm.response.json(); ",
+													"// pm.expect(jsonData.scenario2.result.from.idValue).to.eql(pm.variables.get('payerMSISDN'));",
+													"// });",
+													"",
+													"// pm.test(\"IdType is MSISDN\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.to.idType).to.eql(\"MSISDN\");",
+													"// });",
+													"",
+													"// pm.test(`goldenpayeefspReceiverMSISDN Value is ${pm.environment.get('goldenpayeefspReceiverMSISDN')}`, function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.to.idValue).to.eql(pm.variables.get('goldenpayeefspReceiverMSISDN'));",
+													"// });",
+													"",
+													"// pm.test(\"fspId is goldenpayeefsp\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.to.fspId).to.eql(\"goldenpayeefsp\");",
+													"// });",
+													"",
+													"// pm.test(\"First name of the party is GoldenFirst\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.to.firstName).to.eql(\"GoldenFirst\");",
+													"// });",
+													"",
+													"// pm.test(\"First name of the party is GoldenLast \", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.to.lastName).to.eql(\"GoldenLast\");",
+													"// });",
+													"",
+													"// pm.test(\"Date of Birth of the MSISDN is 2010-10-10 \", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.to.dateOfBirth).to.eql(\"2010-10-10\");",
+													"// });",
+													"",
+													"// pm.test(\"Amount-Type in Quote request is SEND\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.amountType).to.eql(\"SEND\");",
+													"// })",
+													"",
+													"// pm.test(` Currency in quotes is ${pm.environment.get('currency')}`, function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.currency).to.eql(pm.environment.get('currency'));",
+													"// });",
+													"    ",
+													"// pm.test(\" Transfer amount is 10\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.amount).to.eql(\"10\");",
+													"// });",
+													"   ",
+													"// pm.test(\" Transaction Type is TRANSFER\", function () {",
+													"// var jsonData = pm.response.json(); ",
+													"// pm.expect(jsonData.scenario2.result.transactionType).to.eql(\"TRANSFER\");",
+													"// });",
+													"   ",
+													"// pm.test(\"Initiator type is CONSUMER\", function () {",
+													"// var jsonData = pm.response.json(); ",
+													"// pm.expect(jsonData.scenario2.result.initiatorType).to.eql(\"CONSUMER\");",
+													"// });",
+													"   ",
+													"// pm.test(\"note is test payment\", function () {",
+													"// var jsonData = pm.response.json(); ",
+													"// pm.expect(jsonData.scenario2.result.note).to.eql(\"test payment\");",
+													"// });",
+													"   ",
+													"// pm.test(\"HomeTransactionId is 123ABC\", function () {",
+													"// var jsonData = pm.response.json(); ",
+													"// pm.expect(jsonData.scenario2.result.homeTransactionId).to.eql(\"123ABC\");",
+													"// });",
+													"    ",
+													"// pm.test(\"Current state of the transacfer is COMPLETED\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.currentState).to.eql(\"COMPLETED\");",
+													"// });",
+													"  ",
+													"// pm.test(\"Transfer Amount is 10\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.quoteResponse.transferAmount.amount).to.eql(\"10\");",
+													"// });",
+													"",
+													"// pm.test(\"Response validation\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.quoteResponse.transferAmount.currency).to.eql(pm.environment.get('currency'));",
+													"// });",
+													"",
+													"// pm.test(\"Quote Expiration is not Null\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.quoteResponse.expiration).not.eql(null);",
+													"// });",
+													"",
+													"// pm.test(\"Response ilpPacket is not null\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.quoteResponse.ilpPacket).not.eql(null);",
+													"// });",
+													"",
+													"// pm.test(\"Response condition is not null\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.quoteResponse.condition).not.eql(null);",
+													"// });",
+													"",
+													"// pm.test(\"PayeeFspFee is 0\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.quoteResponse.payeeFspFee.amount).to.eql(\"0\");",
+													"// });",
+													"",
+													"// pm.test(`Payeefsp fee currency is ${pm.environment.get('currency')}` , function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.quoteResponse.payeeFspFee.currency).to.eql(pm.environment.get('currency'));",
+													"// });",
+													"",
+													"// pm.test(\"Payeefsp commission is 0\", function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.quoteResponse.payeeFspCommission.amount).to.eql(\"0\");",
+													"// });",
+													"",
+													"// pm.test(` Transfer currency is ${pm.environment.get('currency')}`, function () {",
+													"// var jsonData = pm.response.json();",
+													"// pm.expect(jsonData.scenario2.result.quoteResponse.payeeFspCommission.currency).to.eql(pm.environment.get('currency'));",
+													"// });",
+													"",
+													"pm.test(\"CompletedTimestamp is not empty\", function () {",
+													"",
+													"pm.expect(jsonData.fulfil.completedTimestamp).not.eql(null);",
+													"});",
+													"",
+													"pm.test(\" transferState is COMMITTED\", function () {",
+													"",
+													"pm.expect(jsonData.fulfil.body.transferState).to.eql(\"COMMITTED\");",
+													"});",
+													"",
+													"pm.test(\" Fulfilment is not empty\", function () {",
+													"",
+													"pm.expect(jsonData.fulfil.fulfilment).not.eql(null);",
+													"",
+													"});",
+													"pm.test(\" fspiop-signature is not empty\", function () {",
+													"",
+													"pm.expect(jsonData.fulfil.headers['fspiop-signature']).not.eql(null);",
+													"",
+													"});",
+													"pm.test(\" fspiop-uri contains /transfers/\", function () {",
+													"",
+													"pm.expect(jsonData.fulfil.headers['fspiop-uri']).includes(\"/transfers/\");",
+													"",
+													"});",
+													"  ",
+													"  pm.test(\" fspiop-http-method is PUT\", function () {",
+													"",
+													"pm.expect(jsonData.fulfil.headers['fspiop-http-method']).to.eql(\"PUT\");",
+													"",
+													"});",
+													"",
+													"        ",
+													"",
+													"",
+													"// //Check Headers and data for parties endpoint on payer side",
+													"// setTimeout(function () {",
+													"//   pm.sendRequest(pm.environment.get(\"GOLDENPAYERFSP_SDK_INBOUND_URL\")+\"/callbacks/\"+pm.variables.get(\"goldenpayeefspReceiverMSISDN\"), function (err, response) {",
+													"       ",
+													"//       if(response.responseSize !== 0) { ",
+													"//       //Checking headers",
+													"//         var headers = response.json().headers;",
+													"//         pm.test(\"On payerfsp fspiop-source is goldenpayeefsp\", function () {",
+													"//             pm.expect(headers['fspiop-source']).to.eql('goldenpayeefsp');",
+													"//         });",
+													"        ",
+													"//         pm.test(\"On payerfsp fspiop-destination is goldenpayerfsp\", function () {",
+													"//             pm.expect(headers['fspiop-destination']).to.eql('goldenpayerfsp');",
+													"//         });",
+													"        ",
+													"        pm.test(\"On payerfsp content-type should be application/vnd.interoperability.parties+json;version=1.0\", function () {",
+													"            pm.expect(jsonData.getPartiesResponse.headers['content-type']).to.eql('application/vnd.interoperability.parties+json;version=1.0');",
+													"        });",
+													"        ",
+													"        pm.test(\"payerfsp accept is empty\", function () {",
+													"            pm.expect(jsonData.fulfil.headers['accept']).to.eql(undefined);",
+													"        });",
+													"",
+													"        pm.test(\"payerfsp date header is not empty\", function () {",
+													"            pm.expect(jsonData.fulfil.headers['date']).not.eql(null);",
+													"        });",
+													"        ",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Accept",
+												"type": "text",
+												"value": "application/vnd.interoperability.transfers+json;version=1",
+												"disabled": true
+											},
+											{
+												"key": "Content-Type",
+												"type": "text",
+												"value": "application/vnd.interoperability.transfers+json;version=1.0",
+												"disabled": true
+											},
+											{
+												"key": "Date",
+												"type": "text",
+												"value": "{{transferDate}}",
+												"disabled": true
+											},
+											{
+												"key": "FSPIOP-Source",
+												"type": "text",
+												"value": "{{payerfsp}}",
+												"disabled": true
+											},
+											{
+												"key": "FSPIOP-Destination",
+												"type": "text",
+												"value": "{{payeefsp}}",
+												"disabled": true
+											},
+											{
+												"key": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"from\": {\n        \"displayName\": \"PayerFirst PayerLast\",\n        \"idType\": \"MSISDN\",\n        \"idValue\": \"{{DEMO_WALLET_MSISDN}}\"\n    },\n    \"to\": {\n        \"idType\": \"ACCOUNT_ID\",\n        \"idValue\": \"{{DEMO_MFI_ACCOUNT_ID}}\"\n    },\n    \"amountType\": \"SEND\",\n    \"currency\": \"MMK\",\n    \"amount\": \"10\",\n    \"transactionType\": \"TRANSFER\",\n    \"initiatorType\": \"CONSUMER\",\n    \"note\": \"test payment\",\n    \"homeTransactionId\": \"{{$guid}}\"\n}"
+										},
+										"url": {
+											"raw": "{{DEMO_WALLET_ML_CONN_OUTBOUND_URL}}/transfers",
+											"host": [
+												"{{DEMO_WALLET_ML_CONN_OUTBOUND_URL}}"
+											],
+											"path": [
+												"transfers"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "negative",
+							"item": [
+								{
+									"name": "demowallet-to-demomfi-participant-not-found",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 500\", function () {",
+													"    pm.response.to.have.status(500);",
+													"});",
+													"",
+													"var jsonData = pm.response.json();",
+													"",
+													"pm.test(\"Error code is 3204\", function () {",
+													"  pm.expect(jsonData.transferState.getPartiesResponse.body.errorInformation.errorCode).to.eql(\"3204\");",
+													"});",
+													"",
+													"pm.test(\"Error Description is Party not found\", function () {",
+													"  pm.expect(jsonData.transferState.getPartiesResponse.body.errorInformation.errorDescription).to.eql(\"Party not found\");",
+													"});",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"from\": {\n        \"displayName\": \"PayerFirst PayerLast\",\n        \"idType\": \"MSISDN\",\n        \"idValue\": \"{{DEMO_WALLET_MSISDN}}\"\n    },\n    \"to\": {\n        \"idType\": \"ACCOUNT_ID\",\n        \"idValue\": \"112233445566\"\n    },\n    \"amountType\": \"SEND\",\n    \"currency\": \"MMK\",\n    \"amount\": \"10\",\n    \"transactionType\": \"TRANSFER\",\n    \"note\": \"test payment\",\n    \"homeTransactionId\": \"{{$guid}}\"\n}"
+										},
+										"url": {
+											"raw": "{{DEMO_WALLET_CBS_URL}}/sendmoney",
+											"host": [
+												"{{DEMO_WALLET_CBS_URL}}"
+											],
+											"path": [
+												"sendmoney"
+											]
+										},
+										"description": "The HTTP request `POST /sendmoney` is used by the Payer DFSP to request the movement of funds from the Payer DFSP to the Payee DFSP. The underlying Mojaloop API has three stages for money transfer:\n  1. Party lookup (discovery phase). This facilitates a check by the sending party that the destination party is correct before proceeding with a money movement.\n  2. Quotation (agreement phase). This facilitates the exchange of fee information and the construction of a cryptographic \"contract\" between the Payee and Payer DFSPs before funds are transferred.\n  3. Transfer (transfer phase). The enactment of the previously agreed \"contract\".\nThis method has several modes of operation. - If the configuration variable `AUTO_ACCEPT_PARTY` is set to `\"false\"`, this method will terminate when the Payee party has been resolved and Payee party details have been returned.\n  If the Payer wishes to proceed with the transfer, then a subsequent `PUT /sendmoney/{transferId}` request (accepting the Payee party) is required to continue the operation.\n  The Payment Manager will then proceed to the quotation stage.\n- If the configuration variable `AUTO_ACCEPT_QUOTES` is set to `\"false\"`, this method will terminate and return the quotation when it has been received from the Payee DFSP.\n  If the Payee wishes to proceed with the transfer, then a subsequent `PUT /sendmoney/{transferId}` request (accepting the quote) is required to continue the operation.\n  The Payment Manager will then proceed to the transfer state.\nIf the configuration variables `AUTO_ACCEPT_PARTY` and `AUTO_ACCEPT_QUOTES` are both set to `\"true\"`, this method will block until all three transfer stages are complete. Upon completion, it will return the entire set of transfer details received during the operation. Combinations of settings for `AUTO_ACCEPT...` configuration variables allow the Payment Manager user to decide which mode of operation best suits their use cases. i.e., the Payment Manager can be configured to \"break\" the three-stage transfer at these points in order to execute backend logic such as party verification, quoted fees assessments, etc.\n"
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "api-tests",
+			"item": [
+				{
+					"name": "account-oracle",
+					"item": [
+						{
+							"name": "admin-api",
+							"item": [
+								{
+									"name": "prefixes",
+									"item": [
+										{
+											"name": "{ID}",
+											"item": [
+												{
+													"name": "Lookup prefix info - GET /prefix",
+													"item": [
+														{
+															"name": "200 - OK GET/prefix/{ID}",
+															"event": [
+																{
+																	"listen": "test",
+																	"script": {
+																		"exec": [
+																			"pm.test(\"Status code is 200\", function () {",
+																			"    pm.response.to.have.status(200);",
+																			"});",
+																			"",
+																			""
+																		],
+																		"type": "text/javascript"
+																	}
+																}
+															],
+															"request": {
+																"method": "GET",
+																"header": [],
+																"url": {
+																	"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes/{{prefix_id}}",
+																	"host": [
+																		"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+																	],
+																	"path": [
+																		"prefixes",
+																		"{{prefix_id}}"
+																	]
+																},
+																"description": "The HTTP request `GET /mappings/{ID}` is used to retrieve information about a particular mapping (identified by its internal identifier)."
+															},
+															"response": []
+														},
+														{
+															"name": "400 - Bad Request - BUG",
+															"event": [
+																{
+																	"listen": "test",
+																	"script": {
+																		"exec": [
+																			"pm.test(\"Status code is 400\", function () {",
+																			"    pm.response.to.have.status(400);",
+																			"});"
+																		],
+																		"type": "text/javascript"
+																	}
+																}
+															],
+															"request": {
+																"method": "GET",
+																"header": [],
+																"url": {
+																	"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes/a",
+																	"host": [
+																		"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+																	],
+																	"path": [
+																		"prefixes",
+																		"a"
+																	]
+																},
+																"description": "The HTTP request `GET /mappings/{ID}` is used to retrieve information about a particular mapping (identified by its internal identifier)."
+															},
+															"response": []
+														}
+													]
+												},
+												{
+													"name": "Update Prefix - PUT /prefix/ID",
+													"item": [
+														{
+															"name": "200 - OK",
+															"request": {
+																"method": "PUT",
+																"header": [],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n    \"fspId\": \"demomfi\",\n    \"prefix\": 477\n}",
+																	"options": {
+																		"raw": {
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes/{{prefix_id}}",
+																	"host": [
+																		"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+																	],
+																	"path": [
+																		"prefixes",
+																		"{{prefix_id}}"
+																	]
+																}
+															},
+															"response": []
+														},
+														{
+															"name": "400 - Bad Request",
+															"request": {
+																"method": "PUT",
+																"header": [],
+																"url": {
+																	"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes/{{prefix_id}}",
+																	"host": [
+																		"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+																	],
+																	"path": [
+																		"prefixes",
+																		"{{prefix_id}}"
+																	]
+																}
+															},
+															"response": []
+														}
+													]
+												},
+												{
+													"name": "Delete Prefix - DEL /prefix/ID",
+													"item": [
+														{
+															"name": "200 - OK - No Content",
+															"event": [
+																{
+																	"listen": "prerequest",
+																	"script": {
+																		"exec": [
+																			"setTimeout(function () {",
+																			"    const addRequest = {",
+																			"        url: `${pm.environment.get(\"ACCOUNT_ORACLE_ADMIN_API_ENDPOINT\")}/prefixes`,",
+																			"        method: 'POST',",
+																			"        header: {",
+																			"            'Content-Type': 'application/json',",
+																			"            'fspiop-source': 'testing'",
+																			"        },",
+																			"        body: {",
+																			"            mode: 'raw',",
+																			"            raw: JSON.stringify({fspId: 'testing', prefix: 123})",
+																			"        }",
+																			"    };",
+																			"    pm.sendRequest(addRequest, (error, response) => {",
+																			"    console.log(error ? error : response.json());",
+																			"    pm.variables.set('addPrefixId',response.json().id)",
+																			"    });",
+																			"}, 2000)"
+																		],
+																		"type": "text/javascript"
+																	}
+																},
+																{
+																	"listen": "test",
+																	"script": {
+																		"exec": [
+																			"pm.test(\"Status code is 200\", function () {",
+																			"    pm.response.to.have.status(200);",
+																			"});"
+																		],
+																		"type": "text/javascript"
+																	}
+																}
+															],
+															"request": {
+																"method": "DELETE",
+																"header": [],
+																"url": {
+																	"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes/{{addPrefixId}}",
+																	"host": [
+																		"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+																	],
+																	"path": [
+																		"prefixes",
+																		"{{addPrefixId}}"
+																	]
+																}
+															},
+															"response": []
+														},
+														{
+															"name": "400 - Bad Request",
+															"event": [
+																{
+																	"listen": "test",
+																	"script": {
+																		"exec": [
+																			"pm.test(\"Status code is 400\", function () {",
+																			"    pm.response.to.have.status(400);",
+																			"});"
+																		],
+																		"type": "text/javascript"
+																	}
+																}
+															],
+															"request": {
+																"method": "DELETE",
+																"header": [],
+																"url": {
+																	"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes/1",
+																	"host": [
+																		"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+																	],
+																	"path": [
+																		"prefixes",
+																		"1"
+																	]
+																}
+															},
+															"response": []
+														}
+													]
+												}
+											]
+										},
+										{
+											"name": "Create prefix",
+											"item": [
+												{
+													"name": "Bad Requests",
+													"item": [
+														{
+															"name": "2 digit prefix - BUG",
+															"event": [
+																{
+																	"listen": "test",
+																	"script": {
+																		"exec": [
+																			"pm.test(\"Status code is 400\", function () {",
+																			"    pm.response.to.have.status(400);",
+																			"});"
+																		],
+																		"type": "text/javascript"
+																	}
+																}
+															],
+															"request": {
+																"method": "POST",
+																"header": [],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n    \"fspId\": \"testing\",\n    \"prefix\": 12\n}",
+																	"options": {
+																		"raw": {
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes",
+																	"host": [
+																		"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+																	],
+																	"path": [
+																		"prefixes"
+																	]
+																}
+															},
+															"response": []
+														},
+														{
+															"name": "4 digit prefix - BUG",
+															"event": [
+																{
+																	"listen": "test",
+																	"script": {
+																		"exec": [
+																			"pm.test(\"Status code is 400\", function () {",
+																			"    pm.response.to.have.status(400);",
+																			"});"
+																		],
+																		"type": "text/javascript"
+																	}
+																}
+															],
+															"request": {
+																"method": "POST",
+																"header": [],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n    \"fspId\": \"testing\",\n    \"prefix\": 1234\n}",
+																	"options": {
+																		"raw": {
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes",
+																	"host": [
+																		"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+																	],
+																	"path": [
+																		"prefixes"
+																	]
+																}
+															},
+															"response": []
+														},
+														{
+															"name": "String prefix - BUG",
+															"event": [
+																{
+																	"listen": "test",
+																	"script": {
+																		"exec": [
+																			"pm.test(\"Status code is 400\", function () {",
+																			"    pm.response.to.have.status(400);",
+																			"});"
+																		],
+																		"type": "text/javascript"
+																	}
+																}
+															],
+															"request": {
+																"method": "POST",
+																"header": [],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n    \"fspId\": \"testing\",\n    \"prefix\": \"123\"\n}",
+																	"options": {
+																		"raw": {
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes",
+																	"host": [
+																		"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+																	],
+																	"path": [
+																		"prefixes"
+																	]
+																}
+															},
+															"response": []
+														},
+														{
+															"name": "prefix to multiple fspIds - CLARIFY",
+															"event": [
+																{
+																	"listen": "test",
+																	"script": {
+																		"exec": [
+																			"pm.test(\"Status code is 400\", function () {",
+																			"    pm.response.to.have.status(400);",
+																			"});",
+																			"",
+																			"setTimeout(function () {",
+																			"    const delRequest = {",
+																			"        url: `${pm.environment.get(\"ACCOUNT_ORACLE_ADMIN_API_ENDPOINT\")}/prefixes/${pm.variables.get(originalPrefixId)}`,",
+																			"        method: 'DELETE'",
+																			"    };",
+																			"    pm.sendRequest(delRequest, (error, response) => {",
+																			"    console.log(error ? error : response.json());",
+																			"    });",
+																			"}, 2000)"
+																		],
+																		"type": "text/javascript"
+																	}
+																},
+																{
+																	"listen": "prerequest",
+																	"script": {
+																		"exec": [
+																			"setTimeout(function () {",
+																			"    const addRequest = {",
+																			"        url: `${pm.environment.get(\"ACCOUNT_ORACLE_ADMIN_API_ENDPOINT\")}/prefixes`,",
+																			"        method: 'POST',",
+																			"        header: {",
+																			"            'Content-Type': 'application/json',",
+																			"            'fspiop-source': 'testing'",
+																			"        },",
+																			"        body: {",
+																			"            mode: 'raw',",
+																			"            raw: JSON.stringify({fspId: 'testing', prefix: 123})",
+																			"        }",
+																			"    };",
+																			"    pm.sendRequest(addRequest, (error, response) => {",
+																			"    console.log(error ? error : response.json());",
+																			"    pm.variables.set('originalPrefixId', response.json().id);",
+																			"    });",
+																			"}, 2000)"
+																		],
+																		"type": "text/javascript"
+																	}
+																}
+															],
+															"request": {
+																"method": "POST",
+																"header": [],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n    \"fspId\": \"testing1\",\n    \"prefix\": \"123\"\n}",
+																	"options": {
+																		"raw": {
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes",
+																	"host": [
+																		"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+																	],
+																	"path": [
+																		"prefixes"
+																	]
+																}
+															},
+															"response": []
+														},
+														{
+															"name": "fspId to multiple prefix - BUG",
+															"event": [
+																{
+																	"listen": "test",
+																	"script": {
+																		"exec": [
+																			"// pm.test(\"Status code is 400\", function () {",
+																			"//     pm.response.to.have.status(400);",
+																			"// });",
+																			"",
+																			"// setTimeout(function () {",
+																			"//     const delRequest = {",
+																			"//         url: `${pm.environment.get(\"ACCOUNT_ORACLE_ADMIN_API_ENDPOINT\")}/prefixes/${pm.variables.get('originalPrefixId')}`,",
+																			"//         method: 'DELETE'",
+																			"//     };",
+																			"//     pm.sendRequest(delRequest, (error, response) => {",
+																			"//     console.log(error ? error : response.json());",
+																			"//     });",
+																			"// }, 2000)",
+																			"",
+																			"// setTimeout(function () {",
+																			"//     const delRequest = {",
+																			"//         url: `${pm.environment.get(\"ACCOUNT_ORACLE_ADMIN_API_ENDPOINT\")}/prefixes/${pm.response.json().id}`,",
+																			"//         method: 'DELETE'",
+																			"//     };",
+																			"//     pm.sendRequest(delRequest, (error, response) => {",
+																			"//     console.log(error ? error : response.json());",
+																			"//     });",
+																			"// }, 2000)"
+																		],
+																		"type": "text/javascript"
+																	}
+																},
+																{
+																	"listen": "prerequest",
+																	"script": {
+																		"exec": [
+																			"setTimeout(function () {",
+																			"    const addRequest = {",
+																			"        url: `${pm.environment.get(\"ACCOUNT_ORACLE_ADMIN_API_ENDPOINT\")}/prefixes`,",
+																			"        method: 'POST',",
+																			"        header: {",
+																			"            'Content-Type': 'application/json',",
+																			"            'fspiop-source': 'testing'",
+																			"        },",
+																			"        body: {",
+																			"            mode: 'raw',",
+																			"            raw: JSON.stringify({fspId: 'testing', prefix: 123})",
+																			"        }",
+																			"    };",
+																			"    pm.sendRequest(addRequest, (error, response) => {",
+																			"    console.log(error ? error : response.json());",
+																			"    pm.variables.set('originalPrefixId', response.json().id);",
+																			"    });",
+																			"}, 2000)"
+																		],
+																		"type": "text/javascript"
+																	}
+																}
+															],
+															"request": {
+																"method": "POST",
+																"header": [],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n    \"fspId\": \"testing\",\n    \"prefix\": \"345\"\n}",
+																	"options": {
+																		"raw": {
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes",
+																	"host": [
+																		"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+																	],
+																	"path": [
+																		"prefixes"
+																	]
+																}
+															},
+															"response": []
+														}
+													]
+												},
+												{
+													"name": "200 - add prefix",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {",
+																	"    pm.response.to.have.status(200);",
+																	"});",
+																	"",
+																	"const prefixId = pm.response.json().id;",
+																	"",
+																	"setTimeout(function () {",
+																	"    const delRequest = {",
+																	"        url: `${pm.environment.get(\"ACCOUNT_ORACLE_ADMIN_API_ENDPOINT\")}/prefixes/${prefixId}`,",
+																	"        method: 'DELETE'",
+																	"    };",
+																	"    pm.sendRequest(delRequest, (error, response) => {",
+																	"    console.log(error ? error : response.json());",
+																	"    });",
+																	"}, 2000)"
+																],
+																"type": "text/javascript"
+															}
+														},
+														{
+															"listen": "prerequest",
+															"script": {
+																"exec": [
+																	"setTimeout(function () {",
+																	"    const getRequest = {",
+																	"        url: `${pm.environment.get(\"ACCOUNT_ORACLE_ADMIN_API_ENDPOINT\")}/prefixes`,",
+																	"        method: 'GET',",
+																	"        header: {",
+																	"            'Content-Type': 'application/json',",
+																	"            'fspiop-source': 'testing'",
+																	"        }",
+																	"    };",
+																	"    pm.sendRequest(getRequest, (error, response) => {",
+																	"    console.log(error ? error : response.json());",
+																	"    response.json()",
+																	"                .filter(prefix => prefix.fspId==='testing')",
+																	"                .forEach(prefix => {",
+																	"                    setTimeout(function () {",
+																	"                        const delRequest = {",
+																	"                            url: `${pm.environment.get(\"ACCOUNT_ORACLE_ADMIN_API_ENDPOINT\")}/prefixes/${prefix.id}`,",
+																	"                            method: 'DELETE',",
+																	"                            header: {",
+																	"                                'Content-Type': 'application/json',",
+																	"                            }",
+																	"                        };",
+																	"                        pm.sendRequest(delRequest, (error, response) => {",
+																	"                            console.log(error ? error : response.json());",
+																	"                        });",
+																	"                    });",
+																	"                });",
+																	"    });",
+																	"}, 2000)"
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "POST",
+														"header": [],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n    \"fspId\": \"testing\",\n    \"prefix\": 112\n}",
+															"options": {
+																"raw": {
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes",
+															"host": [
+																"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+															],
+															"path": [
+																"prefixes"
+															]
+														}
+													},
+													"response": []
+												}
+											]
+										},
+										{
+											"name": "Get prefixes",
+											"item": [
+												{
+													"name": "200 - Success Request",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 200\", function () {",
+																	"    pm.response.to.have.status(200);",
+																	"});",
+																	"",
+																	"const responseData = pm.response.json();",
+																	"",
+																	"const testingObjectArr = responseData.filter(prefix => prefix.fspId === 'testing');",
+																	"console.log(testingObjectArr);",
+																	"pm.test('response contains testing object', function() {",
+																	"    pm.expect(testingObjectArr.length>0).to.be.true;",
+																	"});",
+																	"",
+																	"testingObjectArr.forEach(testingObject => {",
+																	"    setTimeout(function () {",
+																	"        const delRequest = {",
+																	"            url: `${pm.environment.get(\"ACCOUNT_ORACLE_ADMIN_API_ENDPOINT\")}/prefixes/${testingObject.id}`,",
+																	"            method: 'DELETE'",
+																	"        };",
+																	"        pm.sendRequest(delRequest, (error, response) => {",
+																	"        console.log(error ? error : response.json());",
+																	"        });",
+																	"    }, 2000)",
+																	"});",
+																	"",
+																	""
+																],
+																"type": "text/javascript"
+															}
+														},
+														{
+															"listen": "prerequest",
+															"script": {
+																"exec": [
+																	"setTimeout(function () {",
+																	"    const addRequest = {",
+																	"        url: `${pm.environment.get(\"ACCOUNT_ORACLE_ADMIN_API_ENDPOINT\")}/prefixes`,",
+																	"        method: 'POST',",
+																	"        header: {",
+																	"            'Content-Type': 'application/json',",
+																	"            'fspiop-source': 'testing'",
+																	"        },",
+																	"        body: {",
+																	"            mode: 'raw',",
+																	"            raw: JSON.stringify({fspId: 'testing', prefix: 123})",
+																	"        }",
+																	"    };",
+																	"    pm.sendRequest(addRequest, (error, response) => {",
+																	"    console.log(error ? error : response.json());",
+																	"    pm.variables.set('addPrefixId',response.json().id)",
+																	"    });",
+																	"}, 2000)"
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes",
+															"host": [
+																"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+															],
+															"path": [
+																"prefixes"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "400 - Bad Request",
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/prefixes",
+															"host": [
+																"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+															],
+															"path": [
+																"prefixes"
+															]
+														}
+													},
+													"response": []
+												}
+											]
+										}
+									]
+								},
+								{
+									"name": "Get server health",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/health",
+											"host": [
+												"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+											],
+											"path": [
+												"health"
+											]
+										},
+										"description": "The HTTP request GET /health is used to return the current status of the API."
+									},
+									"response": [
+										{
+											"name": "OK",
+											"originalRequest": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/health",
+													"host": [
+														"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+													],
+													"path": [
+														"health"
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n \"status\": \"exer\",\n \"uptime\": -52694664.57034242,\n \"startTime\": \"Ut qui ex\",\n \"versionNumber\": \"consectetur et\"\n}"
+										},
+										{
+											"name": "Bad Request",
+											"originalRequest": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}/health",
+													"host": [
+														"{{ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}}"
+													],
+													"path": [
+														"health"
+													]
+												}
+											},
+											"status": "Bad Request",
+											"code": 400,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Length",
+													"value": "-61464783",
+													"description": "The `Content-Length` header field indicates the anticipated size of the payload body.\nOnly sent if there is a body.\n**Note:** The API supports a maximum size of 5242880 bytes (5 Megabytes).\n"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n \"errorInformation\": {\n  \"errorCode\": \"7497\",\n  \"errorDescription\": \"This is an error description.\",\n  \"extensionList\": {\n   \"extension\": [\n    {\n     \"key\": \"dolor quis\",\n     \"value\": \"cillum sit sint occaecat\"\n    }\n   ]\n  }\n }\n}"
+										},
+										{
+											"name": "Unauthorized",
+											"originalRequest": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/health",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"health"
+													]
+												}
+											},
+											"status": "Unauthorized",
+											"code": 401,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Length",
+													"value": "-61464783",
+													"description": "The `Content-Length` header field indicates the anticipated size of the payload body.\nOnly sent if there is a body.\n**Note:** The API supports a maximum size of 5242880 bytes (5 Megabytes).\n"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n \"errorInformation\": {\n  \"errorCode\": \"7497\",\n  \"errorDescription\": \"This is an error description.\",\n  \"extensionList\": {\n   \"extension\": [\n    {\n     \"key\": \"dolor quis\",\n     \"value\": \"cillum sit sint occaecat\"\n    }\n   ]\n  }\n }\n}"
+										},
+										{
+											"name": "Forbidden",
+											"originalRequest": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/health",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"health"
+													]
+												}
+											},
+											"status": "Forbidden",
+											"code": 403,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Length",
+													"value": "-61464783",
+													"description": "The `Content-Length` header field indicates the anticipated size of the payload body.\nOnly sent if there is a body.\n**Note:** The API supports a maximum size of 5242880 bytes (5 Megabytes).\n"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n \"errorInformation\": {\n  \"errorCode\": \"7497\",\n  \"errorDescription\": \"This is an error description.\",\n  \"extensionList\": {\n   \"extension\": [\n    {\n     \"key\": \"dolor quis\",\n     \"value\": \"cillum sit sint occaecat\"\n    }\n   ]\n  }\n }\n}"
+										},
+										{
+											"name": "Not Found",
+											"originalRequest": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/health",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"health"
+													]
+												}
+											},
+											"status": "Not Found",
+											"code": 404,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Length",
+													"value": "-61464783",
+													"description": "The `Content-Length` header field indicates the anticipated size of the payload body.\nOnly sent if there is a body.\n**Note:** The API supports a maximum size of 5242880 bytes (5 Megabytes).\n"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n \"errorInformation\": {\n  \"errorCode\": \"7497\",\n  \"errorDescription\": \"This is an error description.\",\n  \"extensionList\": {\n   \"extension\": [\n    {\n     \"key\": \"dolor quis\",\n     \"value\": \"cillum sit sint occaecat\"\n    }\n   ]\n  }\n }\n}"
+										},
+										{
+											"name": "Method Not Allowed",
+											"originalRequest": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/health",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"health"
+													]
+												}
+											},
+											"status": "Method Not Allowed",
+											"code": 405,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Length",
+													"value": "-61464783",
+													"description": "The `Content-Length` header field indicates the anticipated size of the payload body.\nOnly sent if there is a body.\n**Note:** The API supports a maximum size of 5242880 bytes (5 Megabytes).\n"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n \"errorInformation\": {\n  \"errorCode\": \"7497\",\n  \"errorDescription\": \"This is an error description.\",\n  \"extensionList\": {\n   \"extension\": [\n    {\n     \"key\": \"dolor quis\",\n     \"value\": \"cillum sit sint occaecat\"\n    }\n   ]\n  }\n }\n}"
+										},
+										{
+											"name": "Not Acceptable",
+											"originalRequest": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/health",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"health"
+													]
+												}
+											},
+											"status": "Not Acceptable",
+											"code": 406,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Length",
+													"value": "-61464783",
+													"description": "The `Content-Length` header field indicates the anticipated size of the payload body.\nOnly sent if there is a body.\n**Note:** The API supports a maximum size of 5242880 bytes (5 Megabytes).\n"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n \"errorInformation\": {\n  \"errorCode\": \"7497\",\n  \"errorDescription\": \"This is an error description.\",\n  \"extensionList\": {\n   \"extension\": [\n    {\n     \"key\": \"dolor quis\",\n     \"value\": \"cillum sit sint occaecat\"\n    }\n   ]\n  }\n }\n}"
+										},
+										{
+											"name": "Not Implemented",
+											"originalRequest": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/health",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"health"
+													]
+												}
+											},
+											"status": "Not Implemented",
+											"code": 501,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Length",
+													"value": "-61464783",
+													"description": "The `Content-Length` header field indicates the anticipated size of the payload body.\nOnly sent if there is a body.\n**Note:** The API supports a maximum size of 5242880 bytes (5 Megabytes).\n"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n \"errorInformation\": {\n  \"errorCode\": \"7497\",\n  \"errorDescription\": \"This is an error description.\",\n  \"extensionList\": {\n   \"extension\": [\n    {\n     \"key\": \"dolor quis\",\n     \"value\": \"cillum sit sint occaecat\"\n    }\n   ]\n  }\n }\n}"
+										},
+										{
+											"name": "Service Unavailable",
+											"originalRequest": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/health",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"health"
+													]
+												}
+											},
+											"status": "Service Unavailable",
+											"code": 503,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Length",
+													"value": "-61464783",
+													"description": "The `Content-Length` header field indicates the anticipated size of the payload body.\nOnly sent if there is a body.\n**Note:** The API supports a maximum size of 5242880 bytes (5 Megabytes).\n"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n \"errorInformation\": {\n  \"errorCode\": \"7497\",\n  \"errorDescription\": \"This is an error description.\",\n  \"extensionList\": {\n   \"extension\": [\n    {\n     \"key\": \"dolor quis\",\n     \"value\": \"cillum sit sint occaecat\"\n    }\n   ]\n  }\n }\n}"
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "als-api",
+							"item": [
+								{
+									"name": "Look up participant information - GET /participants",
+									"item": [
+										{
+											"name": "Bad Requests",
+											"item": [
+												{
+													"name": "400 - Missing Header - BUG",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 400\", function () {",
+																	"    pm.response.to.have.status(400);",
+																	"});"
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "FSPIOP-Source",
+																"value": "test",
+																"type": "text"
+															}
+														],
+														"url": {
+															"raw": "{{ACCOUNT_ORACLE_ENDPOINT}}/participants/ACCOUNT_ID/47822222222",
+															"host": [
+																"{{ACCOUNT_ORACLE_ENDPOINT}}"
+															],
+															"path": [
+																"participants",
+																"ACCOUNT_ID",
+																"47822222222"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "400 - string prefix",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Status code is 400\", function () {",
+																	"    pm.response.to.have.status(400);",
+																	"});"
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{ACCOUNT_ORACLE_ENDPOINT}}/participants/ACCOUNT_ID/47822222222",
+															"host": [
+																"{{ACCOUNT_ORACLE_ENDPOINT}}"
+															],
+															"path": [
+																"participants",
+																"ACCOUNT_ID",
+																"47822222222"
+															]
+														}
+													},
+													"response": []
+												}
+											]
+										},
+										{
+											"name": "200 - OK",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Status code is 200\", function () {",
+															"    pm.response.to.have.status(200);",
+															"});",
+															"",
+															"var jsonData = pm.response.json();",
+															"",
+															"pm.test(\"Participant is demomfi\", function () {    ",
+															"    pm.expect(jsonData.partyList[0].fspId).to.eql(\"demomfi\");",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "FSPIOP-Source",
+														"value": "test",
+														"type": "text"
+													}
+												],
+												"url": {
+													"raw": "{{ACCOUNT_ORACLE_ENDPOINT}}/participants/ACCOUNT_ID/47822222222",
+													"host": [
+														"{{ACCOUNT_ORACLE_ENDPOINT}}"
+													],
+													"path": [
+														"participants",
+														"ACCOUNT_ID",
+														"47822222222"
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

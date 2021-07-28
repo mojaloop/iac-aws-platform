@@ -18,14 +18,14 @@ module "intgw" {
   source = "../modules/int-gw"
 
   kubeconfig       = "${var.project_root_path}/admin-gateway.conf"
-  namespace        = module.wso2_init.k8s_namespace
+  namespace        = var.wso2_namespace
   root_certificate = tls_self_signed_cert.ca_cert.cert_pem
   root_private_key = module.wso2_init.root_private_key
   keystore_password  = "wso2carbon"
   jws_password       = "wso2carbon"
   public_domain_name = data.terraform_remote_state.tenant.outputs.public_zone_name
   db_password        = var.wso2_mysql_password
-  contact_email      = "example@example.com"
+  contact_email      = "cicd@modusbox.com"
   iskm_fqdn          = data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn
   intgw_fqdn         = data.terraform_remote_state.infrastructure.outputs.intgw_private_fqdn
 }

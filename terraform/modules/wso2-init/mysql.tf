@@ -3,37 +3,45 @@ resource "helm_release" "mysql" {
   repository = "https://charts.helm.sh/stable"
   chart      = "mysql"
   version    = var.mysql_version
-  namespace  = "mysql-wso2"
+  namespace  = var.namespace
+  create_namespace = true
   set {
     name  = "mysqlRootPassword"
     value = var.db_root_password
+    type  = "string"
   }
 
   set {
     name  = "mysqlUser"
     value = var.db_username
+    type  = "string"
   }
   set {
     name  = "mysqlPassword"
     value = var.db_password
+    type  = "string"
   }
 
   set {
     name  = "mysqlDatabase"
     value = var.db_name
+    type  = "string"
   }
   set {
     name  = "persistence.storageClass"
     value = "slow"
+    type  = "string"
   }
 
   set {
     name  = "persistence.accessMode"
     value = "ReadWriteOnce"
+    type  = "string"
   }
   set {
     name  = "persistence.size"
     value = "8Gi"
+    type  = "string"
   }
   depends_on = [kubernetes_storage_class.wso2]
 }
@@ -41,7 +49,7 @@ resource "helm_release" "mysql" {
 resource "kubernetes_job" "mysql_int" {
   metadata {
     name      = "mysql-init-int"
-    namespace = "mysql-wso2"
+    namespace = var.namespace
   }
   spec {
     template {
@@ -64,7 +72,7 @@ resource "kubernetes_job" "mysql_int" {
 resource "kubernetes_job" "mysql_ext" {
   metadata {
     name      = "mysql-init-ext"
-    namespace = "mysql-wso2"
+    namespace = var.namespace
   }
   spec {
     template {

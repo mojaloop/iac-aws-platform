@@ -12,7 +12,7 @@ resource "vault_pki_secret_backend_role" "role-server-cert-simulators" {
   server_flag        = true
   client_flag        = false
   ou                 = ["Infrastructure Team"]
-  organization       = ["Infra"]
+  organization       = ["ModusBox"]
   # 2 years
   max_ttl = 63113904
   # 30 days
@@ -34,7 +34,7 @@ resource "vault_pki_secret_backend_role" "role-client-cert-simulators" {
   server_flag        = false
   client_flag        = true
   ou                 = ["Infrastructure Team"]
-  organization       = ["Infra"]
+  organization       = ["ModusBox"]
   # 2 years
   max_ttl = 63113904
   # 30 days

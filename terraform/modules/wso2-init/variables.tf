@@ -3,11 +3,6 @@ variable "kubeconfig" {
   type = string
 }
 
-variable "namespace" {
-  description = "Kubernetes Namespace to deploy ConfigMaps and Secrets"
-  type = string
-}
-
 variable "region" {
   description = "AWS Region used"
   type = string
@@ -66,4 +61,16 @@ variable "efs_subnet_id" {
 variable "efs_security_groups"  {
   description = "List of security group IDs to apply to the EFS. Must contain at least the sg id for the environment"
   type = list(string)
+}
+
+variable "efs_storage_class_name" {
+  description = "storage class name for efs"
+  type = string
+  default = "efs"
+}
+
+variable "namespace" {
+  description = "namespace to deploy to"
+  type = string
+  default = "wso2"
 }

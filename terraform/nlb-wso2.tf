@@ -1,8 +1,8 @@
 module "nlb_wso2" {
-  source = "git@github.com:mojaloop/iac-shared-modules.git//aws/nlb?ref=v0.0.2"
+  source = "git@github.com:modusintegration/terraform-shared-modules.git//aws/nlb?ref=v0.0.2"
 
   vpc_id = data.aws_vpc.selected.id
-  prefix = "wso2-${var.tenant}-${var.environment}"
+  prefix = "wso2-${var.client}-${var.environment}"
   nlb_listeners = [
     {
       target_port          = 9443
@@ -30,6 +30,26 @@ module "nlb_wso2" {
       deregistration_delay = 90
       interval             = 10
       health_port          = 8243
+      protocol             = "TCP"
+      healthy_threshold    = 3
+      unhealthy_threshold  = 3
+    },
+    {
+      target_port          = 30000
+      protocol             = "TCP"
+      deregistration_delay = 90
+      interval             = 10
+      health_port          = 30000
+      protocol             = "TCP"
+      healthy_threshold    = 3
+      unhealthy_threshold  = 3
+    },
+    {
+      target_port          = 80
+      protocol             = "TCP"
+      deregistration_delay = 90
+      interval             = 10
+      health_port          = 80
       protocol             = "TCP"
       healthy_threshold    = 3
       unhealthy_threshold  = 3

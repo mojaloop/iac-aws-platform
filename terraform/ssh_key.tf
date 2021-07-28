@@ -1,8 +1,8 @@
 resource "aws_key_pair" "provisioner_key" {
-  key_name   = "${var.name}-${var.environment}-deployer-key"
+  key_name   = "${var.client}-${var.environment}-deployer-key"
   public_key = tls_private_key.provisioner_key.public_key_openssh
 
-  tags = var.default_tags
+  tags = local.default_tags
 }
 
 resource "tls_private_key" "provisioner_key" {

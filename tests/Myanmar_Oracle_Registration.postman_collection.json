@@ -1,0 +1,368 @@
+{
+	"info": {
+		"_postman_id": "5d6db811-9d01-4875-b8ad-179d2c2d609d",
+		"name": "Myanmar_Oracle_Registration",
+		"description": "Author: Sridevi Miriyala\nPurpose: Used to add new FSP and relevant Callback Information. \nIn this collection we onboarded HUB accounts for the corresponding currency, payerfsp, payeefsp, testfsp1, testfsp2 sims.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Delete Mojaloop Provided Oracles",
+			"item": [
+				{
+					"name": "Delete Old Oracles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonData = pm.response.json();",
+									"",
+									"jsonData",
+									"    .filter(oracle => oracle.oracleIdType != 'MSISDN')",
+									"    .forEach(oracle => {",
+									"        setTimeout(function () {",
+									"            const delRequest = {",
+									"                url: `${pm.environment.get(\"HOST_SWITCH\")}/alsadmin/1.0/oracles/${oracle.oracleId}`,",
+									"                header: {",
+									"                    \"Authorization\": \"Bearer \" + pm.environment.get(\"HUB_OPERATOR_BEARER_TOKEN\"),",
+									"                    \"Date\": pm.environment.get(\"dateHeader\")",
+									"                },",
+									"                method: 'DELETE'",
+									"            };",
+									"            pm.sendRequest(delRequest, (error, response) => {",
+									"            console.log(error ? error : response.json());",
+									"            });",
+									"        }, 2000)",
+									"    });"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{HUB_OPERATOR_BEARER_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.interoperability.participants+json;version=1.0",
+								"type": "text"
+							},
+							{
+								"key": "Date",
+								"value": "{{dateHeader}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{HOST_ACCOUNT_LOOKUP_ADMIN}}/oracles",
+							"host": [
+								"{{HOST_ACCOUNT_LOOKUP_ADMIN}}"
+							],
+							"path": [
+								"oracles"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Register MMD specific Oracles",
+			"item": [
+				{
+					"name": "Register ALIAS Oracle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{HUB_OPERATOR_BEARER_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/vnd.interoperability.participants+json;version=1"
+							},
+							{
+								"key": "Cache-Control",
+								"value": "no-cache"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.interoperability.participants+json;version=1.0"
+							},
+							{
+								"key": "Date",
+								"value": ""
+							},
+							{
+								"key": "Postman-Token",
+								"value": "003d55c1-2ebc-4e25-b9da-26bf053a8a5c"
+							},
+							{
+								"key": "cache-control",
+								"value": "no-cache"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"oracleIdType\": \"ALIAS\",\n  \"endpoint\": {\n    \"value\": \"{{ALIAS_ORACLE_ENDPOINT}}\",\n    \"endpointType\": \"URL\"\n  },\n  \"currency\": \"{{currency}}\",\n  \"isDefault\": true\n}"
+						},
+						"url": {
+							"raw": "{{HOST_ACCOUNT_LOOKUP_ADMIN}}/oracles",
+							"host": [
+								"{{HOST_ACCOUNT_LOOKUP_ADMIN}}"
+							],
+							"path": [
+								"oracles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register ACCOUNT_ID Oracle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{HUB_OPERATOR_BEARER_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/vnd.interoperability.participants+json;version=1"
+							},
+							{
+								"key": "Cache-Control",
+								"value": "no-cache"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.interoperability.participants+json;version=1.0"
+							},
+							{
+								"key": "Date",
+								"value": ""
+							},
+							{
+								"key": "Postman-Token",
+								"value": "003d55c1-2ebc-4e25-b9da-26bf053a8a5c"
+							},
+							{
+								"key": "cache-control",
+								"value": "no-cache"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"oracleIdType\": \"ACCOUNT_ID\",\n  \"endpoint\": {\n    \"value\": \"{{ACCOUNT_ORACLE_ENDPOINT}}\",\n    \"endpointType\": \"URL\"\n  },\n  \"currency\": \"{{currency}}\",\n  \"isDefault\": true\n}"
+						},
+						"url": {
+							"raw": "{{HOST_ACCOUNT_LOOKUP_ADMIN}}/oracles",
+							"host": [
+								"{{HOST_ACCOUNT_LOOKUP_ADMIN}}"
+							],
+							"path": [
+								"oracles"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"if (pm.environment.get('WS02_OAUTH_ENABLED') === 'true') {",
+					"",
+					"    // Get Token for Hub Operator",
+					"    let authHeader = btoa(`${pm.environment.get('HUB_OPERATOR_CONSUMER_KEY')}:${pm.environment.get('HUB_OPERATOR_CONSUMER_SECRET')}`);",
+					"    let getTokenRequest = {",
+					"        url: pm.environment.get(\"HOST_SWITCH\") + '/token/',",
+					"        method: 'POST',",
+					"        header: {",
+					"            \"Authorization\": `Basic ${authHeader}`,",
+					"            'Content-Type': 'application/x-www-form-urlencoded',",
+					"        },",
+					"        body: {",
+					"            mode: 'urlencoded',",
+					"            urlencoded: [",
+					"                { key: \"grant_type\", value: \"client_credentials\", disabled: false },",
+					"            ]",
+					"        }",
+					"    };",
+					"    pm.sendRequest(getTokenRequest, function (err, response) {",
+					"        var jsonData = response.json();",
+					"        pm.environment.set('HUB_OPERATOR_BEARER_TOKEN', jsonData.access_token);",
+					"    });",
+					"",
+					"    // Get Token for Payerfsp",
+					"    authHeader = btoa(`${pm.environment.get('MPTDFSP_CONSUMER_KEY')}:${pm.environment.get('MPTDFSP_CONSUMER_SECRET')}`);",
+					"    getTokenRequest = {",
+					"        url: pm.environment.get(\"HOST_SWITCH\") + '/token/',",
+					"        method: 'POST',",
+					"        header: {",
+					"            \"Authorization\": `Basic ${authHeader}`,",
+					"            'Content-Type': 'application/x-www-form-urlencoded',",
+					"        },",
+					"        body: {",
+					"            mode: 'urlencoded',",
+					"            urlencoded: [",
+					"                { key: \"grant_type\", value: \"client_credentials\", disabled: false },",
+					"            ]",
+					"        }",
+					"    };",
+					"    pm.sendRequest(getTokenRequest, function (err, response) {",
+					"        var jsonData = response.json();",
+					"        pm.environment.set('MPTDFSP_BEARER_TOKEN', jsonData.access_token);",
+					"    });",
+					"",
+					"    // Get Token for Payeefsp",
+					"    authHeader = btoa(`${pm.environment.get('EASYDFSP_CONSUMER_KEY')}:${pm.environment.get('EASYDFSP_CONSUMER_SECRET')}`);",
+					"    getTokenRequest = {",
+					"        url: pm.environment.get(\"HOST_SWITCH\") + '/token/',",
+					"        method: 'POST',",
+					"        header: {",
+					"            \"Authorization\": `Basic ${authHeader}`,",
+					"            'Content-Type': 'application/x-www-form-urlencoded',",
+					"        },",
+					"        body: {",
+					"            mode: 'urlencoded',",
+					"            urlencoded: [",
+					"                { key: \"grant_type\", value: \"client_credentials\", disabled: false },",
+					"            ]",
+					"        }",
+					"    };",
+					"    pm.sendRequest(getTokenRequest, function (err, response) {",
+					"        var jsonData = response.json();",
+					"        pm.environment.set('EASYDFSP_BEARER_TOKEN', jsonData.access_token);",
+					"    });",
+					"",
+					"    // Get Token for Testfsp1",
+					"    authHeader = btoa(`${pm.environment.get('TESTFSP1_CONSUMER_KEY')}:${pm.environment.get('TESTFSP1_CONSUMER_SECRET')}`);",
+					"    getTokenRequest = {",
+					"        url: pm.environment.get(\"HOST_SWITCH\") + '/token/',",
+					"        method: 'POST',",
+					"        header: {",
+					"            \"Authorization\": `Basic ${authHeader}`,",
+					"            'Content-Type': 'application/x-www-form-urlencoded',",
+					"        },",
+					"        body: {",
+					"            mode: 'urlencoded',",
+					"            urlencoded: [",
+					"                { key: \"grant_type\", value: \"client_credentials\", disabled: false },",
+					"            ]",
+					"        }",
+					"    };",
+					"    pm.sendRequest(getTokenRequest, function (err, response) {",
+					"        var jsonData = response.json();",
+					"        pm.environment.set('TESTFSP1_BEARER_TOKEN', jsonData.access_token);",
+					"    });",
+					"",
+					"    // Get Token for Testfsp2",
+					"    authHeader = btoa(`${pm.environment.get('TESTFSP2_CONSUMER_KEY')}:${pm.environment.get('TESTFSP2_CONSUMER_SECRET')}`);",
+					"    getTokenRequest = {",
+					"        url: pm.environment.get(\"HOST_SWITCH\") + '/token/',",
+					"        method: 'POST',",
+					"        header: {",
+					"            \"Authorization\": `Basic ${authHeader}`,",
+					"            'Content-Type': 'application/x-www-form-urlencoded',",
+					"        },",
+					"        body: {",
+					"            mode: 'urlencoded',",
+					"            urlencoded: [",
+					"                { key: \"grant_type\", value: \"client_credentials\", disabled: false },",
+					"            ]",
+					"        }",
+					"    };",
+					"    pm.sendRequest(getTokenRequest, function (err, response) {",
+					"        var jsonData = response.json();",
+					"        pm.environment.set('TESTFSP2_BEARER_TOKEN', jsonData.access_token);",
+					"    });",
+					"",
+					"    // Get Token for Testfsp3",
+					"    authHeader = btoa(`${pm.environment.get('TESTFSP3_CONSUMER_KEY')}:${pm.environment.get('TESTFSP3_CONSUMER_SECRET')}`);",
+					"    getTokenRequest = {",
+					"        url: pm.environment.get(\"HOST_SWITCH\") + '/token/',",
+					"        method: 'POST',",
+					"        header: {",
+					"            \"Authorization\": `Basic ${authHeader}`,",
+					"            'Content-Type': 'application/x-www-form-urlencoded',",
+					"        },",
+					"        body: {",
+					"            mode: 'urlencoded',",
+					"            urlencoded: [",
+					"                { key: \"grant_type\", value: \"client_credentials\", disabled: false },",
+					"            ]",
+					"        }",
+					"    };",
+					"    pm.sendRequest(getTokenRequest, function (err, response) {",
+					"        var jsonData = response.json();",
+					"        pm.environment.set('TESTFSP3_BEARER_TOKEN', jsonData.access_token);",
+					"    });",
+					"",
+					"    // Get Token for Testfsp4",
+					"    authHeader = btoa(`${pm.environment.get('TESTFSP4_CONSUMER_KEY')}:${pm.environment.get('TESTFSP4_CONSUMER_SECRET')}`);",
+					"    getTokenRequest = {",
+					"        url: pm.environment.get(\"HOST_SWITCH\") + '/token/',",
+					"        method: 'POST',",
+					"        header: {",
+					"            \"Authorization\": `Basic ${authHeader}`,",
+					"            'Content-Type': 'application/x-www-form-urlencoded',",
+					"        },",
+					"        body: {",
+					"            mode: 'urlencoded',",
+					"            urlencoded: [",
+					"                { key: \"grant_type\", value: \"client_credentials\", disabled: false },",
+					"            ]",
+					"        }",
+					"    };",
+					"    pm.sendRequest(getTokenRequest, function (err, response) {",
+					"        var jsonData = response.json();",
+					"        pm.environment.set('TESTFSP4_BEARER_TOKEN', jsonData.access_token);",
+					"    });",
+					"",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

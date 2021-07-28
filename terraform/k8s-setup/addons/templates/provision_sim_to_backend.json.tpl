@@ -49,17 +49,17 @@
         },
         {
             "key": "NDC_THRESHOLD_BREACH_EMAIL",
-            "value": "iac-test-users@example.com",
+            "value": "iac-test-users@modusbox.com",
             "enabled": true
         },
         {
             "key": "NDC_ADJUSTMENT_EMAIL",
-            "value": "iac-test-users@example.com",
+            "value": "iac-test-users@modusbox.com",
             "enabled": true
         },
         {
             "key": "SETTLEMENT_TRANSFER_POSITION_CHANGE_EMAIL",
-            "value": "iac-test-users@example.com",
+            "value": "iac-test-users@modusbox.com",
             "enabled": true
         }
     ],

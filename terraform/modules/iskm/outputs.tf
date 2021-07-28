@@ -1,4 +1,4 @@
-output "helm_release" {
+output "helm_release_name" {
   description = "Name of Helm release"
   value = helm_release.app.name
 }

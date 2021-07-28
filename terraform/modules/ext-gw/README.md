@@ -17,13 +17,13 @@ module "extgw" {
   source = "../../modules/ext-gw"
 
   kubeconfig         = "${var.project_root_path}/admin-gateway.conf"
-  namespace          = module.wso2_init.k8s_namespace
+  namespace          = var.wso2_namespace
   root_certificate   = module.wso2_init.root_certificate
   root_private_key   = module.wso2_init.root_private_key
   keystore_password  = "wso2carbon"
   public_domain_name = data.terraform_remote_state.tenant.outputs.public_zone_name
   db_password        = var.wso2_mysql_password
-  contact_email      = "example@example.com"
+  contact_email      = "david.fry@modusbox.com"
   iskm_fqdn          = data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn
   extgw_fqdn         = data.terraform_remote_state.infrastructure.outputs.extgw_public_fqdn
   helm_release       = module.iskm.helm_release

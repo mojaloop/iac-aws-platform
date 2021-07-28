@@ -1,0 +1,107 @@
+[
+  {
+    "DFSP_NAME": "emoments",
+    "DFSP_CURRENCY": "UGX",
+    "DFSP_MSISDN": "256111111111",
+    "DFSP_BUSINESS_ID": "emomentsMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "yougandaltd",
+    "DFSP_CURRENCY": "UGX",
+    "DFSP_MSISDN": "256222222222",
+    "DFSP_BUSINESS_ID": "yougandaltdMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "teamspec",
+    "DFSP_CURRENCY": "UGX",
+    "DFSP_MSISDN": "256333333333",
+    "DFSP_BUSINESS_ID": "teamspecMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "wsacco",
+    "DFSP_CURRENCY": "UGX",
+    "DFSP_MSISDN": "256444444444",
+    "DFSP_BUSINESS_ID": "wsaccoMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "kanzucodeladies",
+    "DFSP_CURRENCY": "UGX",
+    "DFSP_MSISDN": "256555555555",
+    "DFSP_BUSINESS_ID": "kanzucodeMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "greengrab",
+    "DFSP_CURRENCY": "ZMW",
+    "DFSP_MSISDN": "260111111111",
+    "DFSP_BUSINESS_ID": "greengrabMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "achors",
+    "DFSP_CURRENCY": "ZMW",
+    "DFSP_MSISDN": "260222222222",
+    "DFSP_BUSINESS_ID": "achorsMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "ugmart",
+    "DFSP_CURRENCY": "ZMW",
+    "DFSP_MSISDN": "260333333333",
+    "DFSP_BUSINESS_ID": "ugmartMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "hackgirls",
+    "DFSP_CURRENCY": "ZMW",
+    "DFSP_MSISDN": "260444444444",
+    "DFSP_BUSINESS_ID": "hackgirlsMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "kameeza",
+    "DFSP_CURRENCY": "ZMW",
+    "DFSP_MSISDN": "260555555555",
+    "DFSP_BUSINESS_ID": "kameezaMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "alpteqictso",
+    "DFSP_CURRENCY": "EUR",
+    "DFSP_MSISDN": "978111111111",
+    "DFSP_BUSINESS_ID": "alpteqictsoMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "affinity",
+    "DFSP_CURRENCY": "EUR",
+    "DFSP_MSISDN": "978222222222",
+    "DFSP_BUSINESS_ID": "affinityMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "skycode",
+    "DFSP_CURRENCY": "EUR",
+    "DFSP_MSISDN": "978333333333",
+    "DFSP_BUSINESS_ID": "skycodeMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "teamtime",
+    "DFSP_CURRENCY": "EUR",
+    "DFSP_MSISDN": "978444444444",
+    "DFSP_BUSINESS_ID": "teamtimeMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  },
+  {
+    "DFSP_NAME": "kuzimba",
+    "DFSP_CURRENCY": "EUR",
+    "DFSP_MSISDN": "978555555555",
+    "DFSP_BUSINESS_ID": "kuzimbaMerchant",
+    "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com"
+  }
+]

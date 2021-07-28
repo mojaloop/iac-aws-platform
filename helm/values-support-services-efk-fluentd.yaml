@@ -1,3 +1,8 @@
+# Default values for mojaloop-efk.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
 image:
   repository: quay.io/fluentd_elasticsearch/fluentd
   ## Specify an imagePullPolicy (Required)
@@ -36,8 +41,7 @@ hostLogDir:
 ## Configure resource requests and limits
 ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
 ##
-resources:
-  {}
+resources: {}
   # limits:
   #   cpu: 100m
   #   memory: 500Mi
@@ -94,8 +98,7 @@ serviceAccount:
 ##
 podSecurityPolicy:
   enabled: false
-  annotations:
-    {}
+  annotations: {}
     ## Specify pod annotations
     ## Ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/#apparmor
     ## Ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/#seccomp
@@ -110,8 +113,7 @@ livenessProbe:
 
 annotations: {}
 
-podAnnotations:
-  {}
+podAnnotations: {}
   # prometheus.io/scrape: "true"
 # prometheus.io/port: "24231"
 
@@ -120,14 +122,12 @@ podAnnotations:
 updateStrategy:
   type: RollingUpdate
 
-tolerations:
-  {}
+tolerations: {}
   # - key: node-role.kubernetes.io/master
   #   operator: Exists
 #   effect: NoSchedule
 
-affinity:
-  {}
+affinity: {}
   # nodeAffinity:
   #   requiredDuringSchedulingIgnoredDuringExecution:
   #     nodeSelectorTerms:
@@ -179,10 +179,10 @@ configMaps:
 
 # can be used to add new config or overwrite the default configmaps completely after the configmaps default has been disabled above
 extraConfigMaps:
-  #   system.conf: |-
-  #     <system>
-  #       root_dir /tmp/fluentd-buffers/
-  #     </system>
+#   system.conf: |-
+#     <system>
+#       root_dir /tmp/fluentd-buffers/
+#     </system>
   forward.input.conf: |-
     # Forwards the messages sent over TCP and sends it to elasticsearch - https://docs.fluentd.org/input/forward
     <source>
@@ -194,17 +194,22 @@ extraConfigMaps:
   # kafka.output.conf: |-
   #   <match **>
   #     @type kafka_buffered
+
   #     # list of seed brokers
   #     brokers "#{ENV['KAFKA_OUTPUT_HOST']}":"#{ENV['KAFKA_OUTPUT_PORT']}"
+
   #     # buffer settings
   #     buffer_type file
   #     buffer_path /var/log/td-agent/buffer/td
   #     flush_interval 3s
+
   #     # topic settings
   #     default_topic log_messages
+
   #     # data type settings
   #     output_data_type json
   #     compression_codec gzip
+
   #     # producer settings
   #     max_send_retries 1
   #     required_acks -1

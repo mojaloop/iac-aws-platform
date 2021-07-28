@@ -1,6 +1,6 @@
 productVersion: 5.7.0
 image:
-  tag: v1.2.0
+  tag: v1.2.1
   pullPolicy: IfNotPresent
 persistentVolume:
   pvEnabled: false

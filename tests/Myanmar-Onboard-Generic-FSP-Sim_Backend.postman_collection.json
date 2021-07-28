@@ -1,0 +1,299 @@
+{
+	"info": {
+		"_postman_id": "f4ee8e3e-fd6e-4ab8-8991-a5144e633bf7",
+		"name": "Myanmar-Onboard-Generic-FSP-Sim_Backend",
+		"description": "Author: Kamuela Franco\nPurpose: Used to add new FSP and relevant Callback Information",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "add_users",
+			"item": [
+				{
+					"name": "Add {{DFSP_MSISDN}} to DFSP",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set('fullName', 'DemoWalletFirst DemoWalletLast');",
+									"pm.environment.set('firstName', 'DemoWalletFirst');",
+									"pm.environment.set('middleName', 'DemoWalletMiddle');",
+									"pm.environment.set('lastName', 'DemoWalletLast');",
+									"pm.environment.set('dob', '2010-10-10');"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([204,200, 500]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"displayName\": \"{{fullName}}\",\n    \"firstName\": \"{{firstName}}\",\n    \"middleName\": \"{{middleName}}\",\n    \"lastName\": \"{{lastName}}\",\n    \"dateOfBirth\": \"{{dob}}\",\n    \"idType\": \"MSISDN\",\n    \"idValue\": \"{{DFSP_MSISDN}}\"\n}"
+						},
+						"url": {
+							"raw": "{{GENERIC_DFSP_BACKEND_TESTAPI_URL}}/repository/parties",
+							"host": [
+								"{{GENERIC_DFSP_BACKEND_TESTAPI_URL}}"
+							],
+							"path": [
+								"repository",
+								"parties"
+							]
+						},
+						"description": "Create a party in payeefsp. So that GET /parties can be successful."
+					},
+					"response": [
+						{
+							"name": "An error occured processing the request",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"displayName\": \"<string>\",\n    \"firstName\": \"<string>\",\n    \"middleName\": \"<string>\",\n    \"lastName\": \"<string>\",\n    \"dateOfBirth\": \"<string>\",\n    \"merchantClassificationCode\": \"<string>\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/repository/parties",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"repository",
+										"parties"
+									]
+								}
+							},
+							"status": "Internal Server Error",
+							"code": 500,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/plain"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						},
+						{
+							"name": "The party was created",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"displayName\": \"<string>\",\n    \"firstName\": \"<string>\",\n    \"middleName\": \"<string>\",\n    \"lastName\": \"<string>\",\n    \"dateOfBirth\": \"<string>\",\n    \"merchantClassificationCode\": \"<string>\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/repository/parties",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"repository",
+										"parties"
+									]
+								}
+							},
+							"status": "No Content",
+							"code": 204,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/plain"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"name": "Add {{DFSP_ACCOUNT_ID} to DFSP",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set('fullName', 'DemoWalletFirst DemoWalletLast');",
+									"pm.environment.set('firstName', 'DemoWalletFirst');",
+									"pm.environment.set('middleName', 'DemoWalletMiddle');",
+									"pm.environment.set('lastName', 'DemoWalletLast');",
+									"pm.environment.set('dob', '2010-10-10');"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([204,200, 500]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"displayName\": \"{{fullName}}\",\n    \"firstName\": \"{{firstName}}\",\n    \"middleName\": \"{{middleName}}\",\n    \"lastName\": \"{{lastName}}\",\n    \"dateOfBirth\": \"{{dob}}\",\n    \"idType\": \"ACCOUNT_ID\",\n    \"idValue\": \"{{DFSP_ACCOUNT_ID}}\"\n}"
+						},
+						"url": {
+							"raw": "{{GENERIC_DFSP_BACKEND_TESTAPI_URL}}/repository/parties",
+							"host": [
+								"{{GENERIC_DFSP_BACKEND_TESTAPI_URL}}"
+							],
+							"path": [
+								"repository",
+								"parties"
+							]
+						},
+						"description": "Create a party in payeefsp. So that GET /parties can be successful."
+					},
+					"response": [
+						{
+							"name": "The party was created",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"displayName\": \"<string>\",\n    \"firstName\": \"<string>\",\n    \"middleName\": \"<string>\",\n    \"lastName\": \"<string>\",\n    \"dateOfBirth\": \"<string>\",\n    \"merchantClassificationCode\": \"<string>\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/repository/parties",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"repository",
+										"parties"
+									]
+								}
+							},
+							"status": "No Content",
+							"code": 204,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/plain"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						},
+						{
+							"name": "An error occured processing the request",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"displayName\": \"<string>\",\n    \"firstName\": \"<string>\",\n    \"middleName\": \"<string>\",\n    \"lastName\": \"<string>\",\n    \"dateOfBirth\": \"<string>\",\n    \"merchantClassificationCode\": \"<string>\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/repository/parties",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"repository",
+										"parties"
+									]
+								}
+							},
+							"status": "Internal Server Error",
+							"code": 500,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/plain"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

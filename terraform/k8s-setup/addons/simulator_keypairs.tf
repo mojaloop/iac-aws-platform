@@ -10,7 +10,7 @@ resource "tls_self_signed_cert" "simulators" {
 
   subject {
     common_name  = each.value
-    organization = "Infra"
+    organization = "ModusBox"
   }
 
   validity_period_hours = 10000

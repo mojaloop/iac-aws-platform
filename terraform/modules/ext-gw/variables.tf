@@ -50,7 +50,7 @@ variable "db_port" {
 variable "db_user" {
   description = "User name used to access DB service"
   type = string
-  default = "root"
+  default = "wso2"
 }
 
 variable "db_password" {
@@ -70,11 +70,6 @@ variable "iskm_fqdn" {
 
 variable "extgw_fqdn" {
   description = "FQDN of Ext GW service"
-  type = string
-}
-
-variable "helm_release" {
-  description = "Helm Release name for ISKM"
   type = string
 }
 
@@ -113,7 +108,28 @@ variable "vault_sim_wl_secret_file_name" {
   type = string
 }
 
+variable "vault_pm4ml_wl_secret_name" {
+  description = "secret name for pm4mls after secret/"
+  type = string
+}
+
+variable "vault_pm4ml_wl_secret_file_name" {
+  description = "name of file to write for pm4ml secrets"
+  type = string
+}
+
 variable "wso2_admin_pw" {
   description = "admin password for wso2"
+  type = string
+}
+
+variable "efs_storage_class_name" {
+  description = "storage class name for efs"
+  type = string
+  default = "efs"
+}
+
+variable "wso2_iskm_helm_name" {
+  description = "placeholder to force dependency"
   type = string
 }

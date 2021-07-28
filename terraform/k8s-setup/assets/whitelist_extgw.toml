@@ -5,12 +5,12 @@ uid = 0
 gid = 0
 mode = "0644"
 keys = [
-  "whitelist_fsp",
+  "whitelist_fsps",
+  "whitelist_pm4mls",
   "whitelist_nat",
   "whitelist_addons",
   "whitelist_vpn",
-  "whitelist_mojaloop",
-  "whitelist_support_services",
+  "whitelist_gateway",
   "whitelist_sims"
 ]
 #check_cmd = "haproxy check new config  {{.src}}" - Might be handy in the future but not for now

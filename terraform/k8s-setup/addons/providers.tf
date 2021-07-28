@@ -1,13 +1,15 @@
 terraform {
-  required_version = ">= 0.12.6"
+  required_version = ">= 0.13.5"
   backend "s3" {
     key = "##environment##/terraform-k8s-postinstall.tfstate"
   }
   required_providers {
     helm = {
       source = "hashicorp/helm"
-      # force Helm v2 usage
-      version = "~> 0.10.6"
+      version = "~> 1.2.4"
+    }
+    kubernetes = {
+      version = "~> 1.13.3"
     }
   }
 }
@@ -26,7 +28,6 @@ provider "helm" {
 }
 
 provider "kubernetes" {
-  version     = "~> 1.13"
   config_path = "${var.project_root_path}/admin-add-ons.conf"
 }
 
@@ -34,7 +35,7 @@ data "terraform_remote_state" "infrastructure" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.tenant}-mojaloop-state"
+    bucket = "${var.client}-mojaloop-state"
     key    = "${var.environment}/terraform.tfstate"
   }
 }
@@ -43,7 +44,7 @@ data "terraform_remote_state" "k8s-base" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.tenant}-mojaloop-state"
+    bucket = "${var.client}-mojaloop-state"
     key    = "${var.environment}/terraform-k8s.tfstate"
   }
 }
@@ -52,17 +53,8 @@ data "terraform_remote_state" "tenant" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.tenant}-mojaloop-state"
+    bucket = "${var.client}-mojaloop-state"
     key    = "bootstrap/terraform.tfstate"
-  }
-}
-
-data "terraform_remote_state" "sdk" {
-  backend = "s3"
-  config = {
-    region = var.region
-    bucket = "${var.tenant}-mojaloop-state"
-    key    = "${var.environment}/sdk_vms.tfstate"
   }
 }
 

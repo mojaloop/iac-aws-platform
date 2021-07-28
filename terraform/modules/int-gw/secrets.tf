@@ -11,9 +11,9 @@ resource "tls_cert_request" "wso2" {
 
   subject {
     common_name         = "${var.hostname}.${var.public_domain_name}"
-    organization        = "Self Signed"
+    organization        = "MBX Self Signed"
     country             = "US"
-    organizational_unit = "infra team"
+    organizational_unit = "modusbox infra team"
   }
 }
 
@@ -47,9 +47,9 @@ resource "tls_cert_request" "jws" {
 
   subject {
     common_name         = "${var.hostname}.${var.public_domain_name}"
-    organization        = "Self Signed"
+    organization        = "MBX Self Signed"
     country             = "US"
-    organizational_unit = "infra team"
+    organizational_unit = "modusbox infra team"
   }
 }
 
@@ -77,11 +77,11 @@ resource "kubernetes_secret" "secrets" {
     namespace = var.namespace
   }
   data = {
-    "key.pem"          = tls_private_key.wso2.private_key_pem
-    "cert.pem"         = tls_locally_signed_cert.wso2.cert_pem
-    "root_ca.pem"      = var.root_certificate
+    "key.pem"     = tls_private_key.wso2.private_key_pem
+    "cert.pem"    = tls_locally_signed_cert.wso2.cert_pem
+    "root_ca.pem" = var.root_certificate
     "jws_priv_key.pem" = tls_private_key.jws.private_key_pem
-    "jws_cert.pem"     = tls_locally_signed_cert.jws.cert_pem
+    "jws_cert.pem" = tls_locally_signed_cert.jws.cert_pem
   }
   type = "Opaque"
 }

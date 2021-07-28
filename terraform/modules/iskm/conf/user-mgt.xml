@@ -55,7 +55,7 @@
             <Property name="RolenameJavaRegEx">^[\S]{3,30}$</Property>
             <Property name="RolenameJavaScriptRegEx">^[\S]{3,30}$</Property>
             <Property name="CaseInsensitiveUsername">true</Property>
-            <Property name="SCIMEnabled">false</Property>
+            <Property name="SCIMEnabled">true</Property>
             <Property name="IsBulkImportSupported">true</Property>
             <Property name="PasswordDigest">SHA-256</Property>
             <Property name="StoreSaltedPassword">true</Property>

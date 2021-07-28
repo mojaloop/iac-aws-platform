@@ -50,7 +50,7 @@ variable "db_port" {
 variable "db_user" {
   description = "User name used to access DB service"
   type = string
-  default = "root"
+  default = "wso2"
 }
 
 variable "db_password" {
@@ -82,3 +82,4 @@ variable "wso2_admin_pw" {
   description = "admin password for wso2"
   type = string
 }
+

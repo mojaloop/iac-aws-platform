@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 0.12.19"
+  required_version = ">= 0.13.3"
   backend "s3" {
     key     = "##environment##/wso2/extgw/terraform.tfstate"
     encrypt = true
@@ -26,7 +26,7 @@ data "terraform_remote_state" "environment" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.tenant}-mojaloop-state"
+    bucket = "${var.client}-mojaloop-state"
     key    = "${var.environment}/terraform.tfstate"
   }
 }
@@ -35,7 +35,7 @@ data "terraform_remote_state" "mojaloop" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.tenant}-mojaloop-state"
+    bucket = "${var.client}-mojaloop-state"
     key    = "${var.environment}/terraform-k8s.tfstate"
   }
 }
@@ -43,8 +43,8 @@ data "terraform_remote_state" "mojaloop" {
 resource "ansible_host" "api_publisher" {
   inventory_hostname = "localhost"
   vars = {
-    env_domain    = data.terraform_remote_state.environment.outputs.public_subdomain
-    ml_version    = "v${data.terraform_remote_state.mojaloop.outputs.helm_mojaloop_version}"
+    env_domain = data.terraform_remote_state.environment.outputs.public_subdomain
+    ml_version = "v${data.terraform_remote_state.mojaloop.outputs.helm_mojaloop_version}"
     wso2_admin_pw = data.vault_generic_secret.ws02_admin_password.data.value
   }
 }

@@ -26,6 +26,7 @@ resource "aws_instance" "k8s-master" {
       "Name"                                              = "${var.environment}-kubernetes-master${count.index}"
       "kubernetes.io/cluster/${var.environment}-mojaloop" = "member"
       "Role"                                              = "master"
+      "k8s-cluster"                                       = "${var.name}"
     },
   )
 }
@@ -60,22 +61,23 @@ resource "aws_instance" "k8s-worker" {
       "Name"                                              = "${var.environment}-kubernetes-worker${count.index}"
       "kubernetes.io/cluster/${var.environment}-mojaloop" = "member"
       "Role"                                              = "worker"
+      "k8s-cluster"                                       = "${var.name}"
     },
   )
 }
 
 resource "aws_volume_attachment" "ebs_att" {
-  device_name = var.gluster_device_name
+  device_name = var.ebs_device_name
   count       = var.kube_worker_num
-  volume_id   = aws_ebs_volume.glusterfs[count.index].id
+  volume_id   = aws_ebs_volume.slowfs[count.index].id
   instance_id = aws_instance.k8s-worker[count.index].id
 }
 
 
-resource "aws_ebs_volume" "glusterfs" {
+resource "aws_ebs_volume" "slowfs" {
   count             = var.kube_worker_num
   availability_zone = var.availability_zone
-  size              = var.gluster_volume_size
+  size              = var.ebs_volume_size
 }
 
 resource "aws_instance" "haproxy" {
@@ -93,15 +95,13 @@ resource "aws_instance" "haproxy" {
   tags = merge(
     var.default_tags,
     {
-      Name = "haproxy-${var.environment}"
+      Name = "haproxy-${var.name}"
     }
   )
 }
 
-data "template_file" "inventory" {
-  template = file("${path.module}/templates/inventory.tpl")
-
-  vars = {
+resource "local_file" "inventory_file" {
+  content = templatefile("${path.module}/templates/inventory.tpl", {
     connection_strings_master = join(
       "\n",
       formatlist(
@@ -118,30 +118,11 @@ data "template_file" "inventory" {
         aws_instance.k8s-worker.*.private_ip,
       ),
     )
-    connection_strings_balancer = var.haproxy_enabled ? join(
-      "\n",
-      formatlist(
-        "%s ansible_host=%s",
-        aws_instance.haproxy.*.tags.Name,
-        aws_instance.haproxy.*.private_ip,
-      ),
-    ) : ""
 
     list_master   = join("\n", aws_instance.k8s-master.*.private_dns)
     list_node     = join("\n", aws_instance.k8s-worker.*.private_dns)
-    list_balancer = var.haproxy_enabled ? join("\n", aws_instance.haproxy.*.tags.Name) : ""
-  }
-}
-
-resource "null_resource" "inventories" {
-  provisioner "local-exec" {
-    command = "echo '${data.template_file.inventory.rendered}' > ${var.inventory_file}"
-  }
-
-  triggers = {
-    template = data.template_file.inventory.rendered
-    checksum = uuid()
-  }
+  })
+  filename   = "${path.root}/${var.inventory_file}"
 }
 
 resource "aws_route53_record" "k8-masters" {
@@ -150,7 +131,7 @@ resource "aws_route53_record" "k8-masters" {
   name    = "k8-master-${var.name}-${count.index}.${var.route53_private_zone_name}"
   type    = "A"
   ttl     = "300"
-  records = [element(aws_instance.k8s-master.*.private_ip, count.index)]
+  records = ["${element(aws_instance.k8s-master.*.private_ip, count.index)}"]
 }
 
 resource "aws_route53_record" "k8-workers" {
@@ -164,7 +145,7 @@ resource "aws_route53_record" "k8-workers" {
 }
 
 resource "aws_route53_record" "k8-haproxy" {
-  count = var.haproxy_enabled ? length(var.haproxy_aliases) : 0
+  count   = var.haproxy_enabled ? length(var.haproxy_aliases) : 0
 
   zone_id = var.route53_private_zone_id
   name    = "${var.haproxy_aliases[count.index]}.${var.route53_private_zone_name}"

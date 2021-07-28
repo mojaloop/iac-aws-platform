@@ -67,21 +67,21 @@ variable "ssh_key_name" {
 
 variable "master_root_volume_size" {
   description = "size of the root volume for master servers"
-  default = 15
+  default = 100
 }
 
 variable "workers_root_volume_size" {
   description = "size of the root volume for workers servers"
-  default = 15
+  default = 100
 }
 
-variable "gluster_volume_size" {
-  description = "size of the volume for gluster"
-  default = 40
+variable "ebs_volume_size" {
+  description = "size of the volume for ebs"
+  default = 100
 }
 
-variable "gluster_device_name" {
-  description = "device name for gluster"
+variable "ebs_device_name" {
+  description = "device name for ebs"
   default = "/dev/sdh"
 }
 

@@ -67,8 +67,8 @@ ingress:
     # kubernetes.io/tls-acme: "true"
   labels: {}
   path: /
-  # hosts defined durng deployment
-  hosts: []
+  hosts:
+    - dev0-grafana.mojaloop.live
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -162,11 +162,6 @@ datasources:
   datasources.yaml:
     apiVersion: 1
     datasources:
-    - name: SupportServices
-      type: prometheus
-      url: ${prom-sup-service-url}
-      access: proxy
-      isDefault: false
     - name: Mojaloop
       type: prometheus
       url: ${prom-mojaloop-url}
@@ -175,11 +170,6 @@ datasources:
     - name: Add-Ons
       type: prometheus
       url: ${prom-add-ons-url}
-      access: proxy
-      isDefault: false
-    - name: Gateway
-      type: prometheus
-      url: ${prom-gateway-url}
       access: proxy
       isDefault: false
 

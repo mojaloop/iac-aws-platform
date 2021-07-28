@@ -1,10 +1,41 @@
+ingress:
+  ingressPathRewriteRegex: "(/|$)(.*)"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+
 simulators:
   ${name}:
     ingress:
       enabled: "${INGRESS_ENABLED}"
       hosts: ["${INGRESS_HOST}"]
     config:
+      schemeAdapter:
+        env:
+          SIM_BACKEND_SERVICE_NAME: ${SIM_BACKEND_SERVICE_NAME}
+          SIM_CACHE_SERVICE_NAME: ${SIM_CACHE_SERVICE_NAME}
+          JWS_SIGN: true
+          PEER_ENDPOINT: ${PEER_ENDPOINT}
+          DFSP_ID: ${name}
+          ILP_SECRET: "Quaixohyaesahju3thivuiChai5cahng"
+          AUTO_ACCEPT_QUOTES: true
+          AUTO_ACCEPT_PARTY: true
+          USE_QUOTE_SOURCE_FSP_AS_TRANSFER_PAYEE_FSP: true
+          INBOUND_MUTUAL_TLS_ENABLED: false
+          OUTBOUND_MUTUAL_TLS_ENABLED: true
+          VALIDATE_INBOUND_JWS: false
+          OAUTH_CLIENT_KEY: ${OAUTH_CLIENT_KEY}
+          OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET}
+          OAUTH_TOKEN_ENDPOINT: ${OAUTH_TOKEN_ENDPOINT}
+        secrets:
+          jws:
+            privKeySecretName: ${PRIV_KEY_SECRET_NAME}
+            publicKeyConfigMapName: ${PUBLIC_KEY_CONFIG_MAP_NAME}
+          tlsSecretName: ${TLS_SECRET_NAME}
       backend:
+        env:
+          SIM_SCHEME_ADAPTER_SERVICE_NAME: ${SIM_SCHEME_ADAPTER_SERVICE_NAME}
+          SIM_CACHE_SERVICE_NAME: ${SIM_CACHE_SERVICE_NAME}
         rules: |-
           [
             {
@@ -314,5 +345,4 @@ simulators:
               }
             }
           ]
-        env:
-          FEE_MULTIPLIER: "0.00"
+

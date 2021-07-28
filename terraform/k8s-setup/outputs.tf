@@ -8,14 +8,24 @@ output "iskm_cert" {
   sensitive = true
 }
 
-output "whitelist_secret_name" {
-  value = "${var.whitelist_secret_name_prefix}_fsp"
+output "fsp_whitelist_secret_name" {
+  value = "${var.whitelist_secret_name_prefix}_fsps"
 }
-
+output "pm4ml_whitelist_secret_name" {
+  value = "${var.whitelist_secret_name_prefix}_pm4mls"
+}
 output "sim_whitelist_secret_name" {
   value = "${var.whitelist_secret_name_prefix}_sims"
 }
-
+output "sim_onboarding_secret_name" {
+  value = "${var.onboarding_secret_name_prefix}_sims"
+}
+output "pm4ml_onboarding_secret_name" {
+  value = "${var.onboarding_secret_name_prefix}_pm4mls"
+}
+output "fsp_onboarding_secret_name" {
+  value = "${var.onboarding_secret_name_prefix}_fsps"
+}
 output "ca_cert_cert_pem" {
   value     = tls_self_signed_cert.ca_cert.cert_pem
   sensitive = true
@@ -64,4 +74,27 @@ output "helm_mojaloop_version" {
 output "switch_jws_key" {
   description = "switch JWS key"
   value       = module.intgw.jws_key
+}
+
+output "haproxy_extgw_cert" {
+  value       = "${vault_pki_secret_backend_cert.extgw.certificate}\n${vault_pki_secret_backend_root_sign_intermediate.intermediate.certificate}\n${tls_self_signed_cert.ca_cert.cert_pem}"
+  sensitive   = true
+  description = "cert chain that haproxy advertises for ssl offloading for extgw"
+}
+
+output "finance_portal_users" {
+  value       = {
+    for user in var.finance_portal_users:
+    user.username => {
+      username           = user.username
+      user_pass          = vault_generic_secret.finance_portal_user_password[user.username].data.value
+    }
+  }
+  sensitive   = true
+  description = "fin portal users"
+}
+
+output "finance-portal-url" {
+  description = "URL for the private endpoint for the fin portal ingress."
+  value = "finance-portal-v2.${var.environment}.${var.client}.${data.terraform_remote_state.tenant.outputs.domain}.internal:30000"
 }

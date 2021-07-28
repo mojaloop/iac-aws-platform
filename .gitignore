@@ -1,5 +1,4 @@
 *.tfstate*
 .terraform
-.terraform.lock.hcl
 *.swp
 .DS_Store

@@ -48,42 +48,12 @@ output "haproxy_callback_private_fqdn" {
   value = aws_route53_record.haproxy-callback.fqdn
 }
 
-output "mojaloop_k8s_worker_nodes_private_ip" {
-  value = module.k8-cluster-mojaloop.worker_nodes_private_ip
-}
-output "addons_k8s_worker_nodes_private_ip" {
-  value = module.k8-cluster-add-ons.worker_nodes_private_ip
-}
-output "gateway_k8s_worker_nodes_private_ip" {
-  value = module.k8-cluster-gateway.worker_nodes_private_ip
-}
 
-output "mojaloop_k8s_worker_nodes_private_dns" {
-  value = module.k8-cluster-mojaloop.worker_nodes_private_dns
-}
-output "addons_k8s_worker_nodes_private_dns" {
-  value = module.k8-cluster-add-ons.worker_nodes_private_dns
-}
-output "gateway_k8s_worker_nodes_private_dns" {
-  value = module.k8-cluster-gateway.worker_nodes_private_dns
-}
-output "mojaloop_k8s_master_nodes_private_ip" {
-  value = module.k8-cluster-mojaloop.master_nodes_private_ip
-}
 output "addons_k8s_master_nodes_private_ip" {
   value = module.k8-cluster-add-ons.master_nodes_private_ip
 }
 output "gateway_k8s_master_nodes_private_ip" {
   value = module.k8-cluster-gateway.master_nodes_private_ip
-}
-output "support_services_k8s_master_nodes_private_ip" {
-  value = module.k8-cluster-support-services.master_nodes_private_ip
-}
-output "support_services_k8s_worker_nodes_private_ip" {
-  value = module.k8-cluster-support-services.worker_nodes_private_ip
-}
-output "mojaloop_k8s_master_nodes_private_dns" {
-  value = module.k8-cluster-mojaloop.master_nodes_private_dns
 }
 output "addons_k8s_master_nodes_private_dns" {
   value = module.k8-cluster-add-ons.master_nodes_private_dns
@@ -92,14 +62,22 @@ output "gateway_k8s_master_nodes_private_dns" {
   value = module.k8-cluster-gateway.master_nodes_private_dns
 }
 
+output "addons_k8s_worker_nodes_private_ip" {
+  value = module.k8-cluster-add-ons.worker_nodes_private_ip
+}
+output "gateway_k8s_worker_nodes_private_ip" {
+  value = module.k8-cluster-gateway.worker_nodes_private_ip
+}
+output "addons_k8s_worker_nodes_private_dns" {
+  value = module.k8-cluster-add-ons.worker_nodes_private_dns
+}
+output "gateway_k8s_worker_nodes_private_dns" {
+  value = module.k8-cluster-gateway.worker_nodes_private_dns
+}
+
 output "mcm_fqdn" {
   description = "FQDN for the public hostname of the Connection Manager service."
   value       = aws_route53_record.mcmweb-public.fqdn
-}
-
-output "pm4ml_fqdn" {
-  description = "FQDN for the public hostname of the Connection Manager service."
-  value       = aws_route53_record.pm4ml-public.fqdn
 }
 
 output "extgw_public_fqdn" {
@@ -148,18 +126,6 @@ output "public_subdomain" {
   value = aws_route53_zone.public_subdomain.name
 }
 
-output "wso2-mysql-host" {
-  value = var.wso2-mysql-host
-}
-
-output "wso2-mysql-root-password" {
-  value = var.wso2-mysql-root-password
-}
-
-output "wso2-mysql-password" {
-  value = var.wso2-mysql-password
-}
-
 output "environment" {
   description = "Name of the environment built"
   value       = var.environment
@@ -188,14 +154,6 @@ output "prometheus-services-private-fqdn" {
 output "prometheus-add-ons-private-fqdn" {
   description = "FQDN for the private hostname of prometheus in the add-ons cluster."
   value       = aws_route53_record.prometheus-add-ons-private.fqdn
-}
-output "prometheus-mojaloop-private-fqdn" {
-  description = "FQDN for the private hostname of prometheus in the mojaloop cluster."
-  value       = aws_route53_record.prometheus-mojaloop-private.fqdn
-}
-output "prometheus-gateway-private-fqdn" {
-  description = "FQDN for the private hostname of prometheus in the gateway cluster."
-  value       = aws_route53_record.prometheus-gateway-private.fqdn
 }
 output "apm-services-private-fqdn" {
   description = "FQDN for the private hostname of apm in the support services cluster."

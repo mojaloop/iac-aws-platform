@@ -13,12 +13,14 @@ locals {
 }
 
 resource "helm_release" "app" {
-  name       = "wso2-is-km"
-  repository = "http://docs.mojaloop.io/wso2-helm-charts-simple/repo"
-  chart      = "wso2-is-km"
-  version    = "2.0.6"
-  namespace  = var.namespace
-  timeout    = 800
+  name          = "wso2-is-km"
+  repository    = "http://docs.mojaloop.io/wso2-helm-charts-simple/repo"
+  chart         = "wso2-is-km"
+  version       = "2.0.10"
+  namespace     = var.namespace
+  timeout       = 500
+  force_update  = true
+  create_namespace = true
 
   values = [
     file("${path.module}/helm/values.yaml"),
@@ -27,13 +29,16 @@ resource "helm_release" "app" {
   set {
     name  = "secret.externalSecretName"
     value = kubernetes_secret.secrets.metadata[0].name
+    type  = "string"
   }
   set {
     name  = "configmap.externalConfigMapName"
     value = kubernetes_config_map.configs.metadata[0].name
+    type  = "string"
   }
   set {
     name  = "binconfigmap.externalConfigMapName"
     value = kubernetes_config_map.binconfigs.metadata[0].name
+    type  = "string"
   }
 }

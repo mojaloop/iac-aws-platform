@@ -16,9 +16,11 @@ resource "helm_release" "app" {
   name         = "wso2-am-int"
   repository   = "http://docs.mojaloop.io/wso2-helm-charts-simple/repo"
   chart        = "wso2-am"
-  version      = "2.0.8"
-  namespace    = "wso2"
-  timeout      = 1200
+  version      = "2.0.10"
+  namespace    = var.namespace
+  timeout      = 500
+  force_update = true
+  create_namespace = true
   values = [
     file("${path.module}/helm/values.yaml"),
     templatefile("${path.module}/templates/env-values.yaml.tpl", local.env_values)
@@ -26,13 +28,21 @@ resource "helm_release" "app" {
   set {
     name  = "secret.externalSecretName"
     value = kubernetes_secret.secrets.metadata[0].name
+    type  = "string"
   }
   set {
     name  = "configmap.externalConfigMapName"
     value = kubernetes_config_map.configs.metadata[0].name
+    type  = "string"
   }
   set {
     name  = "binconfigmap.externalConfigMapName"
     value = kubernetes_config_map.binconfigs.metadata[0].name
+    type  = "string"
+  }
+  set {
+    name  = "persistentVolume.storageClass"
+    value = var.efs_storage_class_name
+    type  = "string"
   }
 }

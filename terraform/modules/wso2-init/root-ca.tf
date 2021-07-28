@@ -9,9 +9,9 @@ resource "tls_self_signed_cert" "root_ca_ssc" {
   is_ca_certificate = true
 
   subject {
-    common_name         = "ACME Self Signed CA"
-    organization        = "ACME Self Signed"
-    organizational_unit = "infra team"
+    common_name         = "MBOX ACME Self Signed CA"
+    organization        = "MBOX ACME Self Signed"
+    organizational_unit = "modusbox infra team"
   }
 
   validity_period_hours = 87659

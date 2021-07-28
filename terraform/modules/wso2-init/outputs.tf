@@ -13,12 +13,17 @@ output "db_host" {
   value = var.db_host
 }
 
-output "k8s_namespace" {
-  description = "Namespace to deploy WSO2 applications into"
-  value = kubernetes_namespace.ns.metadata[0].name
-}
-
 output "storage_class" {
   description = "Storage Class for EBS"
   value = kubernetes_storage_class.wso2
 }
+
+output "efs_helm_release_name" {
+  description = "Name of EFS Helm release"
+  value = helm_release.efs-setup.name
+}
+
+output "mysql_helm_release_name" {
+  description = "name of Mysql Helm release"
+  value = helm_release.mysql.name
+} 

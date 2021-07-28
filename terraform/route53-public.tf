@@ -53,14 +53,6 @@ resource "aws_route53_record" "mcmweb-public" {
   type    = "A"
   ttl     = 60
 
-  records = [module.nlb_addons.public_ip]
+  records = [module.nlb_wso2.public_ip]
 }
 
-resource "aws_route53_record" "pm4ml-public" {
-  zone_id = aws_route53_zone.public_subdomain.zone_id
-  name    = var.pm4ml-name
-  type    = "A"
-  ttl     = 60
-
-  records = [module.nlb_addons.public_ip]
-}

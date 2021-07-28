@@ -1,17 +1,3 @@
-resource "kubernetes_storage_class" "slow-mojaloop" {
-  metadata {
-    name = "slow"
-  }
-  storage_provisioner = "kubernetes.io/aws-ebs"
-  reclaim_policy      = "Retain"
-  parameters = {
-    type      = "gp2"
-    iopsPerGB = "10"
-    fsType    = "ext4"
-  }
-  provider = kubernetes.k8s-mojaloop
-}
-
 resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
   metadata {
     name      = "wso2-mojaloop-ingress"
@@ -29,12 +15,6 @@ resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
           }
           path = "/participants"
         }
-      }
-    }
-    rule {
-      host = data.terraform_remote_state.infrastructure.outputs.interop_switch_private_fqdn
-
-      http {
         path {
           backend {
             service_name = "mojaloop-account-lookup-service"
@@ -42,12 +22,6 @@ resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
           }
           path = "/parties"
         }
-      }
-    }
-    rule {
-      host = data.terraform_remote_state.infrastructure.outputs.interop_switch_private_fqdn
-
-      http {
         path {
           backend {
             service_name = "mojaloop-quoting-service"
@@ -55,12 +29,6 @@ resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
           }
           path = "/quotes"
         }
-      }
-    }
-    rule {
-      host = data.terraform_remote_state.infrastructure.outputs.interop_switch_private_fqdn
-
-      http {
         path {
           backend {
             service_name = "mojaloop-ml-api-adapter-service"
@@ -68,12 +36,6 @@ resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
           }
           path = "/transfers"
         }
-      }
-    }
-    rule {
-      host = data.terraform_remote_state.infrastructure.outputs.interop_switch_private_fqdn
-
-      http {
         path {
           backend {
             service_name = "bulk-quoting-service"
@@ -81,28 +43,25 @@ resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
           }
           path = "/bulkQuotes"
         }
+        path {
+          backend {
+            service_name = "mojaloop-transaction-requests-service"
+            service_port = 80
+          }
+          path = "/transactionRequests"
+        }
+        path {
+          backend {
+            service_name = "mojaloop-transaction-requests-service"
+            service_port = 80
+          }
+          path = "/authorizations"
+        }
       }
     }
   }
-  provider   = kubernetes.k8s-mojaloop
+  provider   = kubernetes.k8s-gateway
   depends_on = [helm_release.mojaloop]
-}
-
-resource "helm_release" "nginx-ingress" {
-  count      = 1
-  name       = "nginx-ingress"
-  repository = "https://charts.helm.sh/stable"
-  chart      = "nginx-ingress"
-  version    = var.helm_nginx_version
-  namespace  = "kube-public"
-  wait       = false
-
-  set {
-    name  = "controller.service.nodePorts.http"
-    value = "30001"
-  }
-
-  provider = helm.helm-mojaloop
 }
 
 resource "helm_release" "mojaloop" {
@@ -112,119 +71,40 @@ resource "helm_release" "mojaloop" {
   version    = var.helm_mojaloop_version
   namespace  = "mojaloop"
   timeout    = 800
+  create_namespace = true
 
   values = [
     templatefile("${path.module}/templates/values-lab-oss.yaml.tpl", local.oss_values)
   ]
-  provider = helm.helm-mojaloop
+ 
+  provider = helm.helm-gateway
 
-  depends_on = [module.wso2_init]
+  depends_on = [module.wso2_init, module.fin-portal-iskm]
 }
 
-resource "helm_release" "ml-bulk-quoting-service" {
-  name       = "bulk-quoting"
-  repository = "http://mojaloop.io/helm/repo"
-  chart      = "quoting-service"
-  version    = "10.4.1"
-  namespace  = "mojaloop"
-  timeout    = 300
-
-
-  provider = helm.helm-mojaloop
-
-  set {
-    name  = "image.tag"
-    value = "v11.1.0"
-  }
-  set {
-    name  = "config.db_host"
-    value = "${helm_release.mojaloop.name}-centralledger-mysql"
-  }
-  set {
-    name  = "config.db_password"
-    value = "KWvT8pzuBQ63Qp"
-  }
-
-  depends_on = [helm_release.mojaloop]
-}
 
 locals {
   oss_values = {
     env    = var.environment
-    name   = var.name
+    name   = var.client
     domain = data.terraform_remote_state.tenant.outputs.domain
     kafka  = var.kafka
+    mysql_password = vault_generic_secret.mojaloop_mysql_password.data.value
+    mysql_root_password = vault_generic_secret.mojaloop_mysql_root_password.data.value
+    elasticsearch_url = "http://${data.terraform_remote_state.infrastructure.outputs.elasticsearch-services-private-fqdn}:30000" 
+    kibana_url = "http://${data.terraform_remote_state.infrastructure.outputs.kibana-services-private-fqdn}:30000"
+    wso2is_host = "https://${data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn}"
+    portal_oauth_app_id = vault_generic_secret.mojaloop_fin_portal_backend_client_id.data.value
+    portal_oauth_app_token = vault_generic_secret.mojaloop_fin_portal_backend_client_secret.data.value
   }
-}
-
-
-resource "kubernetes_job" "mojaloop_post_install" {
-
-  metadata {
-    name      = "mojaloop-post-install"
-    namespace = "mojaloop"
-  }
-  spec {
-    template {
-      metadata {}
-      spec {
-        container {
-          name    = "mojaloop-post-install"
-          image   = "alpine"
-          command = ["/bin/sh", "-c", "apk add git curl && git clone -b ${var.iac_post_init_version} https://github.com/mojaloop/iac_post_deploy.git && cd iac_post_deploy/backend-post-setup && sh switch_setup.sh"]
-        }
-        restart_policy = "Never"
-      }
+  portal_users = [
+    for user in var.finance_portal_users :
+    {
+      "username" = user.username
+      "password" = vault_generic_secret.finance_portal_user_password[user.username].data.value
+      "roles" = user.roles
     }
-    #ttl_seconds_after_finished = 60
-    backoff_limit = 4
-  }
-  provider   = kubernetes.k8s-mojaloop
-  depends_on = [helm_release.mojaloop]
-}
-#monitoring and logging deployments
-resource "helm_release" "prometheus-mojaloop" {
-  name         = "prometheus-mojaloop"
-  repository   = "https://charts.helm.sh/stable"
-  chart        = "prometheus"
-  version      = var.helm_prometheus_version
-  namespace    = "monitoring"
-  force_update = true
-
-  values = [
-    file("${var.project_root_path}/helm/values-workload-clusters-prometheus.yaml")
   ]
-  set {
-    name  = "server.ingress.hosts"
-    value = "{${data.terraform_remote_state.infrastructure.outputs.prometheus-mojaloop-private-fqdn}}"
-  }
-  provider = helm.helm-mojaloop
-
-  depends_on = [kubernetes_storage_class.slow-mojaloop]
-}
-
-resource "helm_release" "fluentd-mojaloop" {
-  name         = "fluentd-mojaloop"
-  repository   = "https://kiwigrid.github.io"
-  chart        = "fluentd-elasticsearch"
-  version      = var.helm_fluentd_version
-  namespace    = "logging"
-  force_update = true
-
-  values = [
-    file("${var.project_root_path}/helm/values-workload-clusters-efk-fluentd.yaml")
-  ]
-  set {
-    name  = "elasticsearch.host"
-    value = data.terraform_remote_state.infrastructure.outputs.elasticsearch-services-private-fqdn
-  }
-  set {
-    name  = "elasticsearch.port"
-    value = "30000"
-  }
-  provider = helm.helm-mojaloop
-
-  depends_on = [helm_release.kafka-support-services]
 }
 
 resource "helm_release" "esp-mojaloop" {
@@ -234,6 +114,8 @@ resource "helm_release" "esp-mojaloop" {
   version      = var.helm_esp_version
   namespace    = "mojaloop"
   force_update = true
+  create_namespace = true
+  reuse_values = true
 
   values = [
     templatefile("${path.module}/templates/values-mojaloop-esp.yaml.tpl", {
@@ -244,9 +126,91 @@ resource "helm_release" "esp-mojaloop" {
   set {
     name  = "config.kafka_host"
     value = "mojaloop-kafka"
+    type  = "string"
   }
 
-  provider = helm.helm-mojaloop
+  provider = helm.helm-gateway
 
   depends_on = [helm_release.mojaloop]
+}
+
+resource "random_password" "mojaloop_mysql_password" {
+  length = 16
+  special = false
+}
+
+resource "vault_generic_secret" "mojaloop_mysql_password" {
+  path = "secret/mojaloop/mysqlpassword"
+
+  data_json = jsonencode({
+    "value" = random_password.mojaloop_mysql_password.result
+  })
+}
+
+resource "random_password" "mojaloop_mysql_root_password" {
+  length = 16
+  special = false
+}
+
+resource "vault_generic_secret" "mojaloop_mysql_root_password" {
+  path = "secret/mojaloop/mysqlrootpassword"
+
+  data_json = jsonencode({
+    "value" = random_password.mojaloop_mysql_root_password.result
+  })
+}
+
+resource "random_password" "mojaloop_fin_portal_backend_client_id" {
+  length = 16
+  special = true
+  override_special = "_"
+}
+
+resource "vault_generic_secret" "mojaloop_fin_portal_backend_client_id" {
+  path = "secret/mojaloop/finportalbackend/clientid"
+
+  data_json = jsonencode({
+    "value" = random_password.mojaloop_fin_portal_backend_client_id.result
+  })
+}
+
+resource "random_password" "mojaloop_fin_portal_backend_client_secret" {
+  length = 30
+  special = true
+  override_special = "_"
+}
+
+resource "vault_generic_secret" "mojaloop_fin_portal_backend_client_secret" {
+  path = "secret/mojaloop/finportalbackend/clientsecret"
+
+  data_json = jsonencode({
+    "value" = random_password.mojaloop_fin_portal_backend_client_secret.result
+  })
+}
+
+resource "random_password" "finance_portal_user_password" {
+  for_each = {for user in var.finance_portal_users: user.username => user}
+  length = 30
+  special = true
+  override_special = "_"
+}
+
+resource "vault_generic_secret" "finance_portal_user_password" {
+  for_each = {for user in var.finance_portal_users: user.username => user}
+  path = "secret/mojaloop/finportalbackend/${each.value.username}"
+  data_json = jsonencode({
+    "value" = random_password.finance_portal_user_password[each.value.username].result
+  })
+}
+
+module "fin-portal-iskm" {
+  source    = "git::git@github.com:modusintegration/wso2is-populate.git//terraform?ref=v2.0.2"
+  wso2_host = "https://${data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn}:9443"
+  admin_user = "admin"
+  admin_password  = vault_generic_secret.wso2_admin_password.data.value
+  auth_server_clientkey = vault_generic_secret.mojaloop_fin_portal_backend_client_id.data.value
+  auth_server_clientsecret = vault_generic_secret.mojaloop_fin_portal_backend_client_secret.data.value
+  wso2_oauth2_application_name = "portaloauth"
+  portal_users = local.portal_users
+  depends_on = [null_resource.wait_for_iskm_readiness]
 }

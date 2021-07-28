@@ -11,8 +11,8 @@ variable "osuser" {
   default = "ubuntu"
 }
 
-variable "tenant" {
-  description = "Tenant name. In lower case, spaces replaced with '-'"
+variable "client" {
+  description = "Name of client. In lower case, spaces replaced with '-'"
   type        = string
 }
 
@@ -21,9 +21,6 @@ variable "environment" {
   type        = string
 }
 
-variable "name" {
-  description = "VPC name"
-}
 
 variable "aws_ami" {
   description = "AMI image ID"
@@ -62,30 +59,12 @@ variable "haproxy_size" {
   type        = string
   default     = "t2.small"
 }
-variable "mojaloop_kube_master_num" {
-  description = "Number of Kubernetes Master Nodes for mojaloop k8"
-  type        = number
-  default     = 3
-}
 
-variable "mojaloop_kube_master_size" {
+variable "gw_haproxy_size" {
   description = "Instance size of Kube Master Nodes for mojaloop k8"
   type        = string
-  default     = "t2.medium"
+  default     = "t2.small"
 }
-
-variable "mojaloop_kube_worker_num" {
-  description = "Number of Kubernetes Worker Nodes for mojaloop k8"
-  type        = number
-  default     = 3
-}
-
-variable "mojaloop_kube_worker_size" {
-  description = "Instance size of Kubernetes Worker Nodes for mojaloop k8"
-  type        = string
-  default     = "m5.large"
-}
-
 
 variable "gateway_kube_master_num" {
   description = "Number of Kubernetes Master Nodes for mojaloop k8"
@@ -96,7 +75,7 @@ variable "gateway_kube_master_num" {
 variable "gateway_kube_worker_num" {
   description = "Number of Kubernetes Worker Nodes for mojaloop k8"
   type        = number
-  default     = 3
+  default     = 6
 }
 variable "gateway_kube_worker_size" {
   description = "Instance size of Kubernetes Worker Nodes for mojaloop k8"
@@ -134,63 +113,25 @@ variable "add-ons_kube_worker_size" {
   default     = "m5.large"
 }
 
-variable "support-services_kube_master_num" {
-  description = "Number of Kubernetes Master Nodes for support-services k8"
-  type        = number
-  default     = 3
-}
-
-variable "support-services_kube_worker_num" {
-  description = "Number of Kubernetes Master Nodes for support-services k8"
-  type        = number
-  default     = 3
-}
-
-variable "support-services_kube_master_size" {
-  description = "Instance size of Kube Master Nodes for support-services k8"
-  type        = string
-  default     = "t2.medium"
-}
-
-variable "support-services_kube_worker_size" {
-  description = "Instance size of Kubernetes Worker Nodes for support-services k8"
-  type        = string
-  default     = "m5.large"
-}
-
-variable "default_tags" {
-  description = "Default tags for all resources"
-  type        = map(string)
-}
-
-variable "inventory_file_mojaloop" {
-  description = "Where to store the generated inventory file for mojaloop k8 cluster"
-  type        = string
-  default     = "../kubespray/inventory/hosts-mojaloop"
-}
-
 variable "inventory_file_gateway" {
   description = "Where to store the generated inventory file for gateway k8 cluster"
   type        = string
-  default     = "../kubespray/inventory/hosts-gateway"
+  default     = "../kubespray-inventory/hosts-gateway"
 }
 
 variable "inventory_file_add-ons" {
   description = "Where to store the generated inventory file for add-ons k8 cluster"
   type        = string
-  default     = "../kubespray/inventory/hosts-add-ons"
+  default     = "../kubespray-inventory/hosts-add-ons"
 }
 
-variable "inventory_file_support-services" {
-  description = "Where to store the generated inventory file for support-services k8 cluster"
-  type        = string
-  default     = "../kubespray/inventory/hosts-support-services"
-}
 
-variable "k8-balancer-mojaloop-aliases" {
-  description = "List of Mojaloop service names for HAProxy to alias"
+variable "k8-balancer-gateway-aliases" {
+  description = "List of gateway services for HAProxy to alias"
   type        = list(string)
   default = [
+    "k8-api-gateway-lb",
+    "wso2-api-lb",
     "k8-api-mojaloop-lb",
     "interop-switch",
     "account-lookup-service",
@@ -210,16 +151,11 @@ variable "k8-balancer-mojaloop-aliases" {
     "ml-api-adapter",
     "quoting-service",
     "moja-simulator",
-    "finance-portal"
-  ]
-}
-
-variable "k8-balancer-gateway-aliases" {
-  description = "List of gateway services for HAProxy to alias"
-  type        = list(string)
-  default = [
-    "k8-api-gateway-lb",
-    "wso2-api-lb"
+    "finance-portal",
+    "finance-portal-v2",
+    "ttkbackend",
+    "ttkfrontend",
+    "mojaloop-reporting"
   ]
 }
 
@@ -229,44 +165,6 @@ variable "k8-balancer-add-ons-aliases" {
   default = [
     "k8-api-add-ons-lb",
   ]
-}
-
-variable "k8-balancer-support-services-aliases" {
-  description = "List of support-services services for HAProxy to alias"
-  type        = list(string)
-  default = [
-    "k8-api-support-services-lb",
-  ]
-}
-
-variable "wso2-mysql-host" {
-  description = "Hostname of MySQL DB for WSO2"
-  type        = string
-  default     = "mysql-wso2.mysql-wso2.svc.cluster.local"
-}
-
-variable "wso2-mysql-port" {
-  description = "WSO2 MySQL DB port"
-  type        = number
-  default     = 3306
-}
-
-variable "wso2-mysql-user" {
-  description = "WSO2 MySQL DB user"
-  type        = string
-  default     = "root"
-}
-
-variable "wso2-mysql-password" {
-  description = "WSO2 MySQL DB password"
-  type        = string
-  default     = "123soleil"
-}
-
-variable "wso2-mysql-root-password" {
-  description = "WSO2 MySQL DB root password"
-  type        = string
-  default     = "123soleil"
 }
 
 variable "mcm-name" {
@@ -303,16 +201,6 @@ variable "prometheus-services-name" {
   type        = string
   default     = "prometheus-services"
 }
-variable "prometheus-gateway-name" {
-  description = "Hostname to use with prometheus in gateway"
-  type        = string
-  default     = "prometheus-gateway"
-}
-variable "prometheus-mojaloop-name" {
-  description = "Hostname to use with prometheus in mojaloop"
-  type        = string
-  default     = "prometheus-mojaloop"
-}
 variable "prometheus-add-ons-name" {
   description = "Hostname to use with prometheus in add-ons"
   type        = string
@@ -338,8 +226,9 @@ variable "apm-services-name" {
   type        = string
   default     = "apm"
 }
-variable "pm4ml-name" {
-  description = "Hostname to use with pm4ml in add-ons"
-  type        = string
-  default     = "pm4ml"
+
+variable "custom_tags" {
+  description = "Hostname to use with apm"
+  type        = map(string)
+  default     = {}
 }

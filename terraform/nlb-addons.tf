@@ -1,8 +1,8 @@
 module "nlb_addons" {
-  source = "git@github.com:mojaloop/iac-shared-modules.git//aws/nlb?ref=v0.0.2"
+  source = "git@github.com:modusintegration/terraform-shared-modules.git//aws/nlb?ref=v0.0.2"
 
   vpc_id = data.aws_vpc.selected.id
-  prefix = "addons-${var.tenant}-${var.environment}"
+  prefix = "addons-${var.client}-${var.environment}"
   nlb_listeners = [
     {
       target_port          = 443

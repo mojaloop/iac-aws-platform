@@ -11,9 +11,9 @@ resource "tls_cert_request" "wso2" {
 
   subject {
     common_name         = "${var.hostname}.${var.public_domain_name}"
-    organization        = "Self Signed"
+    organization        = "MBX Self Signed"
     country             = "US"
-    organizational_unit = "infra team"
+    organizational_unit = "modusbox infra team"
   }
 }
 
