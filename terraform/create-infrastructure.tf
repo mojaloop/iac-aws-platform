@@ -63,7 +63,7 @@ resource "aws_security_group" "internet" {
 
 # TODO: was is this even for?
 module "aws-iam" {
-  source = "git@github.com:modusintegration/terraform-shared-modules.git//aws/iam"
+  source = "git@github.com:mojaloop/iac-shared-modules//aws/iam?ref=v0.0.7"
 
   aws_cluster_name = "${var.environment}-${var.client}"
 }

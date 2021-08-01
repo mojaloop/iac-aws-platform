@@ -86,7 +86,7 @@ locals {
 }
 
 module "external_provision_pm4ml_to_wso2" {
-  source            = "git::git@github.com:modusintegration/wso2-util-terraform-modules.git//create-test-user?ref=v2.0.2"
+  source            = "git::git@github.com:mojaloop/iac-shared-modules.git//wso2/create-test-user?ref=v0.0.7"
   extgw_fqdn        = data.terraform_remote_state.infrastructure.outputs.extgw_public_fqdn
   test_user_details = local.external_pm4ml_details
   admin_user        = "admin"
@@ -94,7 +94,7 @@ module "external_provision_pm4ml_to_wso2" {
 }
 
 module "external_provision_pm4ml_callbacks_to_wso2" {
-  source            = "git::git@github.com:modusintegration/wso2-util-terraform-modules.git//wso2-post-config/callbacks?ref=v2.0.2"
+  source            = "git::git@github.com:mojaloop/iac-shared-modules.git//wso2/callbacks-post-config?ref=v0.0.7"
   intgw_fqdn        = data.terraform_remote_state.infrastructure.outputs.intgw_private_fqdn
   test_user_details = local.external_pm4ml_details
   fspiop_version    = split(".", var.helm_mojaloop_version)[0] == "10" ? "1.0" : "1.1"
