@@ -106,7 +106,7 @@ Destroy Environment:
 Destroy k3s Cluster:
     
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.10.12
+    name: ghcr.io/pm4ml/k3sbootstrap:0.11.0
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - eval `ssh-agent`
@@ -146,7 +146,7 @@ Deploy AWS Infrastructure:
 
 Create k3s Cluster:
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.10.12
+    name: ghcr.io/pm4ml/k3sbootstrap:0.11.0
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - eval `ssh-agent`
@@ -179,13 +179,12 @@ Create k3s Cluster:
     - aws s3 cp /k3s-boot/kubeconfig s3://$BUCKET/$ENVIRONMENT/k3saddons/ --sse
     - aws s3 cp /k3s-boot/ssh-key s3://${BUCKET}/$ENVIRONMENT/k3saddons/ --sse
     - aws s3 sync s3://$BUCKET/$ENVIRONMENT/k3saddons /k3s-boot/k3saddons --sse
-    - cp -r /k3s-boot/k3saddons/* /k3s-boot/   
+    - cp -r /k3s-boot/k3saddons/* /k3s-boot/
+    - if [ ! -f /k3s-boot/vault-keys.json ]; then make vault; else echo "found vault, skipping make vault"; fi 
+    - aws s3 cp /k3s-boot/vault-keys.json s3://$BUCKET/$ENVIRONMENT/k3saddons/ --sse   
     - make wireguard
-    - aws s3 sync /k3s-boot/wireguard.clients s3://$BUCKET/$ENVIRONMENT/k3saddons/wireguard.clients --sse
     - aws s3 cp /k3s-boot/wireguard.private.key s3://$BUCKET/$ENVIRONMENT/k3saddons/ --sse
     - aws s3 cp /k3s-boot/wireguard.public.key s3://$BUCKET/$ENVIRONMENT/k3saddons/ --sse
-    - if [ ! -f /k3s-boot/vault-keys.json ]; then make vault; else echo "found vault, skipping make vault"; fi 
-    - aws s3 cp /k3s-boot/vault-keys.json s3://$BUCKET/$ENVIRONMENT/k3saddons/ --sse
   when: manual
 
 Create Addons Cluster:
@@ -242,7 +241,7 @@ Deploy Vault:
 2b. Install Internal PM4MLs:
   stage: "Deploy Platform"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.10.12
+    name: ghcr.io/pm4ml/k3sbootstrap:0.11.0
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - eval `ssh-agent`
@@ -300,10 +299,8 @@ Deploy Vault:
   script:
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-    - git clone git@github.com:pm4ml/pm4ml-test-scripts.git $CI_IMAGE_PROJECT_DIR/pm4ml-tests
-    - cp $CI_IMAGE_PROJECT_DIR/pm4ml-tests/postman/Deregister_Existing_Oracles.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests 
     - cd sim_tests
-    - newman run Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopHub_Setup.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopSims_Onboarding.postman_collection.json --ssl-client-cert-list test_cert_list.json --insecure -e Lab.postman_environment.json || true
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/Golden_Path_Mojaloop.postman_collection.json --ssl-client-cert-list test_cert_list.json --insecure -e Lab.postman_environment.json --folder p2p_happy_path_RECEIVE_quote --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/hp_report.html --reporter-junit-export ${CI_PROJECT_DIR}/hp_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
@@ -347,20 +344,17 @@ Deploy Vault:
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - git clone git@github.com:pm4ml/pm4ml-test-scripts.git $CI_IMAGE_PROJECT_DIR/pm4ml-tests
-    - cp $CI_IMAGE_PROJECT_DIR/pm4ml-tests/postman/Deregister_Existing_Oracles.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests 
-    - cp $CI_IMAGE_PROJECT_DIR/pm4ml-tests/postman/Mojaloop-Payment-Manager-Onboarding.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - cp $CI_IMAGE_PROJECT_DIR/pm4ml-tests/postman/Mojaloop-Payment-Manager-Golden-Path.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests
     - cd sim_tests
-    - newman run Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopHub_Setup.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopSims_Onboarding.postman_collection.json --ssl-client-cert-list test_cert_list.json --insecure -e Lab.postman_environment.json || true
-    - newman run Mojaloop-Payment-Manager-Onboarding.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
-    - newman run Mojaloop-Payment-Manager-Golden-Path.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json --folder feature-tests --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/gp_report.html --reporter-junit-export ${CI_PROJECT_DIR}/gp_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Sim_Backend.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Mojaloop-Payment-Manager-Golden-Path.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json --folder feature-tests --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/gp_report.html --reporter-junit-export ${CI_PROJECT_DIR}/gp_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
   after_script:
     - curl https://slack.com/api/files.upload
       -F file=@"gp_report.html"
-      -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}"
+      -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}","${SLACK_GITLABCI_GP_REPORTS_CHANNEL_NAME}"
       -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
       -F title="Mojaloop PM4ML Goldenpath Test (Postman) Results.'${ENVIRONMENT}'-$(date +\"%Y-%m-%d-%H:%M:%S\")"
       -F filetype="html"
@@ -397,14 +391,12 @@ Deploy Vault:
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - git clone git@github.com:pm4ml/pm4ml-test-scripts.git $CI_IMAGE_PROJECT_DIR/pm4ml-tests
-    - cp $CI_IMAGE_PROJECT_DIR/pm4ml-tests/postman/Deregister_Existing_Oracles.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests 
     - cd $CI_IMAGE_PROJECT_DIR/sim_tests
-    - newman run Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopHub_Setup.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopSims_Onboarding.postman_collection.json --ssl-client-cert-list test_cert_list.json --insecure -e Lab.postman_environment.json || true
-    - git clone git@github.com:mojaloop/finance-portal-v2-ui.git $CI_IMAGE_PROJECT_DIR/finance-portal-v2-ui
-    - cd $CI_IMAGE_PROJECT_DIR/finance-portal-v2-ui/tests/e2e-ui-tests
+    - git clone git@github.com:modusintegration/finance-portal-settlements.git $CI_IMAGE_PROJECT_DIR/finance-portal-settlements
+    - cd $CI_IMAGE_PROJECT_DIR/finance-portal-settlements/tests/e2e-ui-tests
     - echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
     - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
     - apt-get update
@@ -414,9 +406,9 @@ Deploy Vault:
     - npm ci
     - npm run test:headless || true
   after_script:
-    - cp $CI_IMAGE_PROJECT_DIR/finance-portal-v2-ui/tests/e2e-ui-tests/src/reports/report.html ${CI_PROJECT_DIR}/fin_port_report.html
+    - cp $CI_IMAGE_PROJECT_DIR/finance-portal-settlements/tests/e2e-ui-tests/src/reports/report.html ${CI_PROJECT_DIR}/fin_port_report.html
     - curl https://slack.com/api/files.upload
-      -F file=@"$CI_IMAGE_PROJECT_DIR/finance-portal-v2-ui/tests/e2e-ui-tests/src/reports/report.html"
+      -F file=@"$CI_IMAGE_PROJECT_DIR/finance-portal-settlements/tests/e2e-ui-tests/src/reports/report.html"
       -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}"
       -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
       -F title="Run Finance Portal V2 UI Tests"
@@ -425,7 +417,7 @@ Deploy Vault:
     paths:
       - fin_port_report.html
     #reports:
-      #junit: $CI_IMAGE_PROJECT_DIR/finance-portal-v2-ui/tests/e2e-ui-tests/src/reports/report.html
+      #junit: $CI_IMAGE_PROJECT_DIR/finance-portal-settlements/tests/e2e-ui-tests/src/reports/report.html
 
 # 4. Run MMD GP Tests:
 #   stage: "Run Tests"
@@ -436,8 +428,8 @@ Deploy Vault:
 #     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
 #     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
 #     - cp $CI_IMAGE_PROJECT_DIR/tests/Myanmar_Oracle_Registration.postman_collection.json sim_tests
-#     - git clone git@github.com:pm4ml/pm4ml-test-scripts.git $CI_IMAGE_PROJECT_DIR/pm4ml-tests
-#     - git clone git@github.com:mmd/myanmar-test-scripts.git $CI_IMAGE_PROJECT_DIR/mmd-tests
+#     - git clone git@github.com:modusintegration/pm4ml-test-scripts.git $CI_IMAGE_PROJECT_DIR/pm4ml-tests
+#     - git clone git@github.com:modusintegration/myanmar-test-scripts.git $CI_IMAGE_PROJECT_DIR/mmd-tests
 #     - cp $CI_IMAGE_PROJECT_DIR/pm4ml-tests/postman/Deregister_Existing_Oracles.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests 
 #     - cp $CI_IMAGE_PROJECT_DIR/mmd-tests/postman/Myanmar-Golden-Path.postman_collection.json sim_tests
 #     - cp $CI_IMAGE_PROJECT_DIR/mmd-tests/postman/Myanmar-Onboard-Generic-FSP-Central_Ledger.postman_collection.json sim_tests
@@ -466,24 +458,9 @@ Deploy Vault:
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - git clone git@github.com:pm4ml/pm4ml-test-scripts.git $CI_IMAGE_PROJECT_DIR/pm4ml-tests
-    - cp $CI_IMAGE_PROJECT_DIR/pm4ml-tests/postman/Mojaloop-Payment-Manager-Onboarding.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests
     - cd sim_tests
-    - newman run Mojaloop-Payment-Manager-Onboarding.postman_collection.json --insecure -e Lab.postman_environment.json -d onboarding_external_pm4ml_output.json
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json -d onboarding_external_pm4ml_output.json
   when: manual
-
-
-# 1. Run External PM4ML Onboarding:
-#   stage: "Maintain Platform"
-#   script:
-#     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-#     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-#     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-#     - cp $CI_IMAGE_PROJECT_DIR/tests/Myanmar-Onboard-Generic-FSP-Central_Ledger.postman_collection.json sim_tests
-#     - cp $CI_IMAGE_PROJECT_DIR/tests/Myanmar-Onboard-Generic-FSP-Sim_Backend.postman_collection.json sim_tests
-#     - cd sim_tests
-#     - newman run Myanmar-Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json -d onboarding_external_pm4ml_output.json
-#   when: manual
 
 # .addon_pre: &addon_pre
 #   - cd addons

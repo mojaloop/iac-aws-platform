@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 0.13.3"
+  required_version = ">= 1.0"
   backend "s3" {
     key     = "##environment##/terraform.tfstate"
     encrypt = true
@@ -63,7 +63,7 @@ resource "aws_security_group" "internet" {
 
 # TODO: was is this even for?
 module "aws-iam" {
-  source = "git@github.com:mojaloop/iac-shared-modules//aws/iam?ref=v0.0.7"
+  source = "git@github.com:mojaloop/iac-shared-modules//aws/iam?ref=v1.0.14"
 
   aws_cluster_name = "${var.environment}-${var.client}"
 }

@@ -1,12 +1,12 @@
 # Mojaloop Platform IaC
 
-![mojaloopIaC by ModusBox banner](./documents/readme_images/000-banner.png)
+![mojaloopIaC banner](./documents/readme_images/000-banner.png)
 
-Welcome to release v3.7 of the mojaloop-IaC.
+Welcome to release v1.0.0 of the mojaloop-IaC.
 
 ## Before Deployment - bootstrap
 
-mojaloop-IAC is designed to run as a subset of the ["mojaloop-bootstrap for AWS"](https://github.com/modusintegration/mojaloop-bootstrap)
+mojaloop-IAC is designed to run as a subset of the ["mojaloop-bootstrap for AWS"](https://github.com/mojaloop/iac-aws-bootstrap)
 
 mojaloop-bootstrap is used to define the client or *tenancy* (these terms are used interchangeably throughout documentation and TF code)  and therefor the supporting IAM, network, routing, and code repository to allow each environment to be deployed programatically:
 

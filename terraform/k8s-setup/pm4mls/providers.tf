@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 0.13.5"
+  required_version = ">= 1.0"
   backend "s3" {
     key = "##environment##/terraform-k8s-pm4mls.tfstate"
   }
