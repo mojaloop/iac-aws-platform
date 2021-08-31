@@ -1,5 +1,5 @@
 module "nlb_wso2" {
-  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=v1.0.17"
+  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=v1.0.19"
   vpc_id = data.aws_vpc.selected.id
   prefix = "wso2-${var.client}-${var.environment}"
   nlb_listeners = [

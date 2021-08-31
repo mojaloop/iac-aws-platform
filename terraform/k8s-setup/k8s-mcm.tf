@@ -20,7 +20,7 @@ resource "null_resource" "wait_for_iskm_readiness" {
 }
 
 module "mcm-iskm-key-secret-gen" {
-  source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-mcm?ref=v1.0.17"
+  source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-mcm?ref=v1.0.19"
   iskm_fqdn = data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn
   user      = "admin"
   password  = vault_generic_secret.wso2_admin_password.data.value
