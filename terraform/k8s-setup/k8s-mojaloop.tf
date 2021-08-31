@@ -204,7 +204,7 @@ resource "vault_generic_secret" "finance_portal_user_password" {
 }
 
 module "fin-portal-iskm" {
-  source    = "git::git@github.com:mojaloop/wso2is-populate.git//terraform?ref=v2.0.4"
+  source    = "git::https://github.com/mojaloop/wso2is-populate.git//terraform?ref=v2.0.4"
   wso2_host = "https://${data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn}:9443"
   admin_user = "admin"
   admin_password  = vault_generic_secret.wso2_admin_password.data.value
