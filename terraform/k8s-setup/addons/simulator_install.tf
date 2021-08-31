@@ -67,7 +67,7 @@ locals {
 }
 
 module "provision_sims_to_wso2" {
-  source            = "git::git@github.com:mojaloop/iac-shared-modules.git//wso2/create-test-user?ref=v1.0.14"
+  source            = "git::git::https://github.com/mojaloop/iac-shared-modules.git//wso2/create-test-user?ref=v1.0.17"
   extgw_fqdn        = data.terraform_remote_state.infrastructure.outputs.extgw_public_fqdn
   test_user_details = local.sim_details
   admin_user        = "admin"
@@ -75,7 +75,7 @@ module "provision_sims_to_wso2" {
 }
 
 module "provision_sim_callbacks_to_wso2" {
-  source            = "git::git@github.com:mojaloop/iac-shared-modules.git//wso2/callbacks-post-config?ref=v1.0.14"
+  source            = "git::git::https://github.com/mojaloop/iac-shared-modules.git//wso2/callbacks-post-config?ref=v1.0.17"
   intgw_fqdn        = data.terraform_remote_state.infrastructure.outputs.intgw_private_fqdn
   test_user_details = local.sim_details
   fspiop_version    = split(".", var.helm_mojaloop_version)[0] == "10" ? "1.0" : "1.1"

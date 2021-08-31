@@ -63,7 +63,7 @@ resource "aws_security_group" "internet" {
 
 # TODO: was is this even for?
 module "aws-iam" {
-  source = "git@github.com:mojaloop/iac-shared-modules//aws/iam?ref=v1.0.14"
+  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/iam?ref=v1.0.17"
 
   aws_cluster_name = "${var.environment}-${var.client}"
 }
