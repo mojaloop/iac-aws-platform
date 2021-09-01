@@ -1,6 +1,6 @@
 default: 
   image: 
-    name: ghcr.io/mojaloop/iac-aws-platform:1.0.6
+    name: ghcr.io/mojaloop/iac-aws-platform:1.0.8
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -112,19 +112,19 @@ Destroy Environment:
 Destroy k3s Cluster:
     
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.11.1
+    name: ghcr.io/pm4ml/k3sbootstrap:0.11.2
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"')
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
-    - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
+    - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" aws_conf
-    - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" aws_conf
-    - sed -i "s/##region##/${region}/g" aws_conf
-    - mkdir -p ~/.aws && cp aws_conf ~/.aws/credentials
+    - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
+    - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
+    - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
+    - mkdir -p ~/.aws && cp $CI_IMAGE_PROJECT_DIR/aws_conf ~/.aws/credentials
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - eval `ssh-agent`
     - mkdir -p ~/.ssh
@@ -159,19 +159,19 @@ Deploy AWS Infrastructure:
 
 Create k3s Cluster:
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.11.1
+    name: ghcr.io/pm4ml/k3sbootstrap:0.11.2
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
-    - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
+    - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" aws_conf
-    - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" aws_conf
-    - sed -i "s/##region##/${region}/g" aws_conf
-    - mkdir -p ~/.aws && cp aws_conf ~/.aws/credentials
+    - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
+    - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
+    - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
+    - mkdir -p ~/.aws && cp $CI_IMAGE_PROJECT_DIR/aws_conf ~/.aws/credentials
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - eval `ssh-agent`
     - mkdir -p ~/.ssh
@@ -259,19 +259,19 @@ Deploy Vault:
 2b. Install Internal PM4MLs:
   stage: "Deploy Platform"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.11.1
+    name: ghcr.io/pm4ml/k3sbootstrap:0.11.2
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
-    - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
+    - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" aws_conf
-    - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" aws_conf
-    - sed -i "s/##region##/${region}/g" aws_conf
-    - mkdir -p ~/.aws && cp aws_conf ~/.aws/credentials
+    - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
+    - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
+    - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
+    - mkdir -p ~/.aws && cp $CI_IMAGE_PROJECT_DIR/aws_conf ~/.aws/credentials
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - eval `ssh-agent`
     - mkdir -p ~/.ssh
