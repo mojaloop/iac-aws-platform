@@ -1,5 +1,5 @@
 module "nlb_addons" {
-  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=v1.0.19"
+  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=v1.0.21"
 
   vpc_id = data.aws_vpc.selected.id
   prefix = "addons-${var.client}-${var.environment}"

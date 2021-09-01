@@ -84,7 +84,7 @@ resource "local_file" "pm4ml_personal_client_key" {
 }
 
 module "internal_provision_pm4ml_to_wso2" {
-  source            = "git::git::https://github.com/mojaloop/iac-shared-modules.git//wso2/create-test-user?ref=v1.0.19"
+  source            = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/create-test-user?ref=v1.0.21"
   extgw_fqdn        = data.terraform_remote_state.infrastructure.outputs.extgw_public_fqdn
   test_user_details = local.internal_pm4ml_details
   admin_user        = "admin"
@@ -92,7 +92,7 @@ module "internal_provision_pm4ml_to_wso2" {
 }
 
 module "provision_pm4ml_callbacks_to_wso2" {
-  source            = "git::git::https://github.com/mojaloop/iac-shared-modules.git//wso2/callbacks-post-config?ref=v1.0.19"
+  source            = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/callbacks-post-config?ref=v1.0.21"
   intgw_fqdn        = data.terraform_remote_state.infrastructure.outputs.intgw_private_fqdn
   test_user_details = local.internal_pm4ml_details
   fspiop_version    = split(".", var.helm_mojaloop_version)[0] == "10" ? "1.0" : "1.1"

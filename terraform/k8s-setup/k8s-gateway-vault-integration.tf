@@ -14,19 +14,6 @@ resource "kubernetes_service_account" "vault-auth-gateway" {
   depends_on = [module.wso2_init]
 }
 
-resource "kubernetes_secret" "vault-auth-gateway" {
-  metadata {
-    name      = "vault-auth-gateway"
-    namespace = var.wso2_namespace
-    annotations = {
-      "kubernetes.io/service-account.name" = "vault-auth-gateway"
-    }
-  }
-  type       = "kubernetes.io/service-account-token"
-  provider   = kubernetes.k8s-gateway
-  depends_on = [kubernetes_service_account.vault-auth-gateway]
-}
-
 resource "kubernetes_cluster_role_binding" "role-tokenreview-binding-gateway" {
   metadata {
     name = "role-tokenreview-binding-vault"
@@ -42,12 +29,11 @@ resource "kubernetes_cluster_role_binding" "role-tokenreview-binding-gateway" {
     namespace = var.wso2_namespace
   }
   provider   = kubernetes.k8s-gateway
-  depends_on = [kubernetes_secret.vault-auth-gateway]
 }
 
 data "kubernetes_secret" "generated-vault-auth-gateway" {
   metadata {
-    name      = kubernetes_service_account.vault-auth-gateway.metadata[0].name
+    name      = kubernetes_service_account.vault-auth-gateway.default_secret_name
     namespace = var.wso2_namespace
   }
   provider   = kubernetes.k8s-gateway
@@ -65,7 +51,6 @@ resource "vault_kubernetes_auth_backend_config" "kubernetes-gateway" {
   kubernetes_ca_cert = data.kubernetes_secret.generated-vault-auth-gateway.data["ca.crt"]
   token_reviewer_jwt = data.kubernetes_secret.generated-vault-auth-gateway.data.token
   issuer             = "api"
-  depends_on         = [data.kubernetes_secret.generated-vault-auth-gateway]
 }
 
 resource "vault_policy" "base-token-polcies" {
