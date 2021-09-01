@@ -9,7 +9,7 @@ account-lookup-service:
       api:
         image:
           repository: mojaloop/account-lookup-service
-          tag: v11.5.4
+          tag: v11.7.0
     config:
       db_password: "${mysql_password}"
     ingress:
@@ -24,7 +24,7 @@ account-lookup-service:
       admin:
         image:
           repository: mojaloop/account-lookup-service
-          tag: v11.5.4
+          tag: v11.7.0
     config:
       db_password: "${mysql_password}"
     ingress:
@@ -169,7 +169,7 @@ finance-portal:
     InsecureCookie: true
   backend:
     image:
-      tag: v15.0.2
+      tag: v15.2.0
     init:
       enabled: false
     ingress:
