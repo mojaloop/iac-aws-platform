@@ -1,8 +1,13 @@
 default: 
   image: 
-    name: ghcr.io/mojaloop/iac-aws-platform:1.0.1
+    name: ghcr.io/mojaloop/iac-aws-platform:1.0.4
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - echo bucket $BUCKET
+    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
+    - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
     # Define the contents of the workbench-config file as environment variables for use in gitlab and optionally in terraform
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
@@ -107,16 +112,24 @@ Destroy Environment:
 Destroy k3s Cluster:
     
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.11.0
+    name: ghcr.io/pm4ml/k3sbootstrap:0.11.1
   before_script:
+    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"')
+    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
+    - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
+    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" aws_conf
+    - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" aws_conf
+    - sed -i "s/##region##/${region}/g" aws_conf
+    - mkdir -p ~/.aws && cp aws_conf ~/.aws/credentials
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - eval `ssh-agent`
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
-    - mkdir -p ~/.aws && echo "$AWS_CONFIG_FILE" >> ~/.aws/credentials
     - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
     - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
     - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
@@ -146,21 +159,27 @@ Deploy AWS Infrastructure:
 
 Create k3s Cluster:
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.11.0
+    name: ghcr.io/pm4ml/k3sbootstrap:0.11.1
   before_script:
+    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
+    - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
+    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" aws_conf
+    - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" aws_conf
+    - sed -i "s/##region##/${region}/g" aws_conf
+    - mkdir -p ~/.aws && cp aws_conf ~/.aws/credentials
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - eval `ssh-agent`
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
-    - mkdir -p ~/.aws && echo "$AWS_CONFIG_FILE" >> ~/.aws/credentials
     - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
     - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
     - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
-    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
-    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     
   stage: "Run k3s"
   script:
@@ -240,21 +259,27 @@ Deploy Vault:
 2b. Install Internal PM4MLs:
   stage: "Deploy Platform"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.11.0
+    name: ghcr.io/pm4ml/k3sbootstrap:0.11.1
   before_script:
+    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
+    - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
+    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" aws_conf
+    - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" aws_conf
+    - sed -i "s/##region##/${region}/g" aws_conf
+    - mkdir -p ~/.aws && cp aws_conf ~/.aws/credentials
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - eval `ssh-agent`
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
-    - mkdir -p ~/.aws && echo "$AWS_CONFIG_FILE" >> ~/.aws/credentials
     - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
     - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
     - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
-    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
-    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
   script:
     - aws s3 cp s3://$BUCKET/$environment/k3saddons/ssh-key /k3s-boot/ssh-key --sse
     - chmod 400 /k3s-boot/ssh-key
