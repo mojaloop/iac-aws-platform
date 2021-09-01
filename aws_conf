@@ -1,4 +1,0 @@
-[default]
-aws_access_key_id = ##accesskeyid##
-aws_secret_access_key = ##accesssecret##
-region = ##region##
