@@ -9,7 +9,7 @@ account-lookup-service:
       api:
         image:
           repository: mojaloop/account-lookup-service
-          tag: v11.7.0
+          tag: v11.7.2
     config:
       db_password: "${mysql_password}"
     ingress:
@@ -24,7 +24,7 @@ account-lookup-service:
       admin:
         image:
           repository: mojaloop/account-lookup-service
-          tag: v11.7.0
+          tag: v11.7.2
     config:
       db_password: "${mysql_password}"
     ingress:
@@ -139,6 +139,9 @@ ml-api-adapter:
       hosts:
         api: ml-api-adapter.${env}.${name}.${domain}.internal
 quoting-service:
+  image:
+    repository: mojaloop/quoting-service
+    tag: v12.0.7
   sidecar:
     enabled: false
   config:
