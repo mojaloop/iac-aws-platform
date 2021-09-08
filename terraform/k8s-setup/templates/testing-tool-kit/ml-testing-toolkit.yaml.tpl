@@ -1,4 +1,5 @@
 ml-testing-toolkit:
+  enabled: ${internal_ttk_enabled}
   ml-testing-toolkit-backend:
     ingress:
       hosts:

@@ -1,5 +1,5 @@
 mojaloop-simulator:
-   enabled: true
+  enabled: ${internal_sim_enabled}
   # Default values for mojaloop-simulator.
   # This is a YAML-formatted file.
   # Declare variables to be passed into your templates.
