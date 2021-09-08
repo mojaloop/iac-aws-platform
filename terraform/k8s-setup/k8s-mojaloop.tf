@@ -74,9 +74,7 @@ resource "helm_release" "mojaloop" {
   create_namespace = true
 
   values = [
-    templatefile("${path.module}/templates/values-lab-oss.yaml.tpl", local.oss_values),
-    templatefile("${path.module}/templates/testing-tool-kit/mojaloop-simulator.tpl", local.oss_values),
-    templatefile("${path.module}/templates/testing-tool-kit/ml-testing-toolkit.yaml.tpl", local.oss_values)
+    templatefile("${path.module}/templates/values-lab-oss.yaml.tpl", local.oss_values)
   ]
  
   provider = helm.helm-gateway
