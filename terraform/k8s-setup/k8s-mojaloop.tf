@@ -10,28 +10,28 @@ resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
       http {
         path {
           backend {
-            service_name = "mojaloop-account-lookup-service"
+            service_name = "${var.helm_mojaloop_release_name}-account-lookup-service"
             service_port = 80
           }
           path = "/participants"
         }
         path {
           backend {
-            service_name = "mojaloop-account-lookup-service"
+            service_name = "${var.helm_mojaloop_release_name}-account-lookup-service"
             service_port = 80
           }
           path = "/parties"
         }
         path {
           backend {
-            service_name = "mojaloop-quoting-service"
+            service_name = "${var.helm_mojaloop_release_name}-quoting-service"
             service_port = 80
           }
           path = "/quotes"
         }
         path {
           backend {
-            service_name = "mojaloop-ml-api-adapter-service"
+            service_name = "${var.helm_mojaloop_release_name}-ml-api-adapter-service"
             service_port = 80
           }
           path = "/transfers"
@@ -45,14 +45,14 @@ resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
         }
         path {
           backend {
-            service_name = "mojaloop-transaction-requests-service"
+            service_name = "${var.helm_mojaloop_release_name}-transaction-requests-service"
             service_port = 80
           }
           path = "/transactionRequests"
         }
         path {
           backend {
-            service_name = "mojaloop-transaction-requests-service"
+            service_name = "${var.helm_mojaloop_release_name}-transaction-requests-service"
             service_port = 80
           }
           path = "/authorizations"
@@ -65,7 +65,7 @@ resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
 }
 
 resource "helm_release" "mojaloop" {
-  name       = "mojaloop"
+  name       = var.helm_mojaloop_release_name
   repository = "http://mojaloop.io/helm/repo"
   chart      = "mojaloop"
   version    = var.helm_mojaloop_version
@@ -74,7 +74,7 @@ resource "helm_release" "mojaloop" {
   create_namespace = true
 
   values = [
-    templatefile("${path.module}/templates/values-lab-oss.yaml.tpl", local.oss_values)
+    templatefile((lookup(var.helm_mojaloop_release_name, "v12", null) != null) ? "${path.module}/templates/values-lab-oss.yaml.tpl" : "${path.module}/templates/values-lab-oss-v13.yaml.tpl", local.oss_values)
   ]
  
   provider = helm.helm-gateway
@@ -125,7 +125,7 @@ resource "helm_release" "esp-mojaloop" {
   ]
   set {
     name  = "config.kafka_host"
-    value = "mojaloop-kafka"
+    value = "${var.helm_mojaloop_release_name}-kafka"
     type  = "string"
   }
 
