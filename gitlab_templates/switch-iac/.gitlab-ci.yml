@@ -1,16 +1,16 @@
 default: 
   image: 
-    name: ghcr.io/mojaloop/iac-aws-platform:1.0.8
+    name: ghcr.io/mojaloop/iac-aws-platform:1.0.9
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - echo bucket $BUCKET
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
     # Define the contents of the workbench-config file as environment variables for use in gitlab and optionally in terraform
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - export ENVIRONMENT=$environment
     - test -n "$BUCKET"
     - cd $CI_IMAGE_PROJECT_DIR
     - aws s3 sync s3://${BUCKET}/${environment}/ . --sse || true
@@ -68,11 +68,17 @@ Destroy Mojaloop K8s Stack:
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform validate
     - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+    - kubectl delete namespace mojaloop
+    - kubectl delete namespace wso2
   when: manual
 
 Destroy Add-On Apps:
   stage: Destroy
   script:
+    - aws s3 sync s3://${BUCKET}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
+    - aws s3 sync s3://${client}${environment}k3s-pm4mladdons-state/k3s ./k3sstate --sse || true
+    - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/addons || true
+    - for var in $(jq -r '.internal_pm4ml_configs | to_entries[] .value.DFSP_NAME' ./workbench-config.json); do touch terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-key.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-ca-cert.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-cert.pem; done
     - cd terraform/k8s-setup/addons
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform validate
@@ -106,6 +112,10 @@ Destroy Vault:
 Destroy Environment:
   stage: Destroy
   script:
+    - aws s3 sync s3://${BUCKET}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
+    - aws s3 sync s3://${client}${environment}k3s-pm4mladdons-state/k3s ./k3sstate --sse || true
+    - for var in $(jq -r '.internal_pm4ml_configs | to_entries[] .value.DFSP_NAME' ./workbench-config.json); do touch terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-key.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-ca-cert.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-cert.pem; done
+    - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/addons || true
     - $CI_IMAGE_PROJECT_DIR/teardown.sh
   when: manual
 
@@ -145,6 +155,7 @@ Destroy k3s Cluster:
     - make backend -- -auto-approve
     - make destroy -- -auto-approve
     - aws s3 rm --recursive s3://$BUCKET/$environment/k3saddons
+    - aws s3 rm --recursive s3://${client}${environment}k3s-pm4mladdons-state/k3s
   when: manual
 
 Deploy AWS Infrastructure:
@@ -411,27 +422,27 @@ Deploy Vault:
   script:
     - if [ -f terraform-k8s.tfstate ]; then export fin_portal_users=$(terraform output -json -state=terraform-k8s.tfstate finance_portal_users); else ls -la .; fi 
     - if [ -f terraform-k8s.tfstate ]; then export fin_portal_url=$(terraform output -state=terraform-k8s.tfstate finance-portal-url); else ls -la .; fi 
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-    - aws s3 cp s3://${BUCKET}/${environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - cd $CI_IMAGE_PROJECT_DIR/sim_tests
+    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ ${CI_IMAGE_PROJECT_DIR}/sim_tests --sse
+    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ ${CI_IMAGE_PROJECT_DIR}/secrets_chart --sse
+    - aws s3 cp s3://${BUCKET}/${environment}/k3saddons/onboarding_internal_pm4ml_output.json ${CI_IMAGE_PROJECT_DIR}/sim_tests
+    - cd ${CI_IMAGE_PROJECT_DIR}/sim_tests
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopHub_Setup.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopSims_Onboarding.postman_collection.json --ssl-client-cert-list test_cert_list.json --insecure -e Lab.postman_environment.json || true
-    - git clone https://github.com/mojaloop/finance-portal-v2-ui.git $CI_IMAGE_PROJECT_DIR/finance-portal-v2-ui
-    - cd $CI_IMAGE_PROJECT_DIR/finance-portal-v2-ui/tests/e2e-ui-tests
+    - git clone https://github.com/mojaloop/finance-portal-v2-ui.git ${CI_IMAGE_PROJECT_DIR}/finance-portal-v2-ui
+    - cd ${CI_IMAGE_PROJECT_DIR}/finance-portal-v2-ui/tests/e2e-ui-tests
     - echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
     - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
     - apt-get update
     - apt-get install -y google-chrome-stable
     - echo $fin_portal_users | jq -r '"ADMIN_USER_NAME=\(.portaladmin.username)\nADMIN_PASSWORD=\(.portaladmin.user_pass)\nUSER_NAME=\(.portaluser.username)\nPASSWORD=\(.portaluser.user_pass)"' > .env
     - echo "FINANCE_PORTAL_ENDPOINT=$fin_portal_url" >> .env
-    - npm ci
+    - npm i
     - npm run test:headless || true
+    - cp ${CI_IMAGE_PROJECT_DIR}/finance-portal-v2-ui/tests/e2e-ui-tests/src/reports/report.html ${CI_PROJECT_DIR}/fin_port_report.html
   after_script:
-    - cp $CI_IMAGE_PROJECT_DIR/finance-portal-v2-ui/tests/e2e-ui-tests/src/reports/report.html ${CI_PROJECT_DIR}/fin_port_report.html
     - curl https://slack.com/api/files.upload
-      -F file=@"$CI_IMAGE_PROJECT_DIR/finance-portal-v2-ui/tests/e2e-ui-tests/src/reports/report.html"
+      -F file=@"${CI_IMAGE_PROJECT_DIR}/finance-portal-v2-ui/tests/e2e-ui-tests/src/reports/report.html"
       -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}"
       -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
       -F title="Run Finance Portal V2 UI Tests"

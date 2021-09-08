@@ -83,6 +83,11 @@ variable "helm_mojaloop_version" {
   description = "Mojaloop version to install via Helm"
 }
 
+variable "helm_mojaloop_release_name" {
+  description = "Mojaloop helm release name"
+  default = "mojaloop"
+}
+
 variable "project_root_path" {
   description = "Root path for IaC project"
 }

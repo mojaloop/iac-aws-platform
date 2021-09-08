@@ -55,6 +55,11 @@ variable "helm_mojaloop_version" {
   description = "Mojaloop version to install via Helm"
 }
 
+variable "helm_mojaloop_release_name" {
+  description = "Mojaloop helm release name"
+  default = "mojaloop"
+}
+
 variable "helm_mojaloop_simulator_version" {
   description = "Mojaloop Simulator version to install via Helm"
 }

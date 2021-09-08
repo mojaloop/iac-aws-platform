@@ -89,7 +89,7 @@
 		},
 		{
 			"key": "HOST_SIMULATOR",
-			"value": "http://mojaloop-simulator",
+			"value": "http://${MOJALOOP_RELEASE}-simulator",
 			"enabled": true
 		},
 		{
