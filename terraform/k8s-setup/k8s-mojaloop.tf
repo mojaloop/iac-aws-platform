@@ -74,7 +74,9 @@ resource "helm_release" "mojaloop" {
   create_namespace = true
 
   values = [
-    templatefile("${path.module}/templates/values-lab-oss.yaml.tpl", local.oss_values)
+    templatefile("${path.module}/templates/values-lab-oss.yaml.tpl", local.oss_values),
+    templatefile("${path.module}/templates/testing-tool-kit/mojaloop-simulator.tpl", local.oss_values),
+    templatefile("${path.module}/templates/testing-tool-kit/ml-testing-toolkit.yaml.tpl", local.oss_values)
   ]
  
   provider = helm.helm-gateway
@@ -96,6 +98,7 @@ locals {
     wso2is_host = "https://${data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn}"
     portal_oauth_app_id = vault_generic_secret.mojaloop_fin_portal_backend_client_id.data.value
     portal_oauth_app_token = vault_generic_secret.mojaloop_fin_portal_backend_client_secret.data.value
+    sim_prefix = var.sim_prefix
   }
   portal_users = [
     for user in var.finance_portal_users :

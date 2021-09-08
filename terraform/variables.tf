@@ -232,3 +232,8 @@ variable "custom_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "sim_prefix" {
+  description = "use to deploy internal simulators to be useb by ttk"
+  default = {}
+}

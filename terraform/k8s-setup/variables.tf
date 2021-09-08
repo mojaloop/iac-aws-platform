@@ -252,3 +252,13 @@ variable "use_mfi_account_oracle_endpoint" {
   type        = string
   default     = "no"
 }
+
+variable "sim_prefix" {
+  description = "use to deploy internal simulators to be useb by ttk"
+  default = {}
+}
+
+variable "sim_prefix" {
+  description = "use to deploy internal simulators to be useb by ttk"
+  default = {}
+}
