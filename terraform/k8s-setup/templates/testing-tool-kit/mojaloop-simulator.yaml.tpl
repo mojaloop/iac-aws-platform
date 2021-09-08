@@ -98,10 +98,10 @@ mojaloop-simulator:
     # payerfsp: {}
     # payeefsp: {}
     ## Default FSPs for Mojaloop Postman Scripts
-    ${sim_prefix}payerfsp:
+    ${internal_sim_prefix}payerfsp:
       ingress:
         hosts:
-          - sim-${sim_prefix}payerfsp.local
+          - sim-${internal_sim_prefix}payerfsp.local
       config:
         schemeAdapter:
           secrets:
@@ -146,10 +146,10 @@ mojaloop-simulator:
                 pxRHkXN7R92xKGDPHO+K/lvmMQhu51H9elwpNd9l1X32x1ZfsBYKNfGAf7ACZnG3
                 jwIDAQAB
                 -----END PUBLIC KEY-----
-    ${sim_prefix}payeefsp:
+    ${internal_sim_prefix}payeefsp:
       ingress:
         hosts:
-          - sim-${sim_prefix}payeefsp.local
+          - sim-${internal_sim_prefix}payeefsp.local
       config:
         schemeAdapter:
           secrets:
@@ -194,10 +194,10 @@ mojaloop-simulator:
                 LmOLh3BtzDuna2KwtNdVNGcjPdCle3b9mNIdhR5aZ/bP6Zm+t9JuRC6ZwU/6WEy3
                 FwIDAQAB
                 -----END PUBLIC KEY-----
-    ${sim_prefix}testfsp1:
+    ${internal_sim_prefix}testfsp1:
       ingress:
         hosts:
-          - sim-${sim_prefix}testfsp1.local
+          - sim-${internal_sim_prefix}testfsp1.local
       config:
         schemeAdapter:
           secrets:
@@ -242,10 +242,10 @@ mojaloop-simulator:
                 xQxFvhHxR7W0e74fAU8B8YIJzwjaQvrEh9SJRc2IZsh6EdBAXXmbk4sHKyhoX0by
                 UQIDAQAB
                 -----END PUBLIC KEY-----
-    ${sim_prefix}testfsp2:
+    ${internal_sim_prefix}testfsp2:
       ingress:
         hosts:
-          - sim-${sim_prefix}testfsp2.local
+          - sim-${internal_sim_prefix}testfsp2.local
       config:
         schemeAdapter:
           secrets:
@@ -290,10 +290,10 @@ mojaloop-simulator:
                 WZLXU+JJoCp2wkCPNTRxzPE2PGnlI0a4ZP2/y/2yacc4HQGBhEMc+SVT/VSZaMS+
                 AQIDAQAB
                 -----END PUBLIC KEY-----
-    ${sim_prefix}testfsp3:
+    ${internal_sim_prefix}testfsp3:
       ingress:
         hosts:
-          - sim-${sim_prefix}testfsp3.local
+          - sim-${internal_sim_prefix}testfsp3.local
       config:
         schemeAdapter:
           secrets:
@@ -338,10 +338,10 @@ mojaloop-simulator:
                 bQdOzgHzf6di3MbpgiePXRqi7wtFcjLBkJGd3UvZDSsf7D+u8ZUpfWHgiDzfecMX
                 BQIDAQAB
                 -----END PUBLIC KEY-----
-    ${sim_prefix}testfsp4:
+    ${internal_sim_prefix}testfsp4:
       ingress:
         hosts:
-          - sim-${sim_prefix}testfsp4.local
+          - sim-${internal_sim_prefix}testfsp4.local
       config:
         schemeAdapter:
           secrets:

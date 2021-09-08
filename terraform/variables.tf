@@ -233,7 +233,7 @@ variable "custom_tags" {
   default     = {}
 }
 
-variable "sim_prefix" {
+variable "internal_sim_prefix" {
   description = "use to deploy internal simulators to be useb by ttk"
   default = "ttk"
 }
