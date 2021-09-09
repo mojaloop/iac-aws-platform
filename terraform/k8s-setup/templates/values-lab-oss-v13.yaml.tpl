@@ -32,6 +32,14 @@ account-lookup-service:
         - account-lookup-service-admin.${env}.${name}.${domain}.internal
   mysql:
     mysqlPassword: "${mysql_password}"
+  als-oracle-pathfinder:
+    enabled: false
+    config:
+      db:
+        account_lookup:
+          password: "${mysql_password}"
+        central_ledger:
+          password: "${mysql_password}"
 central:
   centraleventprocessor:
     ingress:
@@ -126,8 +134,19 @@ central:
     centralsettlement-handler-rules:
       config:
         db_password: "${mysql_password}"
+    centralsettlement-handler-settlementwindow:
+      config:
+        db_password: "${mysql_password}"
+    centralsettlement-handler-transfersettlement:
+      config:
+        db_password: "${mysql_password}"
 emailnotifier:
+#just for 13.0.1 - can be removed in 13.0.2
   enabled: true
+  readinessProbe:
+    enabled: false  
+  livenessProbe:
+    enabled: false
   ingress:
     hosts:
       api: emailnotifier.${env}.${name}.${domain}.internal
@@ -194,7 +213,8 @@ finance-portal:
         nginx.ingress.kubernetes.io/rewrite-target: ""
 finance-portal-settlement-management:
   enabled: false
-
+  config:
+    db_password: "${mysql_password}"
 mojaloop-bulk:
   enabled: true  
   bulk-centralledger:
