@@ -74,16 +74,13 @@ resource "helm_release" "mojaloop" {
   create_namespace = true
 
   values = [
-    templatefile((lookup(var.helm_mojaloop_release_name, "v12", null) != null) ? "${path.module}/templates/values-lab-oss.yaml.tpl" : "${path.module}/templates/values-lab-oss-v13.yaml.tpl", local.oss_values),
-    templatefile("${path.module}/templates/testing-tool-kit/mojaloop-simulator.tpl", local.oss_values),
-    templatefile("${path.module}/templates/testing-tool-kit/ml-testing-toolkit.yaml.tpl", local.oss_values)
+    templatefile(split(".", var.helm_mojaloop_version)[0] == "12" ? "${path.module}/templates/values-lab-oss.yaml.tpl" : "${path.module}/templates/values-lab-oss-v13.yaml.tpl", local.oss_values)
   ]
  
   provider = helm.helm-gateway
 
   depends_on = [module.wso2_init, module.fin-portal-iskm]
 }
-
 
 locals {
   oss_values = {
