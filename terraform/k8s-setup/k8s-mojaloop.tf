@@ -73,14 +73,15 @@ resource "helm_release" "mojaloop" {
   timeout    = 800
   create_namespace = true
   values = [
-    templatefile(split(".", var.helm_mojaloop_version)[0] == "12" ? "${path.module}/templates/values-lab-oss.yaml.tpl" : "${path.module}/templates/values-lab-oss-v13.yaml.tpl", local.oss_values)
+    templatefile(split(".", var.helm_mojaloop_version)[0] == "12" ? "${path.module}/templates/values-lab-oss.yaml.tpl" : "${path.module}/templates/values-lab-oss-v13.yaml.tpl", local.oss_values),
+    templatefile("${path.module}/templates/testing-tool-kit/mojaloop-simulator.tpl", local.oss_values),
+    templatefile("${path.module}/templates/testing-tool-kit/ml-testing-toolkit.yaml.tpl", local.oss_values)
   ]
  
   provider = helm.helm-gateway
 
   depends_on = [module.wso2_init, module.fin-portal-iskm]
 }
-
 
 locals {
   oss_values = {
@@ -95,6 +96,9 @@ locals {
     wso2is_host = "https://${data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn}"
     portal_oauth_app_id = vault_generic_secret.mojaloop_fin_portal_backend_client_id.data.value
     portal_oauth_app_token = vault_generic_secret.mojaloop_fin_portal_backend_client_secret.data.value
+    sim_prefix = var.sim_prefix
+    internal_ttk_enabled = var.internal_ttk_enabled
+    internal_sim_enabled = var.internal_sim_enabled
   }
   portal_users = [
     for user in var.finance_portal_users :

@@ -38,6 +38,9 @@
   "TAG_ML_GP": "v12.0.3",
   "TAG_PM4ML_GP": "v1.0.0",
   "simulator_names": ["payerfsp", "payeefsp", "testfsp1", "testfsp2", "testfsp3", "testfsp4"],
+  "internal_sim_prefix": "<placeholder>",
+  "internal_ttk_enabled": "<placeholder>",
+  "internal_sim_enabled": "<placeholder>",
   "internal_pm4ml_configs": [
     {
       "DFSP_NAME": "pm4mlreceiverfsp",
