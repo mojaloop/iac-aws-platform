@@ -232,18 +232,3 @@ variable "custom_tags" {
   type        = map(string)
   default     = {}
 }
-
-variable "internal_sim_prefix" {
-  description = "use to deploy internal simulators to be useb by ttk"
-  default = "ttk"
-}
-
-variable "internal_ttk_enabled" {
-  description = "whether internal ttk instance is enabled or not"
-  default = true
-}
-
-variable "internal_sim_enabled" {
-  description = "whether internal mojaloop simulators ar enabled or not"
-  default = true
-}
