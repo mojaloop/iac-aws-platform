@@ -181,7 +181,19 @@ management-api:
         }
       }
 
-mojaloop-connector:
+mojaloop-core-connector:
+  image:
+    repository: pm4ml/mojaloop-payment-manager-simulator-core-connector
+    tag: 1.4.2
+  env:
+    MLCONN_OUTBOUND_ENDPOINT: "http://{{ item.value.helm_release_name }}-pm4ml-mojaloop-connector:4001"
+    BACKEND_ENDPOINT: "http://sim-backend:3000"
+  livenessProbe:
+    enabled: true
+  readinessProbe:
+    enabled: true
+
+pm4ml-mojaloop-connector:
   secrets:
     jws:
       privateKey: |-

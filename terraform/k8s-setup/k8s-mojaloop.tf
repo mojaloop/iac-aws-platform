@@ -72,7 +72,6 @@ resource "helm_release" "mojaloop" {
   namespace  = "mojaloop"
   timeout    = 800
   create_namespace = true
-
   values = [
     templatefile(split(".", var.helm_mojaloop_version)[0] == "12" ? "${path.module}/templates/values-lab-oss.yaml.tpl" : "${path.module}/templates/values-lab-oss-v13.yaml.tpl", local.oss_values)
   ]
