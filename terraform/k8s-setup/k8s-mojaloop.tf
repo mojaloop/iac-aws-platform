@@ -96,7 +96,7 @@ locals {
     wso2is_host = "https://${data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn}"
     portal_oauth_app_id = vault_generic_secret.mojaloop_fin_portal_backend_client_id.data.value
     portal_oauth_app_token = vault_generic_secret.mojaloop_fin_portal_backend_client_secret.data.value
-    sim_prefix = var.sim_prefix
+    internal_sim_prefix = var.internal_sim_prefix
     internal_ttk_enabled = var.internal_ttk_enabled
     internal_sim_enabled = var.internal_sim_enabled
   }

@@ -258,14 +258,9 @@ variable "use_mfi_account_oracle_endpoint" {
   default     = "no"
 }
 
-variable "sim_prefix" {
-  description = "use to deploy internal simulators to be useb by ttk"
-  default = {}
-}
-
 variable "internal_sim_prefix" {
   description = "use to deploy internal simulators to be useb by ttk"
-  default = {}
+  default = "mojaint"
 }
 
 variable "internal_ttk_enabled" {
