@@ -240,5 +240,21 @@ resource "kubernetes_config_map" "grafana-support-services-dashboards" {
     value = 30001
     type  = "string"
   }
+
+  set {
+    name  = "config.entries.client-body-buffer-size"
+    value = "256M"
+  }
+
+  set {
+    name  = "config.entries.client-max-body-size"
+    value = "256M"
+  }
+
+  set {
+    name  = "config.entries.proxy-body-size"
+    value = "256M"
+  }
+  
   provider = helm.helm-gateway
 } */
