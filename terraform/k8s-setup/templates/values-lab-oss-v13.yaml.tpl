@@ -191,7 +191,7 @@ finance-portal:
     InsecureCookie: true
   backend:
     image:
-      tag: v15.2.0
+      tag: v15.3.2
     init:
       enabled: false
     ingress:
