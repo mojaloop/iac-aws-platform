@@ -240,6 +240,5 @@ resource "kubernetes_config_map" "grafana-support-services-dashboards" {
     value = 30001
     type  = "string"
   }
-
   provider = helm.helm-gateway
 } */
