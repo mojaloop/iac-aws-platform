@@ -51,7 +51,10 @@ imagePullPolicy: "IfNotPresent"
 podAnnotations: {}
 # iam.amazonaws.com/role: es-cluster
 
-esJavaOpts: "-Xmx1g -Xms1g"
+esConfig:
+  elasticsearch.yml: |
+     http.max_content_length: 256mb
+  ES_JAVA_OPTS: -Xms1000m -Xmx1000m
 
 resources:
   requests:
@@ -168,7 +171,7 @@ readinessProbe:
   timeoutSeconds: 5
 
 # https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-health.html#request-params wait_for_status
-clusterHealthCheckParams: "wait_for_status=green&timeout=1s"
+clusterHealthCheckParams: "wait_for_status=yellow&timeout=10s"
 
 ## Use an alternate scheduler.
 ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
