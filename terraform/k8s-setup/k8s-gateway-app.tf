@@ -171,5 +171,21 @@ resource "helm_release" "deploy-gateway-nginx-ingress-controller" {
     name  = "service.nodePorts.http"
     value = 30001
   }
+
+  set {
+    name  = "config.entries.client-body-buffer-size"
+    value = "256M"
+  }
+
+  set {
+    name  = "config.entries.client-max-body-size"
+    value = "256M"
+  }
+
+  set {
+    name  = "config.entries.proxy-body-size"
+    value = "256M"
+  }
+
   provider = helm.helm-gateway
 }
