@@ -4,9 +4,12 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   externalHostname: ${ingress_host}
-  loginService:
+  authService:
     name: ${mojaloop_release}-finance-portal
     portName: 3000
+  ledgerService:
+    name: ${mojaloop_release}-centralledger-service
+    portName: 80
   settlementService:
     name: ${mojaloop_release}-centralsettlement-service
     portName: 80

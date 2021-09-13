@@ -38,17 +38,17 @@ frontend k8s-ingress
 
 {{range secrets "${secret_path}_sims"}}
 {{ with secret (printf "${secret_path}_sims/%s" .) }}
-    acl {{.Data.fqdn}}_acl path -i -m beg /sim/{{.Data.host}}
+    acl {{.Data.fqdn}}_acl path -i -m beg /sim/{{.Data.host}}/
 {{end}}
 {{end}}
 {{range secrets "${secret_path}_fsps"}}
 {{ with secret (printf "${secret_path}_fsps/%s" .) }}
-    acl {{.Data.fqdn}}_acl path -i -m beg /fsp/{{.Data.host}}
+    acl {{.Data.fqdn}}_acl path -i -m beg /fsp/{{.Data.host}}/
 {{end}}
 {{end}}
 {{range secrets "${secret_path}_pm4mls"}}
 {{ with secret (printf "${secret_path}_pm4mls/%s" .) }}
-    acl {{.Data.fqdn}}_acl path -i -m beg /sim/{{.Data.host}}
+    acl {{.Data.fqdn}}_acl path -i -m beg /sim/{{.Data.host}}/
 {{end}}
 {{end}}
 

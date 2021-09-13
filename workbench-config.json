@@ -11,7 +11,7 @@
   "helm_nginx_version": "7.6.1",
   "helm_mojaloop_version": "12.0.0",
   "helm_mojaloop_simulator_version": "11.3.0",
-  "helm_finance_portal_version": "2.0.6",
+  "helm_finance_portal_version": "2.3.0",
   "helm_apm_version": "2.1.4",
   "helm_fluentd_version": "4.3.2",
   "helm_elasticsearch_version": "7.8.1",
