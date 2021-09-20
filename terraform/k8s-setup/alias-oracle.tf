@@ -10,7 +10,7 @@ resource "aws_route53_record" "alias-oracle-gateway-private" {
 resource "helm_release" "alias-oracle" {
   count      = var.use_alias_oracle_endpoint == "yes" ? 1 : 0
   name       = "alias-oracle"
-  repository = "https://${var.private_helm_repo_read_key}@raw.githubusercontent.com/modusintegration/alias-oracle/repo"
+  repository = "https://docs.mojaloop.io/alias-oracle"
   chart      = "alias-oracle"
   version    = var.helm_alias_oracle_version
   namespace  = "mojaloop"

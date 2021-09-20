@@ -167,9 +167,8 @@ resource "helm_release" "deploy-gateway-nginx-ingress-controller" {
   wait       = false
   create_namespace = true
 
-  set {
-    name  = "service.nodePorts.http"
-    value = 30001
-  }
   provider = helm.helm-gateway
+  values = [
+    "${file("${var.project_root_path}/helm/values-nginx.yaml")}"
+  ]
 }

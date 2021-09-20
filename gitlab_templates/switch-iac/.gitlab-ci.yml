@@ -1,6 +1,6 @@
 default: 
   image: 
-    name: ghcr.io/mojaloop/iac-aws-platform:1.0.10
+    name: ghcr.io/mojaloop/iac-aws-platform:1.0.13
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -118,6 +118,7 @@ Destroy Environment:
     - aws s3 sync s3://${client}${environment}k3s-pm4mladdons-state/k3s ./k3sstate --sse || true
     - for var in $(jq -r '.internal_pm4ml_configs | to_entries[] .value.DFSP_NAME' ./workbench-config.json); do touch terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-key.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-ca-cert.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-cert.pem; done
     - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/addons || true
+    - cp $CI_PROJECT_DIR/teardown.sh $CI_IMAGE_PROJECT_DIR/teardown.sh || true
     - $CI_IMAGE_PROJECT_DIR/teardown.sh
   when: manual
 
@@ -455,6 +456,12 @@ Deploy Vault:
       - fin_port_report.html
     #reports:
       #junit: $CI_IMAGE_PROJECT_DIR/finance-portal-v2-ui/tests/e2e-ui-tests/src/reports/report.html
+
+4. Run Helm Tests:
+  stage: "Run Tests"
+  script:
+    - helm --kubeconfig=admin-gateway.conf test ${helm_mojaloop_release_name} -n mojaloop
+  when: manual
 
 1. Run External PM4ML Onboarding:
   stage: "Maintain Platform"

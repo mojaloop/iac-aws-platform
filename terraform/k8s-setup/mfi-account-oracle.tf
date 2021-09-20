@@ -10,7 +10,7 @@ resource "aws_route53_record" "mfi-account-oracle-gateway-private" {
 resource "helm_release" "mfi-account-oracle" {
   count      = var.use_mfi_account_oracle_endpoint == "yes" ? 1 : 0
   name       = "mfi-account-oracle"
-  repository = "https://${var.private_helm_repo_read_key}@raw.githubusercontent.com/modusintegration/mfi-account-oracle/repo"
+  repository = "https://docs.mojaloop.io/mfi-account-oracle"
   chart      = "mfi-account-oracle"
   version    = var.helm_mfi_account_oracle_version
   namespace  = "mojaloop"
