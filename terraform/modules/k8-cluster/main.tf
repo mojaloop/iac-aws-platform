@@ -24,7 +24,7 @@ resource "aws_instance" "k8s-master" {
     var.default_tags,
     {
       "Name"                                                            = "${var.environment}-kubernetes-master${count.index}"
-      "kubernetes.io/cluster/${var.client}-${var.environment}-mojaloop" = "member"
+      "kubernetes.io/cluster/${var.tenant}-${var.environment}-mojaloop" = "member"
       "Role"                                                            = "master"
       "k8s-cluster"                                                     = "${var.name}"
     },

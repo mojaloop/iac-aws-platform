@@ -14,7 +14,7 @@ module "k8-cluster-gateway" {
   default_tags              = local.default_tags
   security_group_ids        = [aws_security_group.internet.id]
   ssh_key_name              = aws_key_pair.provisioner_key.key_name
-  stage                     = var.environment
+  tenant                     = var.client
   subnet_id                 = data.terraform_remote_state.tenant.outputs.private_subnet_ids["${var.environment}-wso2"]["id"]
   kube_master_ebs_optimized = "false"
   kube_worker_ebs_optimized = "false"
@@ -43,7 +43,7 @@ module "k8-cluster-add-ons" {
   default_tags              = local.default_tags
   security_group_ids        = [aws_security_group.internet.id]
   ssh_key_name              = aws_key_pair.provisioner_key.key_name
-  stage                     = var.environment
+  tenant                     = var.client
   subnet_id                 = data.terraform_remote_state.tenant.outputs.private_subnet_ids["${var.environment}-add-ons"]["id"]
   kube_master_ebs_optimized = "false"
   kube_worker_ebs_optimized = "false"
