@@ -2,12 +2,12 @@ variable "environment" {
   description = "Environment name"
 }
 
-variable "name" {
-  description = "VPC name"
+variable "tenant" {
+  description = "Tenant name"
 }
 
-variable "stage" {
-  description = "VPC stage"
+variable "name" {
+  description = "VPC name"
 }
 
 variable "kube_master_ebs_optimized" {
