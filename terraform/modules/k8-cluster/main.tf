@@ -23,10 +23,10 @@ resource "aws_instance" "k8s-master" {
   tags = merge(
     var.default_tags,
     {
-      "Name"                                              = "${var.environment}-kubernetes-master${count.index}"
-      "kubernetes.io/cluster/${var.environment}-mojaloop" = "member"
-      "Role"                                              = "master"
-      "k8s-cluster"                                       = "${var.name}"
+      "Name"                                                            = "${var.environment}-kubernetes-master${count.index}"
+      "kubernetes.io/cluster/${var.client}-${var.environment}-mojaloop" = "member"
+      "Role"                                                            = "master"
+      "k8s-cluster"                                                     = "${var.name}"
     },
   )
 }
@@ -58,10 +58,10 @@ resource "aws_instance" "k8s-worker" {
   tags = merge(
     var.default_tags,
     {
-      "Name"                                              = "${var.environment}-kubernetes-worker${count.index}"
-      "kubernetes.io/cluster/${var.environment}-mojaloop" = "member"
-      "Role"                                              = "worker"
-      "k8s-cluster"                                       = "${var.name}"
+      "Name"                                                            = "${var.environment}-kubernetes-worker${count.index}"
+      "kubernetes.io/cluster/${var.client}-${var.environment}-mojaloop" = "member"
+      "Role"                                                            = "worker"
+      "k8s-cluster"                                                     = "${var.name}"
     },
   )
 }

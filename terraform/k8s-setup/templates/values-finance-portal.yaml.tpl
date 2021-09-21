@@ -17,11 +17,6 @@ ingress:
     name: ${mojaloop_release}-finance-portal
     portName: 3000
 
-imagePullCredentials:
-  user: ${private_registry_user}
-  pass: ${private_registry_pw}
-  registry: ${private_registry_reg}
-
 image:
   tag: ${image_tag}
 

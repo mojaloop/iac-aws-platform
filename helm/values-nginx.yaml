@@ -1,0 +1,8 @@
+config:
+  entries: 
+    client-body-buffer-size: "256M"
+    config.entries.client-max-body-size: "256M"
+    config.entries.proxy-body-size: "256M"
+service:
+  nodePorts:
+    http: 30001

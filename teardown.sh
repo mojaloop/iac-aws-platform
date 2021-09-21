@@ -66,11 +66,10 @@ else
 fi
 
 echo "Clearing remaining volumes"
-for vol in $(aws ec2 describe-volumes --filters "Name=tag:kubernetes.io/cluster/${ENVIRONMENT}-mojaloop,Values=owned" --query "Volumes[*].{id:VolumeId}" --region ${TF_VAR_region} | jq -r '.[].id'); do
+for vol in $(aws ec2 describe-volumes --filters "Name=tag:kubernetes.io/cluster/${client]-${ENVIRONMENT}-mojaloop,Values=owned" --query "Volumes[*].{id:VolumeId}" --region ${TF_VAR_region} | jq -r '.[].id'); do
   echo "  > deleting ${vol}"
   aws ec2 delete-volume --volume-id $vol --region ${TF_VAR_region}
 done
-
 echo "Clearing Terraform state"
 for item in $(terraform state list); do
   terraform state rm -state=$item

@@ -22,12 +22,10 @@ minimumMasterNodes: 2
 
 # Allows you to add any config files in /usr/share/elasticsearch/config/
 # such as elasticsearch.yml and log4j2.properties
-esConfig: {}
-#  elasticsearch.yml: |
-#    key:
-#      nestedkey: value
-#  log4j2.properties: |
-#    key = value
+esConfig:
+  ES_JAVA_OPTS: -Xms1000m -Xmx1000m
+  elasticsearch.yml: |
+    http.max_content_length: 256mb
 
 # Extra environment variables to append to this nodeGroup
 # This will be appended to the current 'env:' key. You can use any of the kubernetes env
@@ -50,8 +48,6 @@ imagePullPolicy: "IfNotPresent"
 
 podAnnotations: {}
 # iam.amazonaws.com/role: es-cluster
-
-esJavaOpts: "-Xmx1g -Xms1g"
 
 resources:
   requests:
@@ -168,7 +164,7 @@ readinessProbe:
   timeoutSeconds: 5
 
 # https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-health.html#request-params wait_for_status
-clusterHealthCheckParams: "wait_for_status=green&timeout=1s"
+clusterHealthCheckParams: "wait_for_status=yellow&timeout=10s"
 
 ## Use an alternate scheduler.
 ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/

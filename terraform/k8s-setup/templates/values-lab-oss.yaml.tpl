@@ -9,7 +9,7 @@ account-lookup-service:
       api:
         image:
           repository: mojaloop/account-lookup-service
-          tag: v11.7.2
+          tag: v11.7.7
     config:
       db_password: "${mysql_password}"
     ingress:
@@ -24,7 +24,7 @@ account-lookup-service:
       admin:
         image:
           repository: mojaloop/account-lookup-service
-          tag: v11.7.2
+          tag: v11.7.7
     config:
       db_password: "${mysql_password}"
     ingress:
