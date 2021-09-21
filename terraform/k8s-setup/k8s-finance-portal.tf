@@ -8,9 +8,6 @@ resource "helm_release" "finance-portal" {
 
   values = [
     templatefile("${path.module}/templates/values-finance-portal.yaml.tpl", {
-      private_registry_pw = var.ghcr_private_registry_pw,
-      private_registry_user = var.ghcr_private_registry_user,
-      private_registry_reg = var.ghcr_private_registry_reg,
       image_tag = var.helm_finance_portal_version,
       fin_portal_backend_svc = "mojaloop-finance-portal.mojaloop.svc.cluster.local:3000"
       ingress_host        = "finance-portal-v2.${var.environment}.${var.client}.${data.terraform_remote_state.tenant.outputs.domain}.internal"
