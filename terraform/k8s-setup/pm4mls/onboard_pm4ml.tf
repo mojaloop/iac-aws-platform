@@ -65,6 +65,7 @@ locals {
       "PARTY_MIDDLE_NAME" = pm4ml_config.PARTY_MIDDLE_NAME
       "PARTY_DOB" = pm4ml_config.PARTY_DOB
       "DFSP_PREFIX" = pm4ml_config.DFSP_PREFIX
+      "DFSP_SUB_ID" = pm4ml_config.DFSP_SUB_ID
     }
   ]
 }
