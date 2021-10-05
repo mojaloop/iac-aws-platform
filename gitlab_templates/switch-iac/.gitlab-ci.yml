@@ -1,6 +1,6 @@
 default: 
   image: 
-    name: ghcr.io/mojaloop/iac-aws-platform:1.0.13
+    name: ghcr.io/mojaloop/iac-aws-platform:1.1.0
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -51,6 +51,7 @@ Validate and Plan:
   artifacts:
     reports:
       terraform: plan.json
+  when: manual
 
 Destroy AWS:
   stage: Destroy
@@ -123,9 +124,9 @@ Destroy Environment:
   when: manual
 
 Destroy k3s Cluster:
-    
+  stage: "Destroy"  
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.11.3
+    name: ghcr.io/pm4ml/k3sbootstrap:0.12.9
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"')
@@ -147,7 +148,6 @@ Destroy k3s Cluster:
     - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
     - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
 
-  stage: "Destroy"
   script:
     - export
     - cd /k3s-boot
@@ -162,19 +162,10 @@ Destroy k3s Cluster:
     - $CI_IMAGE_PROJECT_DIR/delete_int_k3s_db_row.sh ${client}${environment}k3s-pm4mladdons-lock ${client}${environment}k3s-pm4mladdons-state/k3s $region
   when: manual
 
-Deploy AWS Infrastructure:
-  stage: "Deploy AWS infrastructure"
-  script:
-    - cd terraform
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve
-    - aws s3 sync $CI_IMAGE_PROJECT_DIR/kubespray-inventory s3://${BUCKET}/${environment}/kubespray-inventory/ --sse
-    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/ssh_provisioner_key s3://${BUCKET}/${environment}/terraform/ --sse
-  when: manual
-
-Create k3s Cluster:
+Undeploy PM4ML Charts:
+  stage: "Destroy"  
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.11.3
+    name: ghcr.io/pm4ml/k3sbootstrap:0.12.9
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -195,8 +186,60 @@ Create k3s Cluster:
     - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
     - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
     - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
-    
+
+  script:
+    - aws s3 cp s3://$BUCKET/$environment/k3saddons/ssh-key /k3s-boot/ssh-key --sse
+    - chmod 400 /k3s-boot/ssh-key
+    - cd /k3s-boot
+    - sed -i "s/##client##/${client}/g" .env
+    - sed -i "s/##domain##/${domain}/g" .env
+    - sed -i "s/##environment##/${environment}/g" .env
+    - sed -i "s/##region##/${region}/g" .env
+    - sed -i "s/##peer_vpc_id##/${peer_vpc_id}/g" .env
+    #TODO: static value needs addressing
+    - sed -i "s/##pm4ml_client_cert_local_dir##/\/k3s-boot\/pm4ml-certoutput\//g" .env
+    - aws s3 cp s3://$BUCKET/$environment/k3saddons/ansible_internal_pm4ml_output.yaml ./ansible_pm4ml_output.yaml --sse
+    - make backend -- -auto-approve || true
+    - make apply -- -auto-approve || true
+    - make uninstall-pm4ml
+    - aws s3 rm --recursive s3://$BUCKET/$PM4ML_ENVIRONMENT/pm4ml-certoutput
+  when: manual
+
+Deploy AWS Infrastructure:
+  stage: "Deploy AWS infrastructure"
+  script:
+    - cd terraform
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform apply -auto-approve
+    - aws s3 sync $CI_IMAGE_PROJECT_DIR/kubespray-inventory s3://${BUCKET}/${environment}/kubespray-inventory/ --sse
+    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/ssh_provisioner_key s3://${BUCKET}/${environment}/terraform/ --sse
+  when: manual
+
+Create k3s Cluster:
   stage: "Run k3s"
+  image: 
+    name: ghcr.io/pm4ml/k3sbootstrap:0.12.9
+  before_script:
+    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
+    - export CI_IMAGE_PROJECT_DIR=/k3s-boot
+    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
+    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
+    - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
+    - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
+    - mkdir -p ~/.aws && cp $CI_IMAGE_PROJECT_DIR/aws_conf ~/.aws/credentials
+    - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+    - eval `ssh-agent`
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
+    - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
+    - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
+  
   script:
     - export
     - cd /k3s-boot
@@ -207,7 +250,7 @@ Create k3s Cluster:
     - sed -i "s/##peer_vpc_id##/${peer_vpc_id}/g" .env
     - make backend -- -auto-approve
     - make apply -- -auto-approve
-    - make k3s 
+    - make k3s
     - make kubeconfig
     - aws s3 cp /k3s-boot/kubeconfig s3://$BUCKET/$environment/k3saddons/ --sse
     - aws s3 cp /k3s-boot/ssh-key s3://${BUCKET}/$environment/k3saddons/ --sse
@@ -218,6 +261,7 @@ Create k3s Cluster:
     - make wireguard
     - aws s3 cp /k3s-boot/wireguard.private.key s3://$BUCKET/$environment/k3saddons/ --sse
     - aws s3 cp /k3s-boot/wireguard.public.key s3://$BUCKET/$environment/k3saddons/ --sse
+    - make monitoring 
   when: manual
 
 Create Addons Cluster:
@@ -274,7 +318,7 @@ Deploy Vault:
 2b. Install Internal PM4MLs:
   stage: "Deploy Platform"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.11.3
+    name: ghcr.io/pm4ml/k3sbootstrap:0.12.9
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -388,7 +432,7 @@ Deploy Vault:
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopSims_Onboarding.postman_collection.json --ssl-client-cert-list test_cert_list.json --insecure -e Lab.postman_environment.json || true
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Sim_Backend.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
-    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Mojaloop-Payment-Manager-Golden-Path.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json --folder feature-tests --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/gp_report.html --reporter-junit-export ${CI_PROJECT_DIR}/gp_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Mojaloop-Payment-Manager-Golden-Path.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json --folder feature-tests --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/gp_report.html --reporter-junit-export ${CI_PROJECT_DIR}/gp_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
   after_script:
     - curl https://slack.com/api/files.upload
       -F file=@"gp_report.html"
@@ -457,7 +501,62 @@ Deploy Vault:
     #reports:
       #junit: $CI_IMAGE_PROJECT_DIR/finance-portal-v2-ui/tests/e2e-ui-tests/src/reports/report.html
 
-4. Run Helm Tests:
+#job template for 4. Run Platform GP Tests:
+.Run Platform GP Tests-job-template:
+  script:
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+    - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+    - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+    - cp $CI_IMAGE_PROJECT_DIR/tests/Golden-Path.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests
+    - cd sim_tests
+    - jq -s '[.[][]]' onboarding_external_pm4ml_output.json onboarding_internal_pm4ml_output.json > /tmp/onboarding_pm4ml_output.json
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Registration.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json || true
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Setup.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Sim_Backend.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
+    - newman run Golden-Path.postman_collection.json --ssl-client-cert-list test_cert_list.json --folder loan-repayment --insecure -e Lab.postman_environment.json --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/alias_report.html --reporter-junit-export ${CI_PROJECT_DIR}/alias_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
+  after_script:
+#    - curl https://slack.com/api/files.upload
+#      -F file=@"Platform_report.html"
+#      -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}"
+#      -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
+#      -F title="Myanmar Goldenpath Test (Postman) Results"
+#      -F filetype="html"
+#  artifacts:
+#    reports:
+#      junit: alias_report.xml
+      
+    - curl https://slack.com/api/files.upload
+      -F file=@"alias_report.html"
+      -F channels="${SLACK_GITLABCI_GP_REPORTS_CHANNEL_NAME}"
+      -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
+      -F title="Alias Goldenpath Test (Postman) Results.'${ENVIRONMENT}'-$(date +\"%Y-%m-%d-%H:%M:%S\")"
+      -F filetype="html"
+  artifacts:
+    reports:
+      junit: alias_report.xml
+
+
+4. Manual Run Platform GP Tests:
+  stage: "Run Tests"
+  extends: .Run Platform GP Tests-job-template
+  when: manual
+  except:
+    - schedules
+
+4. Scheduled Run Platform GP Tests:
+  stage: "Run Tests"
+  allow_failure: true
+  extends: .Run Platform GP Tests-job-template
+  only:
+    refs:
+      - schedules
+    variables:
+      - $SCHEDULE_PLATFORM == "PLAT_GP"
+
+5. Run Helm Tests:
   stage: "Run Tests"
   script:
     - helm --kubeconfig=admin-gateway.conf test ${helm_mojaloop_release_name} -n mojaloop

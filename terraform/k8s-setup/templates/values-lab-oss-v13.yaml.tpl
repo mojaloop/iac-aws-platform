@@ -9,7 +9,7 @@ account-lookup-service:
       api:
         image:
           repository: mojaloop/account-lookup-service
-          tag: v11.7.7
+          tag: v11.8.0
     config:
       db_password: "${mysql_password}"
     ingress:
@@ -24,7 +24,7 @@ account-lookup-service:
       admin:
         image:
           repository: mojaloop/account-lookup-service
-          tag: v11.7.7
+          tag: v11.8.0
     config:
       db_password: "${mysql_password}"
     ingress:
@@ -47,44 +47,86 @@ central:
         api: central-event-processor.${env}.${name}.${domain}.internal
   centralledger:
     centralledger-handler-admin-transfer:
+      containers:
+        api:
+          image:
+            repository: mojaloop/central-ledger
+            tag: v13.14.3
       config:
         db_password: "${mysql_password}"
+        resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         hosts:
           api: central-ledger-admin-transfer.${env}.${name}.${domain}.internal
     centralledger-handler-timeout:
+      containers:
+        api:
+          image:
+            repository: mojaloop/central-ledger
+            tag: v13.14.3
       config:
         db_password: "${mysql_password}"
+        resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         hosts:
           api: central-ledger-timeout.${env}.${name}.${domain}.internal
     centralledger-handler-transfer-fulfil:
+      containers:
+        api:
+          image:
+            repository: mojaloop/central-ledger
+            tag: v13.14.3
       config:
         db_password: "${mysql_password}"
+        resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         hosts:
           api: central-ledger-transfer-fulfil.${env}.${name}.${domain}.internal
     centralledger-handler-transfer-get:
+      containers:
+        api:
+          image:
+            repository: mojaloop/central-ledger
+            tag: v13.14.3
       config:
         db_password: "${mysql_password}"
+        resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         hosts:
           api: central-ledger-transfer-get.${env}.${name}.${domain}.internal
     centralledger-handler-transfer-position:
+      containers:
+        api:
+          image:
+            repository: mojaloop/central-ledger
+            tag: v13.14.3
       config:
         db_password: "${mysql_password}"
+        resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         hosts:
           api: central-ledger-transfer-position.${env}.${name}.${domain}.internal
     centralledger-handler-transfer-prepare:
+      containers:
+        api:
+          image:
+            repository: mojaloop/central-ledger
+            tag: v13.14.3
       config:
         db_password: "${mysql_password}"
+        resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         hosts:
           api: central-ledger-transfer-prepare.${env}.${name}.${domain}.internal
     centralledger-service:
+      containers:
+        api:
+          image:
+            repository: mojaloop/central-ledger
+            tag: v13.14.3
       config:
         db_password: "${mysql_password}"
+        resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         annotations:
           nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -140,22 +182,27 @@ central:
     centralsettlement-handler-transfersettlement:
       config:
         db_password: "${mysql_password}"
+
 emailnotifier:
-#just for 13.0.1 - can be removed in 13.0.2
-  enabled: true
-  readinessProbe:
-    enabled: false  
-  livenessProbe:
-    enabled: false
   ingress:
     hosts:
       api: emailnotifier.${env}.${name}.${domain}.internal
 ml-api-adapter:
   ml-api-adapter-handler-notification:
+    config:
+      resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
+    image:
+      repository: mojaloop/ml-api-adapter
+      tag: v11.2.0
     ingress:
       hosts:
         api: ml-api-adapter-handler-notification.${env}.${name}.${domain}.internal
   ml-api-adapter-service:
+    config:
+      resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
+    image:
+      repository: mojaloop/ml-api-adapter
+      tag: v11.2.0
     ingress:
       modernIngressController: true
       modernIngressControllerRegex: (/|$)(.*)
