@@ -10,25 +10,6 @@ resource "kubernetes_namespace" "simulators" {
   provider = kubernetes
 }
 
-resource "kubernetes_secret" "secrets_tls_simulators" {
-  for_each = toset(var.simulator_names)
-  metadata {
-    name      = "${each.value}-tls-sec"
-    namespace = each.value
-  }
-  data = {
-    "inbound-key.pem"      = vault_pki_secret_backend_cert.simulators-server[each.value].private_key
-    "inbound-cert.pem"     = vault_pki_secret_backend_cert.simulators-server[each.value].certificate
-    "inbound-cacert.pem"   = "${vault_pki_secret_backend_root_sign_intermediate.intermediate_simulators[each.value].issuing_ca}\n${vault_pki_secret_backend_root_sign_intermediate.intermediate_simulators[each.value].certificate}"
-    "outbound-key.pem"     = vault_pki_secret_backend_cert.switch-simulators-client[each.value].private_key
-    "outbound-cert.pem"    = vault_pki_secret_backend_cert.switch-simulators-client[each.value].certificate
-    "outbound-cacert.pem"  = data.terraform_remote_state.k8s-base.outputs.root_signed_intermediate_ca_cert_chain
-  }
-  type       = "Opaque"
-  provider   = kubernetes
-  depends_on = [kubernetes_namespace.simulators, local_file.root_ca_switch_certificate, local_file.simulators_server_certificate, local_file.simulators_server_key, local_file.root_ca_switch_certificate_simulators, local_file.simulators_personal_client_certificate, local_file.switch_simulators_client_certificate, local_file.simulators_personal_client_key, local_file.switch_simulators_client_key, local_file.simulators_server_ca]
-}
-
 resource "kubernetes_secret" "secrets_jws_privkey_simulators" {
   for_each = toset(var.simulator_names)
   metadata {
@@ -102,7 +83,6 @@ resource "helm_release" "simulators" {
     SIM_SCHEME_ADAPTER_SERVICE_NAME = "${each.value}-sim-${each.value}-scheme-adapter",
     PRIV_KEY_SECRET_NAME = "${each.value}-jws-pvt-key",
     PUBLIC_KEY_CONFIG_MAP_NAME = "${each.value}-jws-pub",
-    TLS_SECRET_NAME = "${each.value}-tls-sec",
     PEER_ENDPOINT = "extgw.${trimsuffix(data.terraform_remote_state.infrastructure.outputs.public_subdomain, ".")}:8243/fsp/1.0",
     OAUTH_CLIENT_KEY = module.provision_sims_to_wso2.client-ids[each.value],
     OAUTH_CLIENT_SECRET = module.provision_sims_to_wso2.client-secrets[each.value],
@@ -110,10 +90,19 @@ resource "helm_release" "simulators" {
 
   provider = helm
 
-  depends_on = [module.provision_sims_to_wso2, kubernetes_namespace.simulators, kubernetes_secret.secrets_tls_simulators,
+  depends_on = [module.provision_sims_to_wso2, kubernetes_namespace.simulators,
     kubernetes_secret.secrets_jws_privkey_simulators, kubernetes_config_map.jws_pub_simulators,
     local_file.root_ca_switch_certificate, local_file.simulators_server_certificate, local_file.simulators_server_key, local_file.root_ca_switch_certificate_simulators,
     local_file.simulators_personal_client_certificate, local_file.switch_simulators_client_certificate, local_file.simulators_personal_client_key,
   local_file.switch_simulators_client_key, local_file.simulators_server_ca]
 
+}
+data "kubernetes_secret" "sim-client-certs" {
+  for_each  = toset(var.simulator_names)
+  metadata {
+    name      = {{ each.value }}-clientcert-tls
+    namespace = each.value
+  }
+  provider   = kubernetes
+  depends_on = [helm_release.simulators]
 }

@@ -1,12 +1,26 @@
 resource "vault_generic_secret" "sim_onboarding_data" {
   for_each = toset(var.simulator_names)
   path      = "${data.terraform_remote_state.k8s-base.outputs.sim_onboarding_secret_name}/${each.value}"
+  disable_read = false
   data_json = jsonencode({
-     "client_cert_chain" = "${vault_pki_secret_backend_cert.simulators-personal-client[each.value].private_key}\n${vault_pki_secret_backend_cert.simulators-personal-client[each.value].certificate}\n${vault_pki_secret_backend_root_sign_intermediate.intermediate_simulators[each.value].certificate}\n${data.terraform_remote_state.k8s-base.outputs.ca_cert_cert_pem}"
-     "ca_bundle" = vault_pki_secret_backend_cert.simulators-server[each.value].ca_chain
-     "host"     = aws_route53_record.simulators-public[each.value].name
-     "fqdn"     = aws_route53_record.simulators-public[each.value].fqdn
+     "client_cert_chain" = "${data.local_file.sim_client_key[each.value].content}\n${data.local_file.sim_client_cert[each.value].content}"
+     "ca_bundle" = data.local_file.sim_ca[each.value].content
+     "host"     = each.key
+     "fqdn"     = "connector.${each.value}.${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   })
+}
+
+data "local_file" "sim_client_cert" {
+  for_each = toset(var.simulator_names)
+  filename = "${path.module}/sim-certoutput/${each.value}-client-cert.pem"
+}
+data "local_file" "sim_client_key" {
+  for_each = toset(var.simulator_names)
+  filename = "${path.module}/sim-certoutput/${each.value}-client-key.pem"
+}
+data "local_file" "sim_ca" {
+  for_each = toset(var.simulator_names)
+  filename = "${path.module}/sim-certoutput/${each.value}-ca-cert.pem"
 }
 resource "null_resource" "sim-haproxy-wso2-callbacks" {
   

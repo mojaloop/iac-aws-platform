@@ -84,6 +84,7 @@ variable "internal_pm4ml_configs" {
     DFSP_PREFIX       = string
     DFSP_MSISDN       = string
     DFSP_ACCOUNT_ID   = string
+    DFSP_SUB_ID       = string
     DFSP_NOTIFICATION_EMAIL = string
     PARTY_LAST_NAME = string
     PARTY_FIRST_NAME = string

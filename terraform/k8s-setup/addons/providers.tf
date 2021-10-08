@@ -23,12 +23,12 @@ provider "aws" {
 #########################
 provider "helm" {
   kubernetes {
-    config_path = "${var.project_root_path}/admin-add-ons.conf"
+    config_path = "${var.project_root_path}/k3saddons/kubeconfig.conf"
   }
 }
 
 provider "kubernetes" {
-  config_path = "${var.project_root_path}/admin-add-ons.conf"
+  config_path = "${var.project_root_path}/k3saddons/kubeconfig.conf"
 }
 
 data "terraform_remote_state" "infrastructure" {

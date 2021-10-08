@@ -13,21 +13,6 @@ output "wso2_eip_public_dns" {
   value       = module.nlb_wso2.public_dns
 }
 
-output "addons_eip_private_ip" {
-  description = "Private IP used for ADDONS Elastic ip"
-  value       = module.nlb_addons.private_ip
-}
-
-output "addons_eip_public_ip" {
-  description = "Public IP used by the ADDONS Elastic ip"
-  value       = module.nlb_addons.public_ip
-}
-
-output "addons_eip_public_dns" {
-  description = "Public dns name used by the ADDONS Elastic ip"
-  value       = module.nlb_addons.public_dns
-}
-
 output "sg_id" {
   description = "Security group ID used for this environment"
   value       = aws_security_group.internet.id
@@ -35,10 +20,6 @@ output "sg_id" {
 
 output "haproxy_gateway_private_ip" {
   value = module.k8-cluster-gateway.haproxy_private_ip
-}
-
-output "haproxy_addons_private_ip" {
-  value = module.k8-cluster-add-ons.haproxy_private_ip
 }
 
 output "haproxy_callback_private_ip" {
@@ -49,28 +30,20 @@ output "haproxy_callback_private_fqdn" {
 }
 
 
-output "addons_k8s_master_nodes_private_ip" {
-  value = module.k8-cluster-add-ons.master_nodes_private_ip
-}
+
 output "gateway_k8s_master_nodes_private_ip" {
   value = module.k8-cluster-gateway.master_nodes_private_ip
 }
-output "addons_k8s_master_nodes_private_dns" {
-  value = module.k8-cluster-add-ons.master_nodes_private_dns
-}
+
 output "gateway_k8s_master_nodes_private_dns" {
   value = module.k8-cluster-gateway.master_nodes_private_dns
 }
 
-output "addons_k8s_worker_nodes_private_ip" {
-  value = module.k8-cluster-add-ons.worker_nodes_private_ip
-}
+
 output "gateway_k8s_worker_nodes_private_ip" {
   value = module.k8-cluster-gateway.worker_nodes_private_ip
 }
-output "addons_k8s_worker_nodes_private_dns" {
-  value = module.k8-cluster-add-ons.worker_nodes_private_dns
-}
+
 output "gateway_k8s_worker_nodes_private_dns" {
   value = module.k8-cluster-gateway.worker_nodes_private_dns
 }
@@ -151,10 +124,7 @@ output "prometheus-services-private-fqdn" {
   description = "FQDN for the private hostname of prometheus in the sup svcs cluster."
   value       = aws_route53_record.prometheus-services-private.fqdn
 }
-output "prometheus-add-ons-private-fqdn" {
-  description = "FQDN for the private hostname of prometheus in the add-ons cluster."
-  value       = aws_route53_record.prometheus-add-ons-private.fqdn
-}
+
 output "apm-services-private-fqdn" {
   description = "FQDN for the private hostname of apm in the support services cluster."
   value = aws_route53_record.apm-services-private.fqdn
