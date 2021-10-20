@@ -9,7 +9,7 @@ resource "helm_release" "mojaloop-reporting" {
     templatefile("${path.module}/templates/values-reporting.yaml.tpl", {
       db_password = vault_generic_secret.mojaloop_mysql_password.data.value,
       db_user = "central_ledger",
-      db_host = "mojaloop-centralledger-mysql",
+      db_host = "${var.helm_mojaloop_release_name}-centralledger-mysql",
       ingress_host  = "mojaloop-reporting.${var.environment}.${var.client}.${data.terraform_remote_state.tenant.outputs.domain}.internal"
     })
   ]
