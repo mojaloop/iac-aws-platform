@@ -26,7 +26,7 @@ default:
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
 
 variables:
-  ANSIBLE_FEATURE_TOGGLES: "-e helm_enabled=True -e dashboard_enabled=True -e helm_version=v3.2.4 -e kube_proxy_mode=iptables -e artifacts_dir=inventory/artifacts/cluster -e cloud_provider=aws -e ansible_user=ubuntu -b --become-user=root --flush-cache -e kubeconfig_localhost=true"
+  ANSIBLE_FEATURE_TOGGLES: "-e helm_enabled=True -e dashboard_enabled=True -e helm_version=v3.6.3 -e kube_version=v1.19.2 -e kube_proxy_mode=iptables -e artifacts_dir=inventory/artifacts/cluster -e cloud_provider=aws -e ansible_user=ubuntu -b --become-user=root --flush-cache -e kubeconfig_localhost=true"
   GIT_SSL_NO_VERIFY: "true"
 
 stages:
