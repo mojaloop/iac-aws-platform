@@ -1,6 +1,6 @@
 default: 
   image: 
-    name: ghcr.io/mojaloop/iac-aws-platform:1.1.0
+    name: ghcr.io/mojaloop/iac-aws-platform:1.2.0
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -24,9 +24,10 @@ default:
     - ./searchandreplace.sh
     
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - export ANSIBLE_FEATURE_TOGGLES="-e kube_version=v${k8s_api_version} -e dashboard_enabled=True -e kube_proxy_mode=iptables -e artifacts_dir=inventory/artifacts/cluster -e cloud_provider=aws -e ansible_user=ubuntu -b --become-user=root --flush-cache -e kubeconfig_localhost=true"
 
 variables:
-  ANSIBLE_FEATURE_TOGGLES: "-e helm_enabled=True -e dashboard_enabled=True -e helm_version=v3.2.4 -e kube_proxy_mode=iptables -e artifacts_dir=inventory/artifacts/cluster -e cloud_provider=aws -e ansible_user=ubuntu -b --become-user=root --flush-cache -e kubeconfig_localhost=true"
+  #ANSIBLE_FEATURE_TOGGLES: "-e kube_version=v${k8s_api_version} -e dashboard_enabled=True -e kube_proxy_mode=iptables -e artifacts_dir=inventory/artifacts/cluster -e cloud_provider=aws -e ansible_user=ubuntu -b --become-user=root --flush-cache -e kubeconfig_localhost=true"
   GIT_SSL_NO_VERIFY: "true"
 
 stages:
@@ -65,11 +66,19 @@ Destroy AWS:
 Destroy Mojaloop K8s Stack:
   stage: Destroy
   script:
-    - cd terraform/k8s-setup
+    - cd terraform/apps/wso2/config
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform validate
     - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
-    - kubectl --kubeconfig=../../admin-gateway.conf delete namespace mojaloop
+    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-roles
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform validate
+    - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform validate
+    - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+    - kubectl --kubeconfig=../../admin-gateway.conf delete namespace mojaloop || true
     ##kill force kill efs provsioner
     - kubectl --kubeconfig=../../admin-gateway.conf delete pods --all -n wso2 --grace-period=0 --force
     - kubectl --kubeconfig=../../admin-gateway.conf delete namespace wso2
@@ -239,7 +248,7 @@ Create k3s Cluster:
     - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
     - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
     - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
-  
+      
   script:
     - export
     - cd /k3s-boot
@@ -293,6 +302,9 @@ Deploy Vault:
   stage: "Deploy Platform"
   script:
     - cd terraform/k8s-setup
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-roles
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
     - chmod o-w $CI_IMAGE_PROJECT_DIR/terraform/apps/wso2/config/
@@ -570,4 +582,19 @@ Deploy Vault:
     - aws s3 cp s3://${BUCKET}/${environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
     - cd sim_tests
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json -d onboarding_external_pm4ml_output.json
+  when: manual
+
+2. Update oathkeeper rules:
+  stage: "Maintain Platform"
+  script:
+    - export private_subdomain=$(terraform output -state=terraform.tfstate private_subdomain | tr -d '"')
+    - helm -n mojaloop -i --kubeconfig=admin-gateway.conf --set-string base_domain=${private_subdomain} upgrade bof-oathkeeper-rules $CI_IMAGE_PROJECT_DIR/bof-custom-resources/oathkeeper-rules
+  when: manual
+
+3. Update mojaloop roles:
+  stage: "Maintain Platform"
+  script:
+    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-roles
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   when: manual
