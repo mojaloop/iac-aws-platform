@@ -91,6 +91,35 @@ module "iskm" {
   depends_on = [module.wso2_init]
 }
 
+module "iskm-bizops" {
+  source = "../modules/iskm"
+
+  kubeconfig       = "${var.project_root_path}/admin-gateway.conf"
+  namespace        = "${var.wso2_namespace}-bizops"
+  root_certificate = module.wso2_init.root_certificate
+  root_private_key = module.wso2_init.root_private_key
+  # TODO: workout where to get keystore password from
+  keystore_password  = "wso2carbon"
+  public_domain_name = data.terraform_remote_state.tenant.outputs.public_zone_name
+  db_user            = "root"
+  db_password        = vault_generic_secret.wso2_mysql_root_password.data.value
+  db_host            = "mysql-wso2-bizops.${var.wso2_namespace}-bizops.svc.cluster.local"
+  contact_email      = var.wso2_email
+  iskm_fqdn          = aws_route53_record.iskm-public-private.fqdn
+  intgw_fqdn         = data.terraform_remote_state.infrastructure.outputs.intgw_private_fqdn
+  extgw_fqdn         = data.terraform_remote_state.infrastructure.outputs.extgw_public_fqdn
+  wso2_admin_pw      = vault_generic_secret.wso2_admin_password.data.value
+  node_port          = 31143
+  iskm_release_name  = "wso2-is-km-bizops"
+
+  providers = {
+    helm = helm.helm-gateway
+    kubernetes = kubernetes.k8s-gateway
+    tls = tls.wso2
+  }
+  depends_on = [helm_release.mysql-bizops]
+}
+
 module "intgw" {
   source = "../modules/int-gw"
 

@@ -1,25 +1,10 @@
-Gossip:
-  Create: true
-Storage: 5Gi
-Replicas: 3
-StorageClass: standard-encrypted
-affinity: |
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: class
-          operator: NotIn
-          values:
-          - consul
-  podAntiAffinity:
-    preferredDuringSchedulingIgnoredDuringExecution:
-    - weight: 1
-      podAffinityTerm:
-        topologyKey: kubernetes.io/hostname
-        labelSelector:
-          matchExpressions:
-          - key: component
-            operator: In
-            values:
-            - "{{ .Release.Name }}-{{ .Values.Component }}"
+global:
+  name: consul
+  enabled: false
+  gossipEncryption:
+    autoGenerate: true
+server:
+  enabled: true
+  storage: 5Gi
+  storageClass: ebs
+  replicas: 3

@@ -83,3 +83,13 @@ variable "wso2_admin_pw" {
   type = string
 }
 
+variable "node_port" {
+  description = "Port number used for node port for service"
+  type = number
+  default = 31443
+}
+variable "iskm_release_name" {
+  description = "name for iskm_release"
+  type = string
+  default = "wso2-is-km"
+} 

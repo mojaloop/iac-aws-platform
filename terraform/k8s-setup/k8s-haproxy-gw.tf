@@ -46,6 +46,16 @@ resource "null_resource" "haproxy-wso2" {
       user        = "ubuntu"
       private_key = file("${var.project_root_path}/terraform/ssh_provisioner_key")
     }
+    content     = "${acme_certificate.iskm_acme_certificate.private_key_pem}\n${acme_certificate.iskm_acme_certificate.certificate_pem}\n${acme_certificate.iskm_acme_certificate.issuer_pem}"
+    destination = "/tmp/iskm.acme.crt"
+  }
+  provisioner "file" {
+    connection {
+      host        = data.terraform_remote_state.infrastructure.outputs.haproxy_gateway_private_ip
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("${var.project_root_path}/terraform/ssh_provisioner_key")
+    }
     content     = "${vault_pki_secret_backend_root_sign_intermediate.intermediate.certificate}\n${tls_self_signed_cert.ca_cert.cert_pem}"
     destination = "/tmp/CA.crt"
   }
@@ -64,6 +74,7 @@ resource "null_resource" "haproxy-wso2" {
       extgw_host    = data.terraform_remote_state.infrastructure.outputs.extgw_public_fqdn
       intgw_host    = data.terraform_remote_state.infrastructure.outputs.intgw_private_fqdn
       iskm_host     = data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn
+      iskmssl_host  = aws_route53_record.iskm-public-private.fqdn
     })
     destination = "/tmp/haproxy.cfg"
   }

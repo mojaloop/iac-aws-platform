@@ -5,11 +5,15 @@ terraform {
     encrypt = true
   }
   required_providers {
-    helm  = "1.2.4"
-    vault = "2.10.0"
-    kubernetes = "~> 1.13.3"
+    helm = "~> 2.3"
+    vault = "~> 2.24.1"
+    kubernetes = "~> 2.6"
     tls = "~> 2.0"
     external = "~> 1.2.0"
+    acme = {
+      source  = "vancluever/acme"
+      version = "~> 2.0"
+    }
   }
 }
 
@@ -39,20 +43,6 @@ provider "kubernetes" {
   config_path = "${var.project_root_path}/admin-add-ons.conf"
 }
 
-###########################
-#        MOJALOOP
-###########################
-/* provider "helm" {
-  alias = "helm-mojaloop"
-  kubernetes {
-    config_path = "${var.project_root_path}/admin-mojaloop.conf"
-  }
-}
-provider "kubernetes" {
-  alias       = "k8s-mojaloop"
-  config_path = "${var.project_root_path}/admin-mojaloop.conf"
-} */
-
 ############################
 #          GATEWAY
 ############################
@@ -67,19 +57,6 @@ provider "kubernetes" {
   config_path = "${var.project_root_path}/admin-gateway.conf"
 }
 
-############################
-#          SUPPORT-SERVICES
-############################
-/* provider "helm" {
-  alias = "helm-support-services"
-  kubernetes {
-    config_path = "${var.project_root_path}/admin-support-services.conf"
-  }
-}
-provider "kubernetes" {
-  alias       = "k8s-support-services"
-  config_path = "${var.project_root_path}/admin-support-services.conf"
-} */
 
 data "terraform_remote_state" "infrastructure" {
   backend = "s3"

@@ -16,3 +16,16 @@ variable "aws_secret_key" {
 variable "project_root_path" {
   description = "Root folder for the infrastructure code"
 }
+variable "kubernetes_auth_path" {
+  description = "vault kube auth engine path"
+  type        = string
+  default     = "kubernetes-gateway"
+}
+variable "environment" {
+  description = "Environment name"
+  type        = string
+}
+variable "client" {
+  description = "Name of client"
+  type        = string
+}

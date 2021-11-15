@@ -57,9 +57,8 @@ elasticsearch:
   bufferChunkLimit: "2M"
   bufferQueueLimit: 8
   hosts: 
-  - ${es_host}:9200
+  - ${es_host}
   logstashPrefix: "logstash"
-  port: 9200
   scheme: "http"
   sslVerify: true
   sslVersion: "TLSv1_2"

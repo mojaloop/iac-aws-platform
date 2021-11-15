@@ -6,21 +6,6 @@ locals {
   }
 }
 
-/* resource "kubernetes_storage_class" "slow-support-services" {
-  metadata {
-    name = "slow"
-  }
-  storage_provisioner = "kubernetes.io/aws-ebs"
-  reclaim_policy      = "Retain"
-  parameters = {
-    type      = "gp2"
-    iopsPerGB = "10"
-    fsType    = "ext4"
-  }
-  provider = kubernetes.k8s-support-services
-} */
-
-
 resource "helm_release" "elasticsearch-support-services" {
   name         = "elasticsearch-support-services"
   repository   = "https://helm.elastic.co"
@@ -52,14 +37,10 @@ resource "helm_release" "fluentd-support-services" {
   force_update = true
   create_namespace = true
 
-  values = [
-    file("${var.project_root_path}/helm/values-support-services-efk-fluentd.yaml")
-  ]
-  set {
-    name  = "elasticsearch.host"
-    value = "elasticsearch-master"
-    type  = "string"
-  }
+  values = [templatefile("${path.module}/templates/values-fluentd.yaml.tpl", {
+    es_host = "elasticsearch-master:9200"
+    })]
+
   provider = helm.helm-gateway
 
   depends_on = [helm_release.elasticsearch-support-services]
@@ -203,42 +184,3 @@ resource "kubernetes_config_map" "grafana-support-services-dashboards" {
 
   depends_on = [helm_release.prometheus-support-services]
 }
-
-/* resource "helm_release" "kafka-support-services" {
-  name         = "kafka-support-services"
-  repository   = "https://charts.helm.sh/incubator"
-  chart        = "kafka"
-  version      = var.helm_kafka_version
-  namespace    = "logging"
-  force_update = true
-  create_namespace = true
-
-  set {
-    name  = "storageClass"
-    value = "slow"
-    type  = "string"
-  }
-  values = [
-    "${file("${var.project_root_path}/helm/values-support-services-kafka.yaml")}"
-  ]
-  provider = helm.helm-gateway
-
-  depends_on = [kubernetes_storage_class.slow-support-services]
-} */
-
-/* resource "helm_release" "deploy-support-services-nginx-ingress-controller" {
-  namespace  = "kube-public"
-  name       = "nginx-ingress"
-  repository = "https://charts.helm.sh/stable"
-  chart      = "nginx-ingress"
-  version    = var.helm_nginx_version
-  wait       = false
-  create_namespace = true
-  
-  set {
-    name  = "controller.service.nodePorts.http"
-    value = 30001
-    type  = "string"
-  }
-  provider = helm.helm-gateway
-} */
