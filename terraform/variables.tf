@@ -155,7 +155,8 @@ variable "k8-balancer-gateway-aliases" {
     "finance-portal-v2",
     "ttkbackend",
     "ttkfrontend",
-    "mojaloop-reporting"
+    "mojaloop-reporting",
+    "kowl"
   ]
 }
 

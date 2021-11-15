@@ -72,6 +72,13 @@ backend nodes
     timeout connect        10s
     timeout server          1m
 
+frontend acme-wso2
+    bind *:7443 ssl crt /etc/haproxy/certs/iskm.acme.crt
+    acl iskm-acl ssl_fc_sni ${iskmssl_host}
+
+    acl Trusted_ISKM_acl src -f /etc/haproxy/whitelist_iskm
+    
+    use_backend iskmssl-backend if iskm-acl Trusted_ISKM_acl
 
 frontend wso2
     bind *:9443 ssl crt /etc/haproxy/certs/${trimsuffix(extgw_host, ".internal")}.fullchain.crt  crt /etc/haproxy/certs/${trimsuffix(intgw_host, ".internal")}.fullchain.crt crt /etc/haproxy/certs/${trimsuffix(iskm_host, ".internal")}.fullchain.crt ca-file /etc/haproxy/certs/CA.crt verify optional crt-ignore-err all
@@ -110,6 +117,14 @@ frontend wso2
     use_backend wso2-backend if extgw-acl Trusted_EXTGW_acl
     use_backend wso2-iskm if iskm-acl Trusted_ISKM_acl
     use_backend wso2-backend-internal if intgw-acl Trusted_INTGW_acl
+
+
+backend iskmssl-backend
+    mode http
+    balance roundrobin
+%{ for host in keys(workerservers) ~}
+    server ${workerservers[host]} ${host}:31143 ssl verify none
+%{ endfor ~}
 
 backend wso2-backend
     mode http

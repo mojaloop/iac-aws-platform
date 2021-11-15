@@ -13,7 +13,7 @@ locals {
 }
 
 resource "helm_release" "app" {
-  name          = "wso2-is-km"
+  name          = var.iskm_release_name
   repository    = "http://docs.mojaloop.io/wso2-helm-charts-simple/repo"
   chart         = "wso2-is-km"
   version       = "2.0.10"
@@ -40,5 +40,9 @@ resource "helm_release" "app" {
     name  = "binconfigmap.externalConfigMapName"
     value = kubernetes_config_map.binconfigs.metadata[0].name
     type  = "string"
+  }
+  set {
+    name  = "service.ports.wso2.internalPort"
+    value = var.node_port
   }
 }
