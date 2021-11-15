@@ -17,7 +17,7 @@ data "terraform_remote_state" "infrastructure" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "##client##-mojaloop-state"
-    key    = "##environment##/terraform.tfstate"
+    bucket = "${var.client}-mojaloop-state"
+    key    = "${var.environment}/terraform.tfstate"
   }
 }

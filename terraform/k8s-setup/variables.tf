@@ -272,3 +272,73 @@ variable "internal_sim_enabled" {
   description = "whether internal mojaloop simulators ar enabled or not"
   default = true
 }
+
+variable "bofapi_name" {
+  description = "host name for MFI account oracle"
+  type        = string
+  default     = "bofapi"
+}
+
+variable "bofportal_name" {
+  description = "host name for MFI account oracle"
+  type        = string
+  default     = "bofportal"
+}
+
+variable "boftransfersui_name" {
+  description = "host name for MFI account oracle"
+  type        = string
+  default     = "boftransfersui"
+}
+
+variable "bofiamui_name" {
+  description = "host name for MFI account oracle"
+  type        = string
+  default     = "bofiamui"
+}
+
+variable "bizops_portal_users" {
+  description = "bizops portal users list"
+  type = list(object({
+    username  = string
+    email     = string
+  }))
+  default = []
+}
+
+variable "bizops_mojaloop_roles" {
+  description = "bizops mojaloop roles list"
+  type = list(object({
+    rolename  = string
+    permissions     = list(string)
+  }))
+  default = []
+}
+variable "kubernetes_auth_path" {
+  description = "vault kube auth engine path"
+  type        = string
+  default     = "kubernetes-gateway"
+}
+variable "k8s_api_version" {
+  description = "kubernetes version of cluster"
+  type        = string
+  default     = "1.19.2"
+}
+
+variable "helm_oathkeeper_version"{
+  description = "helm chart version of ory oathkeeper"
+  type        = string
+  default     = "0.19.6"
+}
+
+variable "helm_keto_version"{
+  description = "helm chart version of ory keto"
+  type        = string
+  default     = "0.19.6"
+}
+
+variable "helm_kratos_version"{
+  description = "helm chart version of kratos"
+  type        = string
+  default     = "0.14.1"
+}

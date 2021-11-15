@@ -42,15 +42,15 @@ data "kubernetes_secret" "generated-vault-auth-gateway" {
 
 resource "vault_auth_backend" "kubernetes-gateway" {
   type = "kubernetes"
-  path = "kubernetes-gateway"
+  path = var.kubernetes_auth_path
 }
 
 resource "vault_kubernetes_auth_backend_config" "kubernetes-gateway" {
   backend            = vault_auth_backend.kubernetes-gateway.path
   kubernetes_host    = local.kube_master_url
-  kubernetes_ca_cert = data.kubernetes_secret.generated-vault-auth-gateway.data["ca.crt"]
-  token_reviewer_jwt = data.kubernetes_secret.generated-vault-auth-gateway.data.token
-  issuer             = "api"
+  #kubernetes_ca_cert = data.kubernetes_secret.generated-vault-auth-gateway.data["ca.crt"]
+  #token_reviewer_jwt = data.kubernetes_secret.generated-vault-auth-gateway.data.token
+  #issuer             = "api"
 }
 
 resource "vault_policy" "base-token-polcies" {
@@ -89,23 +89,4 @@ resource "vault_kubernetes_auth_backend_role" "kubernetes-gateway" {
   bound_service_account_namespaces = [var.wso2_namespace]
   token_ttl                        = 3600
   policies                         = [vault_policy.read-whitelist-addresses-gateway.name]
-}
-
-resource "helm_release" "vault-agent" {
-  name       = "vault-agent"
-  repository = "https://helm.releases.hashicorp.com"
-  chart      = "vault"
-  version    = "0.5.0"
-  namespace  = "default"
-  set {
-    name  = "injector.externalVaultAddr"
-    value = local.vault_addr
-    type  = "string"
-  }	  
-  set {
-    name  = "injector.authPath"
-    value = "auth/${vault_auth_backend.kubernetes-gateway.path}"
-    type  = "string"
-  }
-  provider = helm.helm-gateway
 }
