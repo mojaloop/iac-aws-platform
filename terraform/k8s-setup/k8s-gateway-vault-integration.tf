@@ -50,7 +50,7 @@ resource "vault_kubernetes_auth_backend_config" "kubernetes-gateway" {
   kubernetes_host    = local.kube_master_url
   #kubernetes_ca_cert = data.kubernetes_secret.generated-vault-auth-gateway.data["ca.crt"]
   #token_reviewer_jwt = data.kubernetes_secret.generated-vault-auth-gateway.data.token
-  #issuer             = "api"
+  issuer             = "https://kubernetes.default.svc.cluster.local"
 }
 
 resource "vault_policy" "base-token-polcies" {

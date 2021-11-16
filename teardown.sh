@@ -25,6 +25,18 @@ else
   echo "terraform-k8s-pm4mls.tfstate not found. Skipping terraform/k8s-setup/pm4mls ..."
 fi
 
+if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-k8s-mojaloop-roles.tfstate ]; then
+  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-roles
+  terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+  terraform validate
+  terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+  aws s3 rm s3://$BUCKET/$ENVIRONMENT/terraform-k8s-mojaloop-roles.tfstate
+  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
+  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform-k8s-mojaloop-roles.tfstate-md5"}}' --return-values ALL_OLD
+else
+  echo "terraform-k8s-mojaloop-roles.tfstate not found. Skipping terraform/k8s-setup/mojaloop-roles ..."
+fi
+
 if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-k8s.tfstate ]; then
   cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup
   terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
