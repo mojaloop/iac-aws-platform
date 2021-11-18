@@ -118,7 +118,6 @@
     {
       "rolename" : "USER_ROLE",
       "permissions" : [
-        "ROLE_API",
         "REPORTING_API"
       ]
     }
