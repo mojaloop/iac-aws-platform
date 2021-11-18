@@ -221,5 +221,10 @@ resource "helm_release" "bof-rules" {
     value = data.terraform_remote_state.infrastructure.outputs.private_subdomain
     type  = "string"
   }
+  set {
+    name  = "bof_release_name"
+    value = "bof"
+    type  = "string"
+  }
   depends_on = [helm_release.oathkeeper-maester]
 }
