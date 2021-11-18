@@ -181,7 +181,7 @@ quoting-service:
     repository: mojaloop/quoting-service
     tag: v12.0.7
   sidecar:
-    enabled: false
+    enabled: true
   config:
     simple_routing_mode_enabled: false
     log_transport: "console"

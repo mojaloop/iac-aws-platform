@@ -38,14 +38,13 @@ global:
   kafka:
     host: ${kafka_host}
     port: 9092
-    topic: topic-event
   mojalooprole: {}
 
 ## Backend API services
 role-assignment-service:
   enabled: true
   ingress:
-    enabled: true
+    enabled: false
     hostname: ${api_fqdn}
     path: /iam(/|$)(.*)
     annotations:
@@ -61,7 +60,7 @@ role-assignment-service:
 reporting-hub-bop-api-svc:
   enabled: true
   ingress:
-    enabled: true
+    enabled: false
     hostname: ${api_fqdn}
     path: /transfers(/|$)(.*)
     annotations:
@@ -132,4 +131,7 @@ security-role-perm-operator-svc:
 
 reporting-events-processor-svc:
   enabled: true
-
+  kafka:
+    topic: topic-event
+    consumerGroup: group
+    clientId: client-id

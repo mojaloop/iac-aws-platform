@@ -6,7 +6,8 @@ metadata:
 spec:
   upstream:
     # set to whatever URL this request should be forwarded to
-    url: http://bofapi.{{ .Values.base_domain }}/
+    url: http://{{ .Values.bof_release_name }}-role-assignment-service/
+    stripPath: /iam
   match:
     # this might need to be http even if external is https, it depends on how ingress does things
     # my recommendation is to have a given prefix, then the "everything else in the domain name" matcher

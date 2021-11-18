@@ -212,7 +212,7 @@ ml-api-adapter:
         api: ml-api-adapter.${env}.${name}.${domain}.internal
 quoting-service:
   sidecar:
-    enabled: false
+    enabled: true
   config:
     simple_routing_mode_enabled: false
     log_transport: "console"
