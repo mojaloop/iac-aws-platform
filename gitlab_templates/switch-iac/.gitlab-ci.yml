@@ -588,7 +588,7 @@ Deploy Vault:
   stage: "Maintain Platform"
   script:
     - export private_subdomain=$(terraform output -state=terraform.tfstate private_subdomain | tr -d '"')
-    - helm -n mojaloop -i --kubeconfig=admin-gateway.conf --set-string base_domain=${private_subdomain} upgrade bof-oathkeeper-rules $CI_IMAGE_PROJECT_DIR/bof-custom-resources/oathkeeper-rules
+    - helm -n mojaloop -i --kubeconfig=admin-gateway.conf --set-string base_domain=${private_subdomain} --set-string bof_release_name=bof upgrade bof-oathkeeper-rules $CI_IMAGE_PROJECT_DIR/bof-custom-resources/oathkeeper-rules
   when: manual
 
 3. Update mojaloop roles:
