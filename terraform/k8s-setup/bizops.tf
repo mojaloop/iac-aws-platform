@@ -128,7 +128,7 @@ resource "helm_release" "bof" {
   name       = "bof"
   repository = "http://docs.mojaloop.io/charts/repo"
   chart      = "bof"
-  // version    = "14.0.0-39.8e2f564"
+  version    = var.helm_bof_version
   devel      = true
   namespace  = "mojaloop"
   timeout    = 300
@@ -141,7 +141,10 @@ resource "helm_release" "bof" {
       api_fqdn = aws_route53_record.bofapi-gateway-private.fqdn
       iamui_fqdn = aws_route53_record.bofiamui-gateway-private.fqdn
       transfersui_fqdn = aws_route53_record.boftransfersui-gateway-private.fqdn
+      settlementsui_fqdn = aws_route53_record.bofsettlementsui-gateway-private.fqdn
+      positionsui_fqdn = aws_route53_record.bofpositionsui-gateway-private.fqdn
       central_admin_host = "moja-centralledger-service"
+      central_settlements_host = "moja-centralsettlement-service"
       kafka_host = "moja-kafka-headless"
       reporting_db_host = "moja-centralledger-mysql"
       reporting_db_port = "3306"
@@ -154,7 +157,6 @@ resource "helm_release" "bof" {
   provider = helm.helm-gateway
   depends_on = [helm_release.mojaloop]
 }
-#aws_route53_record.bofportal-gateway-private.fqdn
 resource "aws_route53_record" "bofportal-gateway-private" {
   zone_id = data.terraform_remote_state.infrastructure.outputs.private_zone_id
   name    = var.bofportal_name
@@ -172,6 +174,20 @@ resource "aws_route53_record" "bofiamui-gateway-private" {
 resource "aws_route53_record" "boftransfersui-gateway-private" {
   zone_id = data.terraform_remote_state.infrastructure.outputs.private_zone_id
   name    = var.boftransfersui_name
+  type    = "A"
+  ttl     = "300"
+  records = [data.terraform_remote_state.infrastructure.outputs.haproxy_gateway_private_ip]
+}
+resource "aws_route53_record" "bofsettlementsui-gateway-private" {
+  zone_id = data.terraform_remote_state.infrastructure.outputs.private_zone_id
+  name    = var.bofsettlementsui_name
+  type    = "A"
+  ttl     = "300"
+  records = [data.terraform_remote_state.infrastructure.outputs.haproxy_gateway_private_ip]
+}
+resource "aws_route53_record" "bofpositionsui-gateway-private" {
+  zone_id = data.terraform_remote_state.infrastructure.outputs.private_zone_id
+  name    = var.bofpositionsui_name
   type    = "A"
   ttl     = "300"
   records = [data.terraform_remote_state.infrastructure.outputs.haproxy_gateway_private_ip]
@@ -224,6 +240,11 @@ resource "helm_release" "bof-rules" {
   set {
     name  = "bof_release_name"
     value = "bof"
+    type  = "string"
+  }
+  set {
+    name  = "moja_release_name"
+    value = "moja"
     type  = "string"
   }
   depends_on = [helm_release.oathkeeper-maester]

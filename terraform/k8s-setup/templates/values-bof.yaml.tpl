@@ -9,6 +9,9 @@ global:
   adminApiSvc:
     host: ${central_admin_host}
     port: 80
+  settlementSvc:
+    host: ${central_settlements_host}
+    port: 80
   keto:
     readURL: "http://keto-read:80"
     writeURL: "http://keto-write:80"
@@ -83,6 +86,8 @@ reporting-hub-bop-shell:
       AUTH_ENABLED: true
       REMOTE_1_URL: http://${iamui_fqdn}
       REMOTE_2_URL: http://${transfersui_fqdn}
+      REMOTE_3_URL: http://${settlementsui_fqdn}
+      REMOTE_4_URL: http://${positionsui_fqdn}
 
 security-hub-bop-kratos-ui:
   enabled: true
@@ -123,6 +128,27 @@ reporting-hub-bop-trx-ui:
     env:
       REACT_APP_API_BASE_URL: http://${portal_fqdn}/proxy/transfers
       REACT_APP_MOCK_API: false
+
+reporting-hub-bop-settlements-ui:
+  enabled: true
+  config:
+    env:
+      CENTRAL_LEDGER_ENDPOINT: http://${portal_fqdn}/proxy/central-admin
+      CENTRAL_SETTLEMENTS_ENDPOINT: http://${portal_fqdn}/proxy/central-settlements
+  ingress:
+    enabled: true
+    pathType: ImplementationSpecific
+    hostname: ${settlementsui_fqdn}
+
+reporting-hub-bop-positions-ui:
+  enabled: true
+  config:
+    env:
+      CENTRAL_LEDGER_ENDPOINT: http://${portal_fqdn}/proxy/central-admin
+  ingress:
+    enabled: true
+    pathType: ImplementationSpecific
+    hostname: ${positionsui_fqdn}
 
 ## Other services
 security-role-perm-operator-svc:

@@ -1,8 +1,6 @@
 fullnameOverride: "reporting-events-db"
 
 auth:
-  rootUser: root
-  rootPassword: "rootPassword"
   username: "user"
   password: "password"
   database: "default"

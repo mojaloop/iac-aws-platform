@@ -280,19 +280,31 @@ variable "bofapi_name" {
 }
 
 variable "bofportal_name" {
-  description = "host name for MFI account oracle"
+  description = "host name for BOF portal"
   type        = string
   default     = "bofportal"
 }
 
 variable "boftransfersui_name" {
-  description = "host name for MFI account oracle"
+  description = "host name for BOF transfers UI"
   type        = string
   default     = "boftransfersui"
 }
 
+variable "bofsettlementsui_name" {
+  description = "host name for BOF settlements UI"
+  type        = string
+  default     = "bofsettlementsui"
+}
+
+variable "bofpositionsui_name" {
+  description = "host name for BOF positions UI"
+  type        = string
+  default     = "bofpositionsui"
+}
+
 variable "bofiamui_name" {
-  description = "host name for MFI account oracle"
+  description = "host name for BOF IAM UI"
   type        = string
   default     = "bofiamui"
 }
@@ -341,4 +353,10 @@ variable "helm_kratos_version"{
   description = "helm chart version of kratos"
   type        = string
   default     = "0.14.1"
+}
+
+variable "helm_bof_version"{
+  description = "helm chart version for bizops framework"
+  type        = string
+  default     = "1.0.0"
 }
