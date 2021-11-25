@@ -40,7 +40,7 @@ spec:
           "namespace": "permission",
           "object": "REPORTING_API",
           "relation": "granted",
-          "subject": "{{ print .Subject }}"
+          "subject": "{{ printf "{{ print .Subject }}" }}"
         }
   mutators:
     - handler: header

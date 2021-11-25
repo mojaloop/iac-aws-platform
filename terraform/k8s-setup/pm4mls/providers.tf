@@ -11,7 +11,7 @@ terraform {
     kubernetes = {
       version = "~> 2.6"
     }
-    vault = "~> 2.24"
+    vault = "~> 3.0"
   }
 }
 

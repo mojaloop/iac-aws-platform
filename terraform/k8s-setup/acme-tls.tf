@@ -22,7 +22,7 @@ resource "acme_certificate" "iskm_acme_certificate" {
 
 resource "aws_route53_record" "iskm-public-private" {
   zone_id = data.terraform_remote_state.infrastructure.outputs.public_subdomain_zone_id
-  name    = "iskmssl"
+  name    = var.iskmssl_name
   type    = "A"
   ttl     = "300"
   records = [data.terraform_remote_state.infrastructure.outputs.haproxy_gateway_private_ip]

@@ -337,6 +337,12 @@ variable "k8s_api_version" {
   default     = "1.19.2"
 }
 
+variable "iskmssl_name" {
+  description = "hostname for sep iskm with ssl cert signed by trusted ca"
+  type        = string
+  default     = "iskmssl"
+}
+
 variable "helm_oathkeeper_version"{
   description = "helm chart version of ory oathkeeper"
   type        = string
