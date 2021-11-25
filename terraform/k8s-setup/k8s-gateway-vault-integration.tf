@@ -48,9 +48,10 @@ resource "vault_auth_backend" "kubernetes-gateway" {
 resource "vault_kubernetes_auth_backend_config" "kubernetes-gateway" {
   backend            = vault_auth_backend.kubernetes-gateway.path
   kubernetes_host    = local.kube_master_url
-  #kubernetes_ca_cert = data.kubernetes_secret.generated-vault-auth-gateway.data["ca.crt"]
-  #token_reviewer_jwt = data.kubernetes_secret.generated-vault-auth-gateway.data.token
+  kubernetes_ca_cert = split(".", var.k8s_api_version)[1] > 18 ? null : data.kubernetes_secret.generated-vault-auth-gateway.data["ca.crt"]
+  token_reviewer_jwt = split(".", var.k8s_api_version)[1] > 18 ? null : data.kubernetes_secret.generated-vault-auth-gateway.data.token
   issuer             = "https://kubernetes.default.svc.cluster.local"
+  disable_iss_validation = split(".", var.k8s_api_version)[1] > 18 ? "false" : "true"
 }
 
 resource "vault_policy" "base-token-polcies" {
@@ -88,5 +89,5 @@ resource "vault_kubernetes_auth_backend_role" "kubernetes-gateway" {
   bound_service_account_names      = [kubernetes_service_account.vault-auth-gateway.metadata[0].name]
   bound_service_account_namespaces = [var.wso2_namespace]
   token_ttl                        = 3600
-  policies                         = [vault_policy.read-whitelist-addresses-gateway.name]
+  token_policies                   = [vault_policy.read-whitelist-addresses-gateway.name]
 }

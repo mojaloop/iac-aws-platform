@@ -15,7 +15,7 @@ resource "vault_approle_auth_backend_role" "callback-haproxy" {
   backend        = vault_auth_backend.approle.path
   role_name      = "callback-haproxy-role"
   token_ttl      = 3600
-  policies = [vault_policy.read-onboarding-details.name]
+  token_policies = [vault_policy.read-onboarding-details.name]
 }
 
 resource "vault_approle_auth_backend_role_secret_id" "callback-haproxy-secret-id" {
