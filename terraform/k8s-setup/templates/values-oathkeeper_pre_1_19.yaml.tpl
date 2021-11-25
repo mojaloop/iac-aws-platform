@@ -53,7 +53,8 @@ ingress:
 #     kubernetes.io/tls-acme: "true"
     hosts:
       - host: ${portal_fqdn}
-        paths: ["/proxy(/|$)(.*)"]
+        paths: 
+          - path: /proxy(/|$)(.*)
               
 #    tls: []
 #        hosts:

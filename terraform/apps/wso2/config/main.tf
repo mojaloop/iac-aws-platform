@@ -9,7 +9,7 @@ terraform {
       source  = "nbering/ansible"
       version = "~> 1.0"
     }
-    vault = "~> 2.24"
+    vault = "~> 3.0"
   }
 }
 

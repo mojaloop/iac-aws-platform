@@ -6,7 +6,7 @@ terraform {
   }
   required_providers {
     helm = "~> 2.3"
-    vault = "~> 2.24.1"
+    vault = "~> 3.0"
     kubernetes = "~> 2.6"
     tls = "~> 2.0"
     external = "~> 1.2.0"
