@@ -23,6 +23,7 @@
   "helm_keto_version": "0.19.6",
   "helm_kratos_version": "0.14.1",
   "helm_bof_version": "1.0.0",
+  "iskmssl_name": "iskmssl2",
   "hub_currency_code": "USD",
   "iac_post_init_version": "v1.0.0",
   "wso2_mysql_repo_version": "v1.0.0",
