@@ -12,8 +12,6 @@ locals {
     vault_role_name        = var.vault_role_name
     vault_secret_file_name = var.vault_secret_file_name
     vault_secret_name      = var.vault_secret_name
-    vault_sim_wl_secret_name = var.vault_sim_wl_secret_name
-    vault_sim_wl_secret_file_name = var.vault_sim_wl_secret_file_name
     vault_pm4ml_wl_secret_name = var.vault_pm4ml_wl_secret_name
     vault_pm4ml_wl_secret_file_name = var.vault_pm4ml_wl_secret_file_name
     wso2_admin_pw = var.wso2_admin_pw

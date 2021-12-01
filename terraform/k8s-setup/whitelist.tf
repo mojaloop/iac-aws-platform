@@ -45,14 +45,6 @@ resource "vault_generic_secret" "whitelist_pm4mls" {
   disable_read = true
 }
 
-resource "vault_generic_secret" "whitelist_addons" {
-  path = "${var.whitelist_secret_name_prefix}_addons"
-
-  data_json = jsonencode({
-    "k8s-workernodes" = join(",", local.env.addons_k8s_worker_nodes_private_ip)
-  })
-}
-
 resource "vault_generic_secret" "whitelist_gateway" {
   path = "${var.whitelist_secret_name_prefix}_gateway"
 

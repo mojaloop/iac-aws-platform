@@ -1,6 +1,5 @@
 locals {
   env_values = {
-    prom-add-ons-url     = "http://${data.terraform_remote_state.infrastructure.outputs.prometheus-add-ons-private-fqdn}:30001"
     prom-mojaloop-url    = "http://prometheus-support-services-server"
     grafana-slack-url    = var.grafana_slack_notifier_url
   }

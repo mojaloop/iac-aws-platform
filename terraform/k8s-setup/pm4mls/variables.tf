@@ -17,18 +17,6 @@ variable "project_root_path" {
   description = "Root path for IaC project"
 }
 
-variable "simulator_names" {
-  description = "Simulator Names. This will be used to create dns records and deploy sims to k8s"
-  type        = list(string)
-  default     = ["payerfsp", "payeefsp", "testfsp1", "testfsp2", "testfsp3", "testfsp4"]
-}
-
-variable "simulator_cidr_block" {
-  description = "Simulator CIDR Block for whitelisting sims"
-  type        = string
-  default     = "10.25.0.0/16"
-}
-
 variable "hub_account_names" {
   description = "other non sim account names. this will create accounts and whitelist entries"
   type        = list(string)

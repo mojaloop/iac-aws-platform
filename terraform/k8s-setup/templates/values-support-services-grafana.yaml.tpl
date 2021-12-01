@@ -167,12 +167,6 @@ datasources:
       url: ${prom-mojaloop-url}
       access: proxy
       isDefault: true
-    - name: Add-Ons
-      type: prometheus
-      url: ${prom-add-ons-url}
-      access: proxy
-      isDefault: false
-
 ## Configure grafana dashboard providers
 ## ref: http://docs.grafana.org/administration/provisioning/#dashboards
 ##

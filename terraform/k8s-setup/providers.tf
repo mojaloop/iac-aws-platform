@@ -29,20 +29,6 @@ provider "tls" {
   alias = "wso2"
 }
 
-##########################
-#       ADD-ONS
-#########################
-provider "helm" {
-  alias = "helm-add-ons"
-  kubernetes {
-    config_path = "${var.project_root_path}/admin-add-ons.conf"
-  }
-}
-provider "kubernetes" {
-  alias       = "k8s-add-ons"
-  config_path = "${var.project_root_path}/admin-add-ons.conf"
-}
-
 ############################
 #          GATEWAY
 ############################

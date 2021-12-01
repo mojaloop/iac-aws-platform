@@ -169,8 +169,6 @@ module "extgw" {
   vault_role_name               = vault_kubernetes_auth_backend_role.kubernetes-gateway.role_name
   vault_secret_file_name        = "main-wl-config.xml"
   vault_secret_name             = "${var.whitelist_secret_name_prefix}_fsps"
-  vault_sim_wl_secret_file_name = "sim-wl-config.xml"
-  vault_sim_wl_secret_name      = "${var.whitelist_secret_name_prefix}_sims"
   vault_pm4ml_wl_secret_file_name = "pm4ml-wl-config.xml"
   vault_pm4ml_wl_secret_name      = "${var.whitelist_secret_name_prefix}_pm4mls"
   helm_deployment               = "wso2-is-km"
