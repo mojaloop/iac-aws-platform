@@ -17,18 +17,6 @@ variable "project_root_path" {
   description = "Root path for IaC project"
 }
 
-variable "simulator_names" {
-  description = "Simulator Names. This will be used to create dns records and deploy sims to k8s"
-  type        = list(string)
-  default     = ["payerfsp", "payeefsp", "testfsp1", "testfsp2", "testfsp3", "testfsp4"]
-}
-
-variable "simulator_cidr_block" {
-  description = "Simulator CIDR Block for whitelisting sims"
-  type        = string
-  default     = "10.25.0.0/16"
-}
-
 variable "hub_account_names" {
   description = "other non sim account names. this will create accounts and whitelist entries"
   type        = list(string)
@@ -36,7 +24,7 @@ variable "hub_account_names" {
 }
 
 variable "hub_account_cidr_blocks" {
-  description = "Simulator CIDR Blocks for whitelisting the matching simulator_names list variable"
+  description = "hubaccount CIDR Block"
   type        = list(string)
   default     = ["10.0.0.0/8"]
 }
@@ -58,10 +46,6 @@ variable "helm_mojaloop_version" {
 variable "helm_mojaloop_release_name" {
   description = "Mojaloop helm release name"
   default = "mojaloop"
-}
-
-variable "helm_mojaloop_simulator_version" {
-  description = "Mojaloop Simulator version to install via Helm"
 }
 
 variable "private_registry_pw" {

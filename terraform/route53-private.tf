@@ -59,10 +59,3 @@ resource "aws_route53_record" "prometheus-services-private" {
   ttl     = "300"
   records = [module.k8-cluster-gateway.haproxy_private_ip]
 }
-resource "aws_route53_record" "prometheus-add-ons-private" {
-  zone_id = aws_route53_zone.main_private.zone_id
-  name    = var.prometheus-add-ons-name
-  type    = "A"
-  ttl     = "300"
-  records = [module.k8-cluster-add-ons.haproxy_private_ip]
-}

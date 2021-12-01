@@ -89,42 +89,11 @@ variable "gateway_kube_master_size" {
   default     = "t2.medium"
 }
 
-variable "add-ons_kube_master_num" {
-  description = "Number of Kubernetes Master Nodes for add-ons k8"
-  type        = number
-  default     = 3
-}
-
-variable "add-ons_kube_worker_num" {
-  description = "Number of Kubernetes Master Nodes for add-ons k8"
-  type        = number
-  default     = 3
-}
-
-variable "add-ons_kube_master_size" {
-  description = "Instance size of Kube Master Nodes for add-ons k8"
-  type        = string
-  default     = "t2.medium"
-}
-
-variable "add-ons_kube_worker_size" {
-  description = "Instance size of Kubernetes Worker Nodes for add-ons k8"
-  type        = string
-  default     = "m5.large"
-}
-
 variable "inventory_file_gateway" {
   description = "Where to store the generated inventory file for gateway k8 cluster"
   type        = string
   default     = "../kubespray-inventory/hosts-gateway"
 }
-
-variable "inventory_file_add-ons" {
-  description = "Where to store the generated inventory file for add-ons k8 cluster"
-  type        = string
-  default     = "../kubespray-inventory/hosts-add-ons"
-}
-
 
 variable "k8-balancer-gateway-aliases" {
   description = "List of gateway services for HAProxy to alias"
@@ -157,14 +126,6 @@ variable "k8-balancer-gateway-aliases" {
     "ttkfrontend",
     "mojaloop-reporting",
     "kowl"
-  ]
-}
-
-variable "k8-balancer-add-ons-aliases" {
-  description = "List of add-ons services for HAProxy to alias"
-  type        = list(string)
-  default = [
-    "k8-api-add-ons-lb",
   ]
 }
 
@@ -201,11 +162,6 @@ variable "prometheus-services-name" {
   description = "Hostname to use with prometheus in support services"
   type        = string
   default     = "prometheus-services"
-}
-variable "prometheus-add-ons-name" {
-  description = "Hostname to use with prometheus in add-ons"
-  type        = string
-  default     = "prometheus-add-ons"
 }
 variable "grafana-services-name" {
   description = "Hostname to use with grafana in support services"

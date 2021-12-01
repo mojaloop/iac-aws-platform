@@ -19,18 +19,6 @@ provider "aws" {
   region = var.region
 }
 
-##########################
-#       ADD-ONS
-#########################
-provider "helm" {
-  kubernetes {
-    config_path = "${var.project_root_path}/admin-add-ons.conf"
-  }
-}
-
-provider "kubernetes" {
-  config_path = "${var.project_root_path}/admin-add-ons.conf"
-}
 
 data "terraform_remote_state" "infrastructure" {
   backend = "s3"

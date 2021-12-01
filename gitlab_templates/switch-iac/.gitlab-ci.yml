@@ -135,7 +135,7 @@ Destroy Environment:
 Destroy k3s Cluster:
   stage: "Destroy"  
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.12.9
+    name: ghcr.io/pm4ml/k3sbootstrap:0.14.1
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"')
@@ -174,7 +174,7 @@ Destroy k3s Cluster:
 Undeploy PM4ML Charts:
   stage: "Destroy"  
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.12.9
+    name: ghcr.io/pm4ml/k3sbootstrap:0.14.1
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -227,7 +227,7 @@ Deploy AWS Infrastructure:
 Create k3s Cluster:
   stage: "Run k3s"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.12.9
+    name: ghcr.io/pm4ml/k3sbootstrap:0.14.1
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -271,14 +271,6 @@ Create k3s Cluster:
     - aws s3 cp /k3s-boot/wireguard.private.key s3://$BUCKET/$environment/k3saddons/ --sse
     - aws s3 cp /k3s-boot/wireguard.public.key s3://$BUCKET/$environment/k3saddons/ --sse
     - make monitoring 
-  when: manual
-
-Create Addons Cluster:
-  stage: "Run Kubespray"
-  script:
-    - cd /kubespray
-    - ansible-playbook -i $CI_IMAGE_PROJECT_DIR/kubespray-inventory/hosts-add-ons -e @$CI_IMAGE_PROJECT_DIR/kubespray-inventory/extra-vars.json ./cluster.yml $ANSIBLE_FEATURE_TOGGLES
-    - aws s3 cp inventory/artifacts/cluster/admin.conf s3://$BUCKET/$environment/admin-add-ons.conf --sse
   when: manual
 
 Create Gateway Cluster:
@@ -330,7 +322,7 @@ Deploy Vault:
 2b. Install Internal PM4MLs:
   stage: "Deploy Platform"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.12.9
+    name: ghcr.io/pm4ml/k3sbootstrap:0.14.1
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -388,51 +380,7 @@ Deploy Vault:
   when: manual
 
 
-#job template for 3. Run ML GP Tests	  
-.Run ML GP Tests-job-template:
-  script:
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-    - cd sim_tests
-    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
-    - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopHub_Setup.postman_collection.json --insecure -e Lab.postman_environment.json
-    - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopSims_Onboarding.postman_collection.json --ssl-client-cert-list test_cert_list.json --insecure -e Lab.postman_environment.json || true
-    - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/Golden_Path_Mojaloop.postman_collection.json --ssl-client-cert-list test_cert_list.json --insecure -e Lab.postman_environment.json --folder p2p_happy_path_RECEIVE_quote --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/hp_report.html --reporter-junit-export ${CI_PROJECT_DIR}/hp_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
-    - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/Golden_Path_Mojaloop.postman_collection.json --ssl-client-cert-list test_cert_list.json --insecure -e Lab.postman_environment.json --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/gp_report.html --reporter-junit-export ${CI_PROJECT_DIR}/gp_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
-     
-  after_script:
-    - curl https://slack.com/api/files.upload
-      -F file=@"gp_report.html"
-      -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}","${SLACK_GITLABCI_GP_REPORTS_CHANNEL_NAME}"
-      -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
-      -F title="Mojaloop Goldenpath Test (Postman) Results.'${ENVIRONMENT}'-$(date +\"%Y-%m-%d-%H:%M:%S\")"
-      -F filetype="html"
-  artifacts:
-    paths:
-      - gp_report.html
-    reports:
-      junit: gp_report.xml
-
-1. Manual Run ML GP Tests:
-  stage: "Run Tests"
-  allow_failure: true
-  extends: .Run ML GP Tests-job-template
-  when: manual
-  except:
-    - schedules
-
-1. Scheduled Run ML GP Tests:
-  stage: "Run Tests"
-  allow_failure: true
-  extends: .Run ML GP Tests-job-template
-  only:
-    refs:
-      - schedules
-    variables:
-      - $SCHEDULE_GP == "1_GP"
-      
-
-#job template for 2. Run PM4ML GP Tests	  
+#job template for 1. Run PM4ML GP Tests	  
 .Run PM4ML GP Tests-job-template:
   script:
     - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
@@ -458,14 +406,14 @@ Deploy Vault:
     reports:
       junit: gp_report.xml
 
-2. Manual Run PM4ML GP Tests:
+1. Manual Run PM4ML GP Tests:
   stage: "Run Tests"
   extends: .Run PM4ML GP Tests-job-template
   when: manual
   except:
     - schedules
 
-2. Scheduled Run PM4ML GP Tests:
+1. Scheduled Run PM4ML GP Tests:
   stage: "Run Tests"
   allow_failure: true
   extends: .Run PM4ML GP Tests-job-template
@@ -475,7 +423,7 @@ Deploy Vault:
     variables:
       - $SCHEDULE_PM4ML == "PM4ML_GP"
 
-3. Run Finance Portal V2 UI Tests:
+2. Run Finance Portal V2 UI Tests:
   stage: "Run Tests"
   allow_failure: true
   when: manual

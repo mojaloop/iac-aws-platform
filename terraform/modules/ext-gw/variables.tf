@@ -98,16 +98,6 @@ variable "vault_secret_file_name" {
   type = string
 }
 
-variable "vault_sim_wl_secret_name" {
-  description = "secret name for simulators after secret/"
-  type = string
-}
-
-variable "vault_sim_wl_secret_file_name" {
-  description = "name of file to write for sim secrets"
-  type = string
-}
-
 variable "vault_pm4ml_wl_secret_name" {
   description = "secret name for pm4mls after secret/"
   type = string

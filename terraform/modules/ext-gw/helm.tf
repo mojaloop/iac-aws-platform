@@ -33,7 +33,6 @@ resource "helm_release" "app" {
     file("${path.module}/helm/values.yaml"),
     templatefile("${path.module}/templates/env-values.yaml.tpl", local.env_values),
     templatefile("${path.module}/templates/annotations.yaml.tpl", local.env_values),
-    templatefile("${path.module}/templates/sim_annotations.yaml.tpl", local.env_values),
     templatefile("${path.module}/templates/pm4ml_annotations.yaml.tpl", local.env_values)
   ]
   set {
