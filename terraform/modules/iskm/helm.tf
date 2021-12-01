@@ -14,7 +14,7 @@ locals {
 
 resource "helm_release" "app" {
   name          = var.iskm_release_name
-  repository    = "http://docs.mojaloop.io/wso2-helm-charts-simple/repo"
+  repository    = "https://mojaloop.github.io/wso2-helm-charts-simple/repo"
   chart         = "wso2-is-km"
   version       = "2.0.10"
   namespace     = var.namespace

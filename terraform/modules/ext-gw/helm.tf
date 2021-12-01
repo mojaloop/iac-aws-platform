@@ -20,7 +20,7 @@ locals {
 
 resource "helm_release" "app" {
   name          = "wso2-am-ext"
-  repository    = "http://docs.mojaloop.io/wso2-helm-charts-simple/repo"
+  repository    = "https://mojaloop.github.io/wso2-helm-charts-simple/repo"
   chart         = "wso2-am"
   version       = "2.0.10"
   namespace     = var.namespace
