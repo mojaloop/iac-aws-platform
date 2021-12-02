@@ -13,3 +13,41 @@ resource "local_file" "gp_postman_pm4ml_certlist_file" {
   })
   filename   = "${path.root}/sim_tests/test_cert_list.json"
 }
+
+resource "local_file" "gp_postman_environment_file" {
+  content = templatefile("${path.module}/templates/Lab.postman_environment.json.tpl", {
+    LAB_DOMAIN                         = trimsuffix(data.terraform_remote_state.infrastructure.outputs.public_subdomain, "."),
+    CURRENCY_CODE                      = var.hub_currency_code,
+    HUB_OPERATOR_CONSUMER_KEY          = module.provision_accounts_to_wso2.client-ids["hub_operator"],
+    HUB_OPERATOR_CONSUMER_SECRET       = module.provision_accounts_to_wso2.client-secrets["hub_operator"],
+    NORESPONSEPAYEEFSP_CONSUMER_KEY    = "noresponsepayeefsp",
+    NORESPONSEPAYEEFSP_CONSUMER_SECRET = "noresponsepayeefsp",
+    PAYERFSP_CONSUMER_KEY              = "payerfsp",
+    PAYEEFSP_CONSUMER_KEY              = "payeefsp",
+    TESTFSP1_CONSUMER_KEY              = "testfsp1",
+    TESTFSP2_CONSUMER_KEY              = "testfsp2",
+    TESTFSP3_CONSUMER_KEY              = "testfsp3",
+    TESTFSP4_CONSUMER_KEY              = "testfsp4",
+    PAYERFSP_CONSUMER_SECRET           = "payerfsp",
+    PAYEEFSP_CONSUMER_SECRET           = "payeefsp",
+    TESTFSP1_CONSUMER_SECRET           = "testfsp1",
+    TESTFSP2_CONSUMER_SECRET           = "testfsp2",
+    TESTFSP3_CONSUMER_SECRET           = "testfsp3",
+    TESTFSP4_CONSUMER_SECRET           = "testfsp4",
+    payerfspJWSKey                     = "payerfsp",
+    payeefspJWSKey                     = "payeefsp",
+    testfsp1JWSKey                     = "testfsp1",
+    testfsp2JWSKey                     = "testfsp2",
+    testfsp3JWSKey                     = "testfsp3",
+    testfsp4JWSKey                     = "testfsp4",
+    MERCHANT_ORACLE_ENDPOINT           = "http://moja-simulator.${trimsuffix(data.terraform_remote_state.infrastructure.outputs.public_subdomain, ".")}.internal:30000/oracle",
+    ALIAS_ORACLE_ENDPOINT              = "http://${data.terraform_remote_state.k8s-base.outputs.alias-oracle-fqdn}:30000/als-api",
+    ALIAS_ORACLE_ADMIN_API_ENDPOINT    = "http://${data.terraform_remote_state.k8s-base.outputs.alias-oracle-fqdn}:30000/admin-api",
+    ACCOUNT_ORACLE_ENDPOINT            = "http://${data.terraform_remote_state.k8s-base.outputs.mfi-account-oracle-fqdn}:30000/als-api",
+    ACCOUNT_ORACLE_ADMIN_API_ENDPOINT  = "http://${data.terraform_remote_state.k8s-base.outputs.mfi-account-oracle-fqdn}:30000/admin-api",
+    PM4ML_DOMAIN                       = "${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}",
+    MOJALOOP_RELEASE                   = var.helm_mojaloop_release_name
+  })
+  filename   = "${path.root}/sim_tests/Lab.postman_environment.json"
+  depends_on = [module.provision_accounts_to_wso2]
+}

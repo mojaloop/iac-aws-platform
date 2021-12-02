@@ -1,6 +1,6 @@
 resource "helm_release" "finance-portal" {
   name       = "finance-portal"
-  repository = "https://docs.mojaloop.io/finance-portal-v2-ui"
+  repository = "https://mojaloop.github.io/finance-portal-v2-ui"
   chart      = "finance-portal-v2-ui"
   version    = var.helm_finance_portal_version
   namespace  = "mojaloop"

@@ -11,6 +11,7 @@ terraform {
     kubernetes = {
       version = "~> 2.6"
     }
+    external = "~> 1.2.0"
     vault = "~> 2.24"
   }
 }
@@ -49,5 +50,4 @@ data "terraform_remote_state" "tenant" {
 
 provider "external" {
   alias   = "v1_2_0"
-  version = "~> 1.2.0"
 }
