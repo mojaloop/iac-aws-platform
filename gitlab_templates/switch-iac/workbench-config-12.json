@@ -44,8 +44,6 @@
   "TAG_ML_GP": "v12.0.3",
   "k8s_api_version": "1.21.6",
   "TAG_PM4ML_GP": "v1.1.3",
-  "simulator_names": ["payerfsp", "payeefsp", "testfsp1", "testfsp2", "testfsp3", "testfsp4"],
-  "internal_sim_prefix": "ttkint",
   "internal_ttk_enabled": "true",
   "internal_sim_enabled": "true",
   "internal_pm4ml_configs": [
