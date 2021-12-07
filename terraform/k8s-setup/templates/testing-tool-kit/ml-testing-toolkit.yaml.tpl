@@ -411,3 +411,12 @@ ml-testing-toolkit:
           paths: ['/']
     config:
       API_BASE_URL: http://ttkbackend.${env}.${name}.${domain}.internal:30000
+
+ml-ttk-test-setup:
+  testCaseEnvironmentFile:  *ttkInputValues
+
+ml-ttk-test-validation:
+  config:
+    testSuiteName: GP Tests
+    environmentName: QA
+  testCaseEnvironmentFile:  *ttkInputValues

@@ -502,7 +502,7 @@ mojaloop-simulator:
             publicKey: ''
         image:
           repository: mojaloop/sdk-scheme-adapter
-          tag: v11.17.1
+          tag: v11.18.11
           pullPolicy: IfNotPresent
         <<: *defaultProbes
 
