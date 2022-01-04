@@ -1,6 +1,6 @@
 resource "local_file" "gp_postman_pm4ml_certlist_file" {
   content = templatefile("${path.module}/templates/test_cert_list.json.tpl", {
-    LAB_DOMAIN                     = trimsuffix(data.terraform_remote_state.infrastructure.outputs.public_subdomain, "."),
+    LAB_DOMAIN                     = data.terraform_remote_state.infrastructure.outputs.public_subdomain,
     PM4ML_DOMAIN                = "${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}",
     DFSP1_KEY_FILENAME          = "../secrets_chart/pm4mlsenderfsp/tls/pm4mlsenderfsp_client.key",
     DFSP2_KEY_FILENAME          = "../secrets_chart/pm4mlreceiverfsp/tls/pm4mlreceiverfsp_client.key",
@@ -16,7 +16,7 @@ resource "local_file" "gp_postman_pm4ml_certlist_file" {
 
 resource "local_file" "gp_postman_environment_file" {
   content = templatefile("${path.module}/templates/Lab.postman_environment.json.tpl", {
-    LAB_DOMAIN                         = trimsuffix(data.terraform_remote_state.infrastructure.outputs.public_subdomain, "."),
+    LAB_DOMAIN                         = data.terraform_remote_state.infrastructure.outputs.public_subdomain,
     CURRENCY_CODE                      = var.hub_currency_code,
     HUB_OPERATOR_CONSUMER_KEY          = module.provision_accounts_to_wso2.client-ids["hub_operator"],
     HUB_OPERATOR_CONSUMER_SECRET       = module.provision_accounts_to_wso2.client-secrets["hub_operator"],
@@ -40,11 +40,11 @@ resource "local_file" "gp_postman_environment_file" {
     testfsp2JWSKey                     = "testfsp2",
     testfsp3JWSKey                     = "testfsp3",
     testfsp4JWSKey                     = "testfsp4",
-    MERCHANT_ORACLE_ENDPOINT           = "http://moja-simulator.${trimsuffix(data.terraform_remote_state.infrastructure.outputs.public_subdomain, ".")}.internal:30000/oracle",
-    ALIAS_ORACLE_ENDPOINT              = "http://${data.terraform_remote_state.k8s-base.outputs.alias-oracle-fqdn}:30000/als-api",
-    ALIAS_ORACLE_ADMIN_API_ENDPOINT    = "http://${data.terraform_remote_state.k8s-base.outputs.alias-oracle-fqdn}:30000/admin-api",
-    ACCOUNT_ORACLE_ENDPOINT            = "http://${data.terraform_remote_state.k8s-base.outputs.mfi-account-oracle-fqdn}:30000/als-api",
-    ACCOUNT_ORACLE_ADMIN_API_ENDPOINT  = "http://${data.terraform_remote_state.k8s-base.outputs.mfi-account-oracle-fqdn}:30000/admin-api",
+    MERCHANT_ORACLE_ENDPOINT           = "http://moja-simulator.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}/oracle",
+    ALIAS_ORACLE_ENDPOINT              = "http://${data.terraform_remote_state.k8s-base.outputs.alias-oracle-fqdn}/als-api",
+    ALIAS_ORACLE_ADMIN_API_ENDPOINT    = "http://${data.terraform_remote_state.k8s-base.outputs.alias-oracle-fqdn}/admin-api",
+    ACCOUNT_ORACLE_ENDPOINT            = "http://${data.terraform_remote_state.k8s-base.outputs.mfi-account-oracle-fqdn}/als-api",
+    ACCOUNT_ORACLE_ADMIN_API_ENDPOINT  = "http://${data.terraform_remote_state.k8s-base.outputs.mfi-account-oracle-fqdn}/admin-api",
     PM4ML_DOMAIN                       = "${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}",
     MOJALOOP_RELEASE                   = var.helm_mojaloop_release_name
   })

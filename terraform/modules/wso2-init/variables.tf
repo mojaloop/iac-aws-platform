@@ -69,6 +69,12 @@ variable "efs_storage_class_name" {
   default = "efs"
 }
 
+variable "mysql_storage_class_name" {
+  description = "storage class name for mysql"
+  type = string
+  default = "ebs"
+}
+
 variable "namespace" {
   description = "namespace to deploy to"
   type = string

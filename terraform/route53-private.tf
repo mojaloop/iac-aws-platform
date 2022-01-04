@@ -1,61 +1,38 @@
-resource "aws_route53_record" "extgw-private" {
+/* resource "aws_route53_record" "extgw-private" {
   zone_id = aws_route53_zone.main_private.zone_id
   name    = var.extgw_hostname
-  type    = "A"
+  type    = "CNAME"
   ttl     = "300"
-  records = [module.k8-cluster-gateway.haproxy_private_ip]
+  records = [module.nlb_int.private_dns]
 }
 
 resource "aws_route53_record" "intgw-private" {
   zone_id = aws_route53_zone.main_private.zone_id
   name    = var.intgw_hostname
-  type    = "A"
+  type    = "CNAME"
   ttl     = "300"
-  records = [module.k8-cluster-gateway.haproxy_private_ip]
+  records = [module.nlb_int.private_dns]
 }
 
 resource "aws_route53_record" "iskm-private" {
   zone_id = aws_route53_zone.main_private.zone_id
   name    = var.iskm_hostname
-  type    = "A"
+  type    = "CNAME"
   ttl     = "300"
-  records = [module.k8-cluster-gateway.haproxy_private_ip]
+  records = [module.nlb_int.private_dns]
 }
 
-resource "aws_route53_record" "elasticsearch-services-private" {
-  zone_id = aws_route53_zone.main_private.zone_id
-  name    = var.elasticsearch-services-name
-  type    = "A"
-  ttl     = "300"
-  records = [module.k8-cluster-gateway.haproxy_private_ip]
-}
-
-resource "aws_route53_record" "apm-services-private" {
-  zone_id = aws_route53_zone.main_private.zone_id
-  name    = var.apm-services-name
-  type    = "A"
-  ttl     = "300"
-  records = [module.k8-cluster-gateway.haproxy_private_ip]
-}
-
-resource "aws_route53_record" "kibana-services-private" {
-  zone_id = aws_route53_zone.main_private.zone_id
-  name    = var.kibana-services-name
-  type    = "A"
-  ttl     = "300"
-  records = [module.k8-cluster-gateway.haproxy_private_ip]
-}
 resource "aws_route53_record" "grafana-services-private" {
   zone_id = aws_route53_zone.main_private.zone_id
   name    = var.grafana-services-name
-  type    = "A"
+  type    = "CNAME"
   ttl     = "300"
-  records = [module.k8-cluster-gateway.haproxy_private_ip]
+  records = [module.nlb_int.private_dns]
 }
 resource "aws_route53_record" "prometheus-services-private" {
   zone_id = aws_route53_zone.main_private.zone_id
   name    = var.prometheus-services-name
-  type    = "A"
+  type    = "CNAME"
   ttl     = "300"
-  records = [module.k8-cluster-gateway.haproxy_private_ip]
-}
+  records = [module.nlb_int.private_dns]
+} */

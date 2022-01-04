@@ -29,6 +29,11 @@ resource "aws_instance" "k8s-master" {
       "k8s-cluster"                                                     = "${var.name}"
     },
   )
+  lifecycle {
+    ignore_changes = [
+      ami
+    ]
+  }
 }
 
 
@@ -64,6 +69,11 @@ resource "aws_instance" "k8s-worker" {
       "k8s-cluster"                                                     = "${var.name}"
     },
   )
+  lifecycle {
+    ignore_changes = [
+      ami
+    ]
+  }
 }
 
 resource "aws_volume_attachment" "ebs_att" {

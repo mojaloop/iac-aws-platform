@@ -59,4 +59,8 @@ ui:
   oauth:
     enabled: true
 
-host: ${mcm_public_fqdn}
+ingress:
+  enabled: true
+  host: ${mcm_public_fqdn}
+  annotations:
+    kubernetes.io/ingress.class: nginx-ext

@@ -14,26 +14,54 @@ readinessProbe:
 livenessProbe:
   enabled: true
   initialDelaySeconds: 180
+ingress:
+  apiServer:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      nginx.ingress.kubernetes.io/ssl-passthrough: "false"
+      cert-manager.io/cluster-issuer: letsencrypt
+      
+    hosts:
+      - host: ${ingress_host}
+        paths:
+          - path: "/"
+            servicePort: wso2
+    tls:
+      - secretName: intgw-tls
+        hosts:
+          - ${ingress_host}
+  tokenServer:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      nginx.ingress.kubernetes.io/ssl-passthrough: "false"
+      cert-manager.io/cluster-issuer: letsencrypt
+      
+    hosts:
+      - host: ${token_ingress_host}
+        paths:
+          - path: "/"
+            servicePort: wso2https
+    tls:
+      - secretName: tokenintgw-tls
+        hosts:
+          - ${token_ingress_host}
 service:
-  type: NodePort
+  type: ClusterIP
   ports:
     wso2:
       name: wso2
-      externalPort: 9843
-      internalPort: 30443
+      externalPort: 9443
+      internalPort: 32443
       targetPort: 9443
-      enabled: true
     wso2https:
       name: wso2https
-      externalPort: 8843
+      externalPort: 8243
       internalPort: 32244
       targetPort: 8243
-      enabled: true
-    wso2http:
-      name: wso2http
-      externalPort: 8844
-      internalPort: 32245
-      targetPort: 8280
       enabled: true
   sessionAffinity: 
     enabled: true

@@ -4,13 +4,13 @@ resource "helm_release" "finance-portal" {
   chart      = "finance-portal-v2-ui"
   version    = var.helm_finance_portal_version
   namespace  = "mojaloop"
-  timeout    = 800
+  timeout    = 500
 
   values = [
     templatefile("${path.module}/templates/values-finance-portal.yaml.tpl", {
       image_tag = var.helm_finance_portal_version,
       fin_portal_backend_svc = "mojaloop-finance-portal.mojaloop.svc.cluster.local:3000"
-      ingress_host        = "finance-portal-v2.${var.environment}.${var.client}.${data.terraform_remote_state.tenant.outputs.domain}.internal"
+      ingress_host        = "finance-portal-v2.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
       mojaloop_release    = helm_release.mojaloop.name
     })
   ]

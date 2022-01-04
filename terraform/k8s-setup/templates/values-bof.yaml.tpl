@@ -51,6 +51,7 @@ role-assignment-service:
     hostname: ${api_fqdn}
     path: /iam(/|$)(.*)
     annotations:
+      kubernetes.io/ingress.class: nginx
       nginx.ingress.kubernetes.io/rewrite-target: /$2
   configFiles:
     default.json: {
@@ -67,6 +68,7 @@ reporting-hub-bop-api-svc:
     hostname: ${api_fqdn}
     path: /transfers(/|$)(.*)
     annotations:
+      kubernetes.io/ingress.class: nginx
       nginx.ingress.kubernetes.io/rewrite-target: /$2
 
 ## Front-end UI services
@@ -75,6 +77,8 @@ reporting-hub-bop-shell:
   enabled: true
   ingress:
     hostname: ${portal_fqdn}
+    annotations:
+      kubernetes.io/ingress.class: nginx
   config:
     env:
       AUTH_MOCK_API: false
@@ -102,6 +106,7 @@ security-hub-bop-kratos-ui:
     pathType: ImplementationSpecific
     path: /selfui/auth(/|$)(.*)
     annotations:
+      kubernetes.io/ingress.class: nginx
       nginx.ingress.kubernetes.io/rewrite-target: /$2
 
 ### Micro-frontends
@@ -112,6 +117,8 @@ reporting-hub-bop-role-ui:
     pathType: ImplementationSpecific
     hostname: ${iamui_fqdn}
     path: /
+    annotations:
+      kubernetes.io/ingress.class: nginx
   config:
     env:
       REACT_APP_API_BASE_URL: http://${portal_fqdn}/proxy/iam
@@ -124,6 +131,8 @@ reporting-hub-bop-trx-ui:
     enabled: true
     pathType: ImplementationSpecific
     hostname: ${transfersui_fqdn}
+    annotations:
+      kubernetes.io/ingress.class: nginx
   config:
     env:
       REACT_APP_API_BASE_URL: http://${portal_fqdn}/proxy/transfers
@@ -139,6 +148,8 @@ reporting-hub-bop-settlements-ui:
     enabled: true
     pathType: ImplementationSpecific
     hostname: ${settlementsui_fqdn}
+    annotations:
+      kubernetes.io/ingress.class: nginx
 
 reporting-hub-bop-positions-ui:
   enabled: true
@@ -149,6 +160,8 @@ reporting-hub-bop-positions-ui:
     enabled: true
     pathType: ImplementationSpecific
     hostname: ${positionsui_fqdn}
+    annotations:
+      kubernetes.io/ingress.class: nginx
 
 ## Other services
 security-role-perm-operator-svc:

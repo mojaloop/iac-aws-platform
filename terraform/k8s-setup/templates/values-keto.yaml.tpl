@@ -114,8 +114,8 @@ ingress:
   read:
     enabled: false
     className: ""
-    annotations: {}
-    # kubernetes.io/ingress.class: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
     hosts:
       - host: keto.local

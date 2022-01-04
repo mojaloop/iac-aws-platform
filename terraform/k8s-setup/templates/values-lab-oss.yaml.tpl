@@ -13,6 +13,8 @@ account-lookup-service:
     config:
       db_password: "${mysql_password}"
     ingress:
+      annotations:
+        kubernetes.io/ingress.class: nginx
       hosts:
         - account-lookup-service.${env}.${name}.${domain}.internal
     mysql:
@@ -28,6 +30,8 @@ account-lookup-service:
     config:
       db_password: "${mysql_password}"
     ingress:
+      annotations:
+        kubernetes.io/ingress.class: nginx
       hosts:
         - account-lookup-service-admin.${env}.${name}.${domain}.internal
   mysql:
@@ -43,6 +47,8 @@ als-oracle-pathfinder:
 central:
   centraleventprocessor:
     ingress:
+      annotations:
+        kubernetes.io/ingress.class: nginx
       hosts:
         api: central-event-processor.${env}.${name}.${domain}.internal
   centralledger:
@@ -51,6 +57,8 @@ central:
         db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
+        annotations:
+          kubernetes.io/ingress.class: nginx
         hosts:
           api: central-ledger-admin-transfer.${env}.${name}.${domain}.internal
     centralledger-handler-timeout:
@@ -58,6 +66,8 @@ central:
         db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
+        annotations:
+          kubernetes.io/ingress.class: nginx
         hosts:
           api: central-ledger-timeout.${env}.${name}.${domain}.internal
     centralledger-handler-transfer-fulfil:
@@ -70,6 +80,8 @@ central:
         db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
+        annotations:
+          kubernetes.io/ingress.class: nginx
         hosts:
           api: central-ledger-transfer-fulfil.${env}.${name}.${domain}.internal
     centralledger-handler-transfer-get:
@@ -77,6 +89,8 @@ central:
         db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
+        annotations:
+          kubernetes.io/ingress.class: nginx
         hosts:
           api: central-ledger-transfer-get.${env}.${name}.${domain}.internal
     centralledger-handler-transfer-position:
@@ -84,6 +98,8 @@ central:
         db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
+        annotations:
+          kubernetes.io/ingress.class: nginx
         hosts:
           api: central-ledger-transfer-position.${env}.${name}.${domain}.internal
     centralledger-handler-transfer-prepare:
@@ -91,6 +107,8 @@ central:
         db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
+        annotations:
+          kubernetes.io/ingress.class: nginx
         hosts:
           api: central-ledger-transfer-prepare.${env}.${name}.${domain}.internal
     centralledger-service:
@@ -104,6 +122,7 @@ central:
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         annotations:
+          kubernetes.io/ingress.class: nginx
           nginx.ingress.kubernetes.io/rewrite-target: /$2
         externalPath:
             api: /admin(/|$)(.*)
@@ -118,7 +137,7 @@ central:
         enabled: true
         accessMode: ReadWriteOnce
         size: 8Gi
-        storageClass: slow
+        storageClass: ${storage_class_name}
       configFiles:
         mysql_custom.cnf: |
           [mysqld]
@@ -130,12 +149,13 @@ central:
         enabled: true
         size: ${kafka.storage_size}
         mountPath: ${kafka.mountPath}
-        storageClass: ${kafka.storage_type}
+        storageClass: ${storage_class_name}
   centralsettlement:
     centralsettlement-service:
       ingress:
         annotations:
           nginx.ingress.kubernetes.io/rewrite-target: /v2/$2
+          kubernetes.io/ingress.class: nginx
         externalPath: 
           api: /settlements(/|$)(.*)
         hosts:
@@ -151,6 +171,8 @@ central:
     
 emailnotifier:
   ingress:
+    annotations:
+      kubernetes.io/ingress.class: nginx
     hosts:
       api: emailnotifier.${env}.${name}.${domain}.internal   
 ml-api-adapter:
@@ -161,6 +183,8 @@ ml-api-adapter:
       repository: mojaloop/ml-api-adapter
       tag: v11.2.0
     ingress:
+      annotations:
+        kubernetes.io/ingress.class: nginx
       hosts:
         api: ml-api-adapter-handler-notification.${env}.${name}.${domain}.internal
   ml-api-adapter-service:
@@ -174,6 +198,7 @@ ml-api-adapter:
       modernIngressControllerRegex: (/|$)(.*)
       annotations:
         nginx.ingress.kubernetes.io/rewrite-target: /$2
+        kubernetes.io/ingress.class: nginx
       hosts:
         api: ml-api-adapter.${env}.${name}.${domain}.internal
 quoting-service:
@@ -188,11 +213,15 @@ quoting-service:
     log_level: "debug"
     db_password: "${mysql_password}"
   ingress:
+    annotations:
+      kubernetes.io/ingress.class: nginx
     hosts:
       api: quoting-service.${env}.${name}.${domain}.internal
 
 simulator:
   ingress:
+    annotations:
+      kubernetes.io/ingress.class: nginx
     hosts:
       - moja-simulator.${env}.${name}.${domain}.internal
 
@@ -217,6 +246,7 @@ finance-portal:
         api: finance-portal.${env}.${name}.${domain}.internal
       annotations:
         nginx.ingress.kubernetes.io/rewrite-target: /$2
+        kubernetes.io/ingress.class: nginx
   frontend: 
     ingress:
       enabled: true
@@ -224,6 +254,7 @@ finance-portal:
         api: finance-portal.${env}.${name}.${domain}.internal
       annotations:
         nginx.ingress.kubernetes.io/rewrite-target: ""
+        kubernetes.io/ingress.class: nginx
 finance-portal-settlement-management:
   enabled: false
   config:
@@ -247,10 +278,14 @@ mojaloop-bulk:
   bulk-api-adapter:
     bulk-api-adapter-service:
       ingress:
+        annotations:
+          kubernetes.io/ingress.class: nginx
         hosts:
           api: bulk-api-adapter.${env}.${name}.${domain}.internal
 
 transaction-requests-service:
   ingress:
+    annotations:
+      kubernetes.io/ingress.class: nginx
     hosts:
       api: transaction-request-service.${env}.${name}.${domain}.internal

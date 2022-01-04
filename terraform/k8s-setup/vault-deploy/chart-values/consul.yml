@@ -6,5 +6,5 @@ global:
 server:
   enabled: true
   storage: 5Gi
-  storageClass: ebs
+  storageClass: ${storage_class_name}
   replicas: 3

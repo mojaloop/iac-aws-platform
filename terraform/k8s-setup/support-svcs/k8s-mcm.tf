@@ -16,14 +16,15 @@ resource "null_resource" "wait_for_iskm_readiness" {
   provisioner "local-exec" {
     command = "sleep 60"
   }
-  depends_on = [module.iskm, null_resource.haproxy-wso2]
+  depends_on = [module.iskm]
 }
 
 module "mcm-iskm-key-secret-gen" {
   source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-mcm?ref=v1.0.21"
-  iskm_fqdn = data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn
+  iskm_fqdn = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   user      = "admin"
   password  = vault_generic_secret.wso2_admin_password.data.value
+  iskm_rest_port = 443
   providers = {
     external = external.wso2-automation-iskm-mcm
   }
@@ -37,6 +38,7 @@ resource "helm_release" "mcm-connection-manager" {
   version    = var.helm_mcm_connection_manager_version
   namespace  = "mcm"
   create_namespace = true
+  timeout    = 500
 
   values = [
     templatefile("${path.module}/templates/values-lab-mcm.yaml.tpl", local.mcm_values)
@@ -45,11 +47,6 @@ resource "helm_release" "mcm-connection-manager" {
   set {
     name  = "api.extraTLS.rootCert.stringValue"
     value = tls_self_signed_cert.ca_cert.cert_pem
-    type  = "string"
-  }
-  set {
-    name  = "api.wso2TokenIssuer.cert.stringValue"
-    value = module.iskm.iskm_cert
     type  = "string"
   }
   set {
@@ -72,13 +69,14 @@ locals {
     password          = vault_generic_secret.mcm_mysql_password.data.value
     root_password     = vault_generic_secret.mcm_mysql_root_password.data.value
     totp_issuer       = var.mcm-totp-issuer
-    mcm_public_fqdn   = data.terraform_remote_state.infrastructure.outputs.mcm_fqdn
-    iskm_private_fqdn = data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn
+    mcm_public_fqdn   = "mcm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+    iskm_private_fqdn = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
     admin_pw          = vault_generic_secret.wso2_admin_password.data.value
     env_name          = data.terraform_remote_state.infrastructure.outputs.environment
-    env_cn            = data.terraform_remote_state.infrastructure.outputs.mcm_fqdn
+    env_cn            = "mcm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
     env_o             = "Modusbox"
     env_ou            = "MCM"
+    storage_class_name = var.ebs_storage_class_name
   }
 }
 

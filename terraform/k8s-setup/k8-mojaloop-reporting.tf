@@ -10,10 +10,9 @@ resource "helm_release" "mojaloop-reporting" {
       db_password = vault_generic_secret.mojaloop_mysql_password.data.value,
       db_user = "central_ledger",
       db_host = "${var.helm_mojaloop_release_name}-centralledger-mysql",
-      ingress_host  = "mojaloop-reporting.${var.environment}.${var.client}.${data.terraform_remote_state.tenant.outputs.domain}.internal"
+      ingress_host  = "mojaloop-reporting.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
     })
   ]
-
   provider = helm.helm-gateway
   depends_on = [helm_release.mojaloop]
 }  

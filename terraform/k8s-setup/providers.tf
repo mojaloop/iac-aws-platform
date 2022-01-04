@@ -17,6 +17,15 @@ terraform {
   }
 }
 
+locals {
+  vault_addr = "https://vault.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+}
+
+provider "vault" {
+  address = local.vault_addr
+  token   = jsondecode(file("${var.project_root_path}/vault_seal_key"))["root_token"]
+}
+
 provider "external" {
   alias = "wso2-automation-iskm-mcm"
 }
@@ -60,4 +69,17 @@ data "terraform_remote_state" "tenant" {
     bucket = "${var.client}-mojaloop-state"
     key    = "bootstrap/terraform.tfstate"
   }
+}
+
+data "terraform_remote_state" "support-svcs" {
+  backend = "s3"
+  config = {
+    region = var.region
+    bucket = "${var.client}-mojaloop-state"
+    key    = "${var.environment}/terraform-suppsvcs.tfstate"
+  }
+}
+
+data "vault_generic_secret" "ws02_admin_password" {
+  path = "secret/wso2/adminpw"
 }

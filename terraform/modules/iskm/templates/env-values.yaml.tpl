@@ -31,6 +31,10 @@ dependencyConfigProps:
     name: "ISKM_HOST"
     propValue: "${iskm}"
     releasePrefixValue: false
+  ISKM_PROXY_PORT:
+    name: "ISKM_PROXY_PORT"
+    propValue: "${iskm_proxy_port}"
+    releasePrefixValue: false
   KEYSTORE_PASSWORD:
     name: "KEYSTORE_PASSWORD"
     propValue: "${keystore_password}"

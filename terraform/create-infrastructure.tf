@@ -60,7 +60,6 @@ resource "aws_security_group" "internet" {
     create_before_destroy = true
   }
 }
-
 # TODO: was is this even for?
 module "aws-iam" {
   source = "git::https://github.com/mojaloop/iac-shared-modules//aws/iam?ref=v1.0.21"
@@ -94,6 +93,28 @@ resource "aws_route53_zone" "public_subdomain" {
     "Description"   = "Public Zone for subdomain ${data.terraform_remote_state.tenant.outputs.public_zone_name}"
     "ManagedBy"     = "Terraform"
   }
+}
+
+resource "aws_route53_record" "subdomain-ns" {
+  allow_overwrite = true
+  zone_id         = data.terraform_remote_state.tenant.outputs.public_zone_id
+  name            = aws_route53_zone.public_subdomain.name
+  type            = "NS"
+  ttl             = "30"
+
+  records = [
+    aws_route53_zone.public_subdomain.name_servers.0,
+    aws_route53_zone.public_subdomain.name_servers.1,
+    aws_route53_zone.public_subdomain.name_servers.2,
+    aws_route53_zone.public_subdomain.name_servers.3,
+  ]
+}
+
+resource "null_resource" "wait_for_NS_propagation" {
+  provisioner "local-exec" {
+    command = "sleep 180"
+  }
+  depends_on = [aws_route53_record.subdomain-ns]
 }
 
 locals {

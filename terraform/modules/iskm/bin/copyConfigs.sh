@@ -17,6 +17,7 @@ sed -i "s/@WSO2_DB_PW@/$WSO2_DB_PW/g" ${WORKING_DIRECTORY}/conf/*
 sed -i "s/@ISKM_HOST@/$ISKM_HOST/g" ${WORKING_DIRECTORY}/conf/*
 sed -i "s/@KEYSTORE_PASSWORD@/$KEYSTORE_PASSWORD/g" ${WORKING_DIRECTORY}/conf/*
 sed -i "s/@WSO2_ADMIN_PW@/$WSO2_ADMIN_PW/g" ${WORKING_DIRECTORY}/conf/*
+sed -i "s/@ISKM_PROXY_PORT@/$ISKM_PROXY_PORT/g" ${WORKING_DIRECTORY}/conf/*
 
 # standard configuration files
 cp ${WORKING_DIRECTORY}/conf/application-authentication.xml $WSO2_SERVER_HOME/repository/conf/identity/application-authentication.xml

@@ -13,8 +13,25 @@ readinessProbe:
 livenessProbe:
   enabled: true
   initialDelaySeconds: 500
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "${nginx_ssl_passthrough}"
+    cert-manager.io/cluster-issuer: ${issuer_name}
+    #nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"    
+  hosts:
+    - host: ${ingress_host}
+      paths:
+        - path: "/"
+          servicePort: wso2
+  tls:
+    - secretName: iskm-tls
+      hosts:
+        - ${ingress_host}
 service:
-  type: NodePort
+  type: ClusterIP
   ports:
     wso2:
       name: wso2

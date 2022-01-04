@@ -123,3 +123,29 @@ variable "wso2_iskm_helm_name" {
   description = "placeholder to force dependency"
   type = string
 }
+
+variable "api_ext_issuer_name" {
+  description = "cert man issuer name for extgw"
+  type = string
+  default = "letsencrypt"
+}
+variable "token_ext_issuer_name" {
+  description = "cert man issuer name for token-extgw"
+  type = string
+  default = "vault-issuer-int"
+}
+variable "api_int_issuer_name" {
+  description = "cert man issuer name for extgw"
+  type = string
+  default = "letsencrypt"
+}
+variable "token_int_issuer_name" {
+  description = "cert man issuer name for token-extgw"
+  type = string
+  default = "vault-issuer-int"
+}
+variable "nginx_ssl_passthrough" {
+  description = "nginx_ssl_passthrough"
+  type = string
+  default = "true"
+}

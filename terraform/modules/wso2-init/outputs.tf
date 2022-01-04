@@ -13,11 +13,6 @@ output "db_host" {
   value = var.db_host
 }
 
-output "storage_class" {
-  description = "Storage Class for EBS"
-  value = kubernetes_storage_class.wso2
-}
-
 output "efs_helm_release_name" {
   description = "Name of EFS Helm release"
   value = helm_release.efs-setup.name

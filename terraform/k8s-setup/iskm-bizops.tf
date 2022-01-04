@@ -40,42 +40,39 @@ resource "vault_generic_secret" "bizops_portal_user_password" {
 
 module "bizops-portal-iskm" {
   source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-bizops?ref=v1.0.42"
-  iskm_fqdn = aws_route53_record.iskm-public-private.fqdn
-  iskm_rest_port = "7443"
+  iskm_fqdn = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  iskm_rest_port = "443"
   user      = "admin"
-  password  = vault_generic_secret.wso2_admin_password.data.value
+  password  = data.vault_generic_secret.ws02_admin_password.data.value
   create_service_provider = "y"
-  callback_url = "http://${aws_route53_record.bofportal-gateway-private.fqdn}/kratos/self-service/methods/oidc/callback/idp"
+  callback_url = "http://${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}/kratos/self-service/methods/oidc/callback/idp"
   // portal_users = local.bizops_portal_users_with_passwords
   providers = {
     external = external.wso2-automation-iskm-mcm
   }
-  depends_on = [null_resource.wait_for_iskm_readiness]
 }
 
 module "bizops-portal-iskm-user-portaladmin" {
   source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-create-user?ref=v1.0.42"
-  iskm_fqdn = aws_route53_record.iskm-public-private.fqdn
-  iskm_admin_port = "7443"
+  iskm_fqdn = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  iskm_admin_port = "443"
   admin_user      = "admin"
-  admin_password  = vault_generic_secret.wso2_admin_password.data.value
+  admin_password  = data.vault_generic_secret.ws02_admin_password.data.value
   account_username = "portaladmin"
   account_password = vault_generic_secret.bizops_portaladmin_password.data.value
   account_email = "portaladmin@test.com"
-  depends_on = [null_resource.wait_for_iskm_readiness]
 }
 
 module "bizops-portal-iskm-user-portal-users" {
   for_each = {for user in var.bizops_portal_users: user.username => user}
   source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-create-user?ref=v1.0.42"
-  iskm_fqdn = aws_route53_record.iskm-public-private.fqdn
-  iskm_admin_port = "7443"
+  iskm_fqdn = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  iskm_admin_port = "443"
   admin_user      = "admin"
-  admin_password  = vault_generic_secret.wso2_admin_password.data.value
+  admin_password  = data.vault_generic_secret.ws02_admin_password.data.value
   account_username = each.value.username
   account_password = vault_generic_secret.bizops_portal_user_password[each.value.username].data.value
   account_email = each.value.email
-  depends_on = [null_resource.wait_for_iskm_readiness]
 }
 
 resource "kubernetes_job" "assign-admin-role-to-portaladmin" {

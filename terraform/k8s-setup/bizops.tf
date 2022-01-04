@@ -76,9 +76,9 @@ resource "helm_release" "oathkeeper" {
 
   values = [  
     templatefile(split(".", var.k8s_api_version)[1] > 18 ? "${path.module}/templates/values-oathkeeper.yaml.tpl" : "${path.module}/templates/values-oathkeeper_pre_1_19.yaml.tpl", {
-      wso2_host = "https://${aws_route53_record.iskm-public-private.fqdn}:7443"
-      wso2_admin_creds = base64encode("admin:${vault_generic_secret.wso2_admin_password.data.value}")
-      portal_fqdn = aws_route53_record.bofportal-gateway-private.fqdn
+      wso2_host = "https://iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      wso2_admin_creds = base64encode("admin:${data.vault_generic_secret.ws02_admin_password.data.value}")
+      portal_fqdn = "${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
     })
   ]
   provider = helm.helm-gateway
@@ -112,8 +112,8 @@ resource "helm_release" "kratos" {
 
   values = [
     templatefile("${path.module}/templates/values-kratos.yaml.tpl", {
-      wso2_host = "https://${aws_route53_record.iskm-public-private.fqdn}:7443"
-      portal_fqdn = aws_route53_record.bofportal-gateway-private.fqdn
+      wso2_host = "https://iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      portal_fqdn = "${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
       wso2_client_id = module.bizops-portal-iskm.consumer-key
       wso2_client_secret = module.bizops-portal-iskm.consumer-secret
     })
@@ -131,18 +131,18 @@ resource "helm_release" "bof" {
   version    = var.helm_bof_version
   devel      = true
   namespace  = "mojaloop"
-  timeout    = 300
+  timeout    = 500
   force_update = true
 
   values = [
     templatefile("${path.module}/templates/values-bof.yaml.tpl", {
-      wso2_host = "https://${aws_route53_record.iskm-public-private.fqdn}:7443"
-      portal_fqdn = aws_route53_record.bofportal-gateway-private.fqdn
-      api_fqdn = aws_route53_record.bofapi-gateway-private.fqdn
-      iamui_fqdn = aws_route53_record.bofiamui-gateway-private.fqdn
-      transfersui_fqdn = aws_route53_record.boftransfersui-gateway-private.fqdn
-      settlementsui_fqdn = aws_route53_record.bofsettlementsui-gateway-private.fqdn
-      positionsui_fqdn = aws_route53_record.bofpositionsui-gateway-private.fqdn
+      wso2_host = "https://iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      portal_fqdn = "${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
+      api_fqdn = "${var.bofapi_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
+      iamui_fqdn = "${var.bofiamui_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
+      transfersui_fqdn = "${var.boftransfersui_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
+      settlementsui_fqdn = "${var.bofsettlementsui_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
+      positionsui_fqdn = "${var.bofpositionsui_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
       central_admin_host = "moja-centralledger-service"
       central_settlements_host = "moja-centralsettlement-service"
       kafka_host = "moja-kafka-headless"
@@ -157,48 +157,6 @@ resource "helm_release" "bof" {
   provider = helm.helm-gateway
   depends_on = [helm_release.mojaloop]
 }
-resource "aws_route53_record" "bofportal-gateway-private" {
-  zone_id = data.terraform_remote_state.infrastructure.outputs.private_zone_id
-  name    = var.bofportal_name
-  type    = "A"
-  ttl     = "300"
-  records = [data.terraform_remote_state.infrastructure.outputs.haproxy_gateway_private_ip]
-}
-resource "aws_route53_record" "bofiamui-gateway-private" {
-  zone_id = data.terraform_remote_state.infrastructure.outputs.private_zone_id
-  name    = var.bofiamui_name
-  type    = "A"
-  ttl     = "300"
-  records = [data.terraform_remote_state.infrastructure.outputs.haproxy_gateway_private_ip]
-}
-resource "aws_route53_record" "boftransfersui-gateway-private" {
-  zone_id = data.terraform_remote_state.infrastructure.outputs.private_zone_id
-  name    = var.boftransfersui_name
-  type    = "A"
-  ttl     = "300"
-  records = [data.terraform_remote_state.infrastructure.outputs.haproxy_gateway_private_ip]
-}
-resource "aws_route53_record" "bofsettlementsui-gateway-private" {
-  zone_id = data.terraform_remote_state.infrastructure.outputs.private_zone_id
-  name    = var.bofsettlementsui_name
-  type    = "A"
-  ttl     = "300"
-  records = [data.terraform_remote_state.infrastructure.outputs.haproxy_gateway_private_ip]
-}
-resource "aws_route53_record" "bofpositionsui-gateway-private" {
-  zone_id = data.terraform_remote_state.infrastructure.outputs.private_zone_id
-  name    = var.bofpositionsui_name
-  type    = "A"
-  ttl     = "300"
-  records = [data.terraform_remote_state.infrastructure.outputs.haproxy_gateway_private_ip]
-}
-resource "aws_route53_record" "bofapi-gateway-private" {
-  zone_id = data.terraform_remote_state.infrastructure.outputs.private_zone_id
-  name    = var.bofapi_name
-  type    = "A"
-  ttl     = "300"
-  records = [data.terraform_remote_state.infrastructure.outputs.haproxy_gateway_private_ip]
-}
 
 resource "kubernetes_secret" "wso2-is-admin-creds" {
   metadata {
@@ -208,7 +166,7 @@ resource "kubernetes_secret" "wso2-is-admin-creds" {
 
   data = {
     username = "admin"
-    password = vault_generic_secret.wso2_admin_password.data.value
+    password = data.vault_generic_secret.ws02_admin_password.data.value
   }
 
   type = "kubernetes.io/basic-auth"

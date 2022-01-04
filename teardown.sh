@@ -53,6 +53,19 @@ else
   echo "terraform-k8s.tfstate not found. Skipping terraform/k8s-setup ..."
 fi
 
+if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-suppsvcs.tfstate ]; then
+  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/support-svcs
+  terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+  terraform validate
+  #making sure to avoid failure on vault bug
+  terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+  aws s3 rm s3://$BUCKET/$ENVIRONMENT/terraform-suppsvcs.tfstate
+  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
+  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform-suppsvcs.tfstate-md5"}}' --return-values ALL_OLD
+else
+  echo "terraform-suppsvcs.tfstate not found. Skipping terraform/terraform-suppsvcs.tfstate ..."
+fi
+
 if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-vault.tfstate ]; then
   cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/vault-deploy
   terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
@@ -78,9 +91,9 @@ else
 fi
 
 echo "Clearing remaining volumes"
-for vol in $(aws ec2 describe-volumes --filters "Name=tag:kubernetes.io/cluster/${client]-${ENVIRONMENT}-mojaloop,Values=owned" --query "Volumes[*].{id:VolumeId}" --region ${TF_VAR_region} | jq -r '.[].id'); do
+for vol in $(aws ec2 describe-volumes --filters "Name=tag:kubernetes.io/cluster/${client}-${ENVIRONMENT}-mojaloop,Values=owned" --query "Volumes[*].{id:VolumeId}" --region $region | jq -r '.[].id'); do
   echo "  > deleting ${vol}"
-  aws ec2 delete-volume --volume-id $vol --region ${TF_VAR_region}
+  aws ec2 delete-volume --volume-id $vol --region $region
 done
 echo "Clearing Terraform state"
 for item in $(terraform state list); do

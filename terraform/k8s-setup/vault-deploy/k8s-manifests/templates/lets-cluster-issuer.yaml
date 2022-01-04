@@ -1,0 +1,25 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.letsencrypt.issuer_name }}
+spec:
+  acme:
+    # You must replace this email address with your own.
+    # Let's Encrypt will use this to contact you about expiring
+    # certificates, and issues related to your account.
+    email: {{ .Values.letsencrypt.letsencrypt_email }}
+    server: {{ .Values.letsencrypt.letsencrypt_server }}
+    privateKeySecretRef:
+      # Secret resource that will be used to store the account's private key.
+      name: letsencrypt-issuer-account-key
+    solvers:
+    - selector:
+        dnsZones:
+          - {{ .Values.letsencrypt.domain }}
+      dns01:
+        route53:
+          region: {{ .Values.letsencrypt.region }}
+          accessKeyID: {{ .Values.letsencrypt.external_dns_iam_access_key }}
+          secretAccessKeySecretRef:
+            name: {{ .Values.letsencrypt.secret_name }}
+            key: secret-access-key

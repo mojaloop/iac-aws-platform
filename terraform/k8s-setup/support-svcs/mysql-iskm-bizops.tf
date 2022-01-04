@@ -1,4 +1,4 @@
-resource "helm_release" "mysql-bizops" {
+/* resource "helm_release" "mysql-bizops" {
   name       = "mysql-wso2-bizops"
   repository = "https://charts.helm.sh/stable"
   chart      = "mysql"
@@ -29,7 +29,7 @@ resource "helm_release" "mysql-bizops" {
   }
   set {
     name  = "persistence.storageClass"
-    value = "slow"
+    value = var.ebs_storage_class_name
     type  = "string"
   }
 
@@ -93,4 +93,4 @@ resource "kubernetes_job" "mysql_int" {
   }
   provider = kubernetes.k8s-gateway
   depends_on = [helm_release.mysql-bizops]
-}
+} */

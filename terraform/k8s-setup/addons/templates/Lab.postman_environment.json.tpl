@@ -4,7 +4,7 @@
 	"values": [
 		{
 			"key": "HOST_SWITCH",
-			"value": "https://extgw.${LAB_DOMAIN}:8243",
+			"value": "https://i-token-extgw.${LAB_DOMAIN}:443",
 			"enabled": true
 		},
 		{
@@ -14,7 +14,7 @@
 		},
 		{
 			"key": "HOST_CENTRAL_LEDGER",
-			"value": "https://extgw.${LAB_DOMAIN}:8243/admin/1.0",
+			"value": "https://i-token-extgw.${LAB_DOMAIN}:443/admin/1.0",
 			"enabled": true
 		},
 		{
@@ -24,7 +24,7 @@
 		},
 		{
 			"key": "HOST_CENTRAL_SETTLEMENT",
-			"value": "https://extgw.${LAB_DOMAIN}:8243/settlements/1.0",
+			"value": "https://i-token-extgw.${LAB_DOMAIN}:443/settlements/1.0",
 			"enabled": true
 		},
 		{
@@ -44,12 +44,12 @@
 		},
 		{
 			"key": "ALS_ADMIN_ENDPOINT",
-			"value": "account-lookup-service-admin.${LAB_DOMAIN}.internal:30000",
+			"value": "account-lookup-service-admin.${LAB_DOMAIN}",
 			"enabled": true
 		},
 		{
 			"key": "MSISDN_ORACLE_ENDPOINT",
-			"value": "http://moja-simulator.${LAB_DOMAIN}.internal:30000/oracle",
+			"value": "http://moja-simulator.${LAB_DOMAIN}.internal/oracle",
 			"enabled": true
 		},
 		{
@@ -94,12 +94,12 @@
 		},
 		{
 			"key": "WS02_INT_GWY_ENDPOINT",
-			"value": "http://intgw.${LAB_DOMAIN}.internal:8844",
+			"value": "https://token-intgw.${LAB_DOMAIN}",
 			"enabled": true
 		},
 		{
 			"key": "MCM_ENDPOINT",
-			"value": "http://mcmweb.${LAB_DOMAIN}:30000",
+			"value": "https://mcmweb.${LAB_DOMAIN}",
 			"enabled": true
 		},
 		{

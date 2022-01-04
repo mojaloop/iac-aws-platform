@@ -12,7 +12,7 @@ terraform {
 
 resource "kubernetes_storage_class" "ebs" {
   metadata {
-    name = "ebs"
+    name = var.ebs_storage_class_name
   }
   storage_provisioner = "kubernetes.io/aws-ebs"
   reclaim_policy      = "Retain"
@@ -35,11 +35,11 @@ resource "helm_release" "deploy_consul" {
   repository = "https://helm.releases.hashicorp.com"
   chart      = "consul"
   version    = var.helm_consul_version
-  values     = [file("chart-values/consul.yml")]
+  values     = [templatefile("chart-values/consul.yml", {
+    storage_class_name = kubernetes_storage_class.ebs.metadata[0].name
+  })]
   timeout    = 300
-
   provider   = helm.helm-gateway
-  depends_on = [kubernetes_storage_class.ebs]
 }
 
 resource "helm_release" "deploy_vault" {
@@ -52,13 +52,13 @@ resource "helm_release" "deploy_vault" {
     kms_key_id = aws_kms_key.vault_unseal_key.id,
     kms_access_key = var.aws_access_key,
     kms_secret_key = var.aws_secret_key,
-    kube_engine_path = var.kubernetes_auth_path,
-    vault_addr = "http://vault.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
+    kube_engine_path = var.kubernetes_auth_path
+    host_name = "vault.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   })]
   force_update = true
   cleanup_on_fail = true
   timeout    = 300
-  depends_on = [helm_release.deploy_consul, aws_kms_key.vault_unseal_key]
+  depends_on = [helm_release.deploy_consul, aws_kms_key.vault_unseal_key, time_sleep.wait_90_seconds]
   provider   = helm.helm-gateway
 }
 
@@ -68,14 +68,6 @@ data "kubernetes_service" "vault" {
   }
   depends_on = [helm_release.deploy_vault]
   provider   = kubernetes.k8s-gateway
-}
-
-resource "aws_route53_record" "vault" {
-  zone_id = data.terraform_remote_state.infrastructure.outputs.private_zone_id
-  name    = "vault"
-  type    = "CNAME"
-  ttl     = "180"
-  records = ["${data.kubernetes_service.vault.status.0.load_balancer.0.ingress.0.hostname}"]
 }
 
 resource "null_resource" "initialize-vault" {
@@ -116,4 +108,86 @@ EOT
     }
   }
   depends_on = [null_resource.initialize-vault]
+}
+
+resource "helm_release" "cert-manager" {
+  name       = "cert-manager"
+  repository = "https://charts.jetstack.io"
+  chart      = "cert-manager"
+  version    = var.helm_certmanager_version
+  namespace  = var.cert_man_namespace
+  timeout    = 300
+  create_namespace = true
+  set {
+    name  = "installCRDs"
+    value = "true"
+  }
+  provider = helm.helm-gateway
+  depends_on = [helm_release.external-dns]
+}
+
+resource "helm_release" "external-dns" {
+  name       = "external-dns"
+  repository = "https://charts.bitnami.com/bitnami"
+  chart      = "external-dns"
+  version    = var.helm_external_dns_version
+  namespace  = var.external_dns_namespace
+  timeout    = 300
+  create_namespace = true
+  provider = helm.helm-gateway
+  values = [
+    templatefile("${path.module}/chart-values/values-external-dns.yaml.tpl", {
+        external_dns_iam_access_key = aws_iam_access_key.route53-external-dns.id
+        external_dns_iam_secret_key = aws_iam_access_key.route53-external-dns.secret
+        domain = data.terraform_remote_state.infrastructure.outputs.public_subdomain
+        internal_domain = data.terraform_remote_state.infrastructure.outputs.private_subdomain
+        txt_owner_id = "${var.environment}-${var.client}"
+        region = var.region
+      })
+  ]
+  depends_on = [helm_release.external-nginx-ingress-controller, helm_release.internal-nginx-ingress-controller]
+}
+
+resource "helm_release" "external-nginx-ingress-controller" {
+  name       = "nginx-ext"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  version    = var.helm_nginx_version
+  namespace  = "nginx-ext"
+  wait       = false
+  create_namespace = true
+
+  provider = helm.helm-gateway
+  values = [
+    templatefile("${path.module}/chart-values/values-nginx.yaml.tpl", {
+        ingress_class_name = "nginx-ext"
+        http_nodeport_port = 32080
+        https_nodeport_port = 32443
+        lb_name            = data.terraform_remote_state.infrastructure.outputs.external_load_balancer_dns
+        use_proxy_protocol = true
+        enable_real_ip     = true
+      })
+  ]
+}
+
+resource "helm_release" "internal-nginx-ingress-controller" {
+  name       = "nginx-int"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  version    = var.helm_nginx_version
+  namespace  = "nginx-int"
+  wait       = false
+  create_namespace = true
+
+  provider = helm.helm-gateway
+  values = [
+    templatefile("${path.module}/chart-values/values-nginx.yaml.tpl", {
+        http_nodeport_port = 31080
+        https_nodeport_port = 31443
+        ingress_class_name = "nginx"
+        lb_name            = data.terraform_remote_state.infrastructure.outputs.internal_load_balancer_dns
+        use_proxy_protocol = false
+        enable_real_ip     = false
+      })
+  ]
 }

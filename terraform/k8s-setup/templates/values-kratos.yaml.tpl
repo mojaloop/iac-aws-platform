@@ -21,8 +21,8 @@ service:
     port: 80
     # -- If you do want to specify annotations, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'annotations:'.
-    annotations: {}
-    # kubernetes.io/ingress.class: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   public:
     enabled: true
@@ -30,8 +30,8 @@ service:
     port: 80
     # -- If you do want to specify annotations, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'annotations:'.
-    annotations: {}
-    # kubernetes.io/ingress.class: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
 
 secret:
@@ -51,8 +51,8 @@ ingress:
   admin:
     enabled: false
     className: ""
-    annotations: {}
-      # kubernetes.io/ingress.class: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
     hosts:
       - host: kratos-admin.local
@@ -67,7 +67,7 @@ ingress:
     className: ""
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /$2
-      # kubernetes.io/ingress.class: nginx
+      kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
     hosts:
       -

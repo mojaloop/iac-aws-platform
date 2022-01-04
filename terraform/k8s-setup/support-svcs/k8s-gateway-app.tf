@@ -39,10 +39,10 @@ resource "vault_generic_secret" "wso2_mysql_password" {
 }
 
 module "wso2_init" {
-  source = "../modules/wso2-init"
+  source = "../../modules/wso2-init"
 
   kubeconfig                   = "${var.project_root_path}/admin-gateway.conf"
-  namespace                    = var.wso2_namespace
+  namespace                    = kubernetes_namespace.wso2.metadata[0].name
   environment                  = var.environment
   mysql_version                = var.helm_mysql_wso2_version
   wso2_mysql_repo_version      = var.wso2_mysql_repo_version
@@ -56,6 +56,7 @@ module "wso2_init" {
   helm_efs_provisioner_version = var.helm_efs_provisioner_version
   region                       = var.region
   efs_storage_class_name       = "efs"
+  mysql_storage_class_name     = var.ebs_storage_class_name
 
   providers = {
     helm = helm.helm-gateway
@@ -65,10 +66,10 @@ module "wso2_init" {
 }
 
 module "iskm" {
-  source = "../modules/iskm"
+  source = "../../modules/iskm"
 
   kubeconfig       = "${var.project_root_path}/admin-gateway.conf"
-  namespace        = var.wso2_namespace
+  namespace        = kubernetes_namespace.wso2.metadata[0].name
   root_certificate = module.wso2_init.root_certificate
   root_private_key = module.wso2_init.root_private_key
   # TODO: workout where to get keystore password from
@@ -78,10 +79,12 @@ module "iskm" {
   db_password        = vault_generic_secret.wso2_mysql_root_password.data.value
   db_host            = var.wso2_mysql_host
   contact_email      = var.wso2_email
-  iskm_fqdn          = data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn
-  intgw_fqdn         = data.terraform_remote_state.infrastructure.outputs.intgw_private_fqdn
-  extgw_fqdn         = data.terraform_remote_state.infrastructure.outputs.extgw_public_fqdn
+  iskm_fqdn          = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  intgw_fqdn         = "intgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  extgw_fqdn         = "extgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   wso2_admin_pw      = vault_generic_secret.wso2_admin_password.data.value
+  cert_man_issuer_name = var.cert_man_letsencrypt_cluster_issuer_name
+  nginx_ssl_passthrough = "false"
 
   providers = {
     helm = helm.helm-gateway
@@ -91,40 +94,11 @@ module "iskm" {
   depends_on = [module.wso2_init]
 }
 
-module "iskm-bizops" {
-  source = "../modules/iskm"
-
-  kubeconfig       = "${var.project_root_path}/admin-gateway.conf"
-  namespace        = "${var.wso2_namespace}-bizops"
-  root_certificate = module.wso2_init.root_certificate
-  root_private_key = module.wso2_init.root_private_key
-  # TODO: workout where to get keystore password from
-  keystore_password  = "wso2carbon"
-  public_domain_name = data.terraform_remote_state.tenant.outputs.public_zone_name
-  db_user            = "root"
-  db_password        = vault_generic_secret.wso2_mysql_root_password.data.value
-  db_host            = "mysql-wso2-bizops.${var.wso2_namespace}-bizops.svc.cluster.local"
-  contact_email      = var.wso2_email
-  iskm_fqdn          = aws_route53_record.iskm-public-private.fqdn
-  intgw_fqdn         = data.terraform_remote_state.infrastructure.outputs.intgw_private_fqdn
-  extgw_fqdn         = data.terraform_remote_state.infrastructure.outputs.extgw_public_fqdn
-  wso2_admin_pw      = vault_generic_secret.wso2_admin_password.data.value
-  node_port          = 31143
-  iskm_release_name  = "wso2-is-km-bizops"
-
-  providers = {
-    helm = helm.helm-gateway
-    kubernetes = kubernetes.k8s-gateway
-    tls = tls.wso2
-  }
-  depends_on = [helm_release.mysql-bizops]
-}
-
 module "intgw" {
-  source = "../modules/int-gw"
+  source = "../../modules/int-gw"
 
   kubeconfig              = "${var.project_root_path}/admin-gateway.conf"
-  namespace               = var.wso2_namespace
+  namespace               = kubernetes_namespace.wso2.metadata[0].name
   root_certificate        = tls_self_signed_cert.ca_cert.cert_pem
   root_private_key        = module.wso2_init.root_private_key
   # TODO: workout where to get keystore and JWS password from
@@ -135,8 +109,8 @@ module "intgw" {
   db_password             = vault_generic_secret.wso2_mysql_root_password.data.value
   db_host                 = var.wso2_mysql_host  
   contact_email           = var.wso2_email
-  iskm_fqdn               = data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn
-  intgw_fqdn              = data.terraform_remote_state.infrastructure.outputs.intgw_private_fqdn
+  intgw_fqdn              = "intgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  iskm_fqdn               = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   wso2_admin_pw           = vault_generic_secret.wso2_admin_password.data.value
   efs_storage_class_name  = "efs"
   
@@ -150,10 +124,10 @@ module "intgw" {
 }
 
 module "extgw" {
-  source = "../modules/ext-gw"
+  source = "../../modules/ext-gw"
 
   kubeconfig       = "${var.project_root_path}/admin-gateway.conf"
-  namespace        = var.wso2_namespace
+  namespace        = kubernetes_namespace.wso2.metadata[0].name
   root_certificate = module.wso2_init.root_certificate
   root_private_key = module.wso2_init.root_private_key
   # TODO: workout where to get keystore and JWS password from
@@ -163,8 +137,8 @@ module "extgw" {
   db_password                   = vault_generic_secret.wso2_mysql_root_password.data.value
   db_host                       = var.wso2_mysql_host
   contact_email                 = var.wso2_email
-  iskm_fqdn                     = data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn
-  extgw_fqdn                    = data.terraform_remote_state.infrastructure.outputs.extgw_public_fqdn
+  iskm_fqdn                     = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  extgw_fqdn                    = "extgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   service_account_name          = kubernetes_service_account.vault-auth-gateway.metadata[0].name
   vault_role_name               = vault_kubernetes_auth_backend_role.kubernetes-gateway.role_name
   vault_secret_file_name        = "main-wl-config.xml"
@@ -175,6 +149,11 @@ module "extgw" {
   wso2_iskm_helm_name           = module.iskm.helm_release_name
   wso2_admin_pw                 = vault_generic_secret.wso2_admin_password.data.value
   efs_storage_class_name        = "efs"
+  api_int_issuer_name           = var.cert_man_letsencrypt_cluster_issuer_name
+  token_int_issuer_name         = var.cert_man_letsencrypt_cluster_issuer_name
+  api_ext_issuer_name           = var.cert_man_vault_cluster_issuer_name
+  token_ext_issuer_name         = var.cert_man_vault_cluster_issuer_name
+  nginx_ssl_passthrough         = "false"
 
   providers = {
     helm = helm.helm-gateway
@@ -182,20 +161,4 @@ module "extgw" {
     tls = tls.wso2
   }
   depends_on = [module.wso2_init, module.iskm]
-}
-
-
-resource "helm_release" "deploy-gateway-nginx-ingress-controller" {
-  name       = "nginx-ingress"
-  repository = "https://charts.bitnami.com/bitnami"
-  chart      = "nginx-ingress-controller"
-  version    = var.helm_nginx_version
-  namespace  = "default"
-  wait       = false
-  create_namespace = true
-
-  provider = helm.helm-gateway
-  values = [
-    "${file("${var.project_root_path}/helm/values-nginx.yaml")}"
-  ]
 }

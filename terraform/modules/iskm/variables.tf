@@ -93,3 +93,13 @@ variable "iskm_release_name" {
   type = string
   default = "wso2-is-km"
 } 
+variable "cert_man_issuer_name" {
+  description = "cert man issuer name"
+  type = string
+  default = "vault-issuer-int"
+}
+variable "nginx_ssl_passthrough" {
+  description = "nginx_ssl_passthrough"
+  type = string
+  default = "true"
+}

@@ -2,6 +2,9 @@ resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
   metadata {
     name      = "wso2-mojaloop-ingress"
     namespace = "mojaloop"
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+    }
   }
   spec {
     rule {
@@ -80,7 +83,7 @@ resource "helm_release" "mojaloop" {
  
   provider = helm.helm-gateway
 
-  depends_on = [module.wso2_init, module.fin-portal-iskm]
+  depends_on = [module.fin-portal-iskm]
 }
 
 locals {
@@ -91,13 +94,14 @@ locals {
     kafka  = var.kafka
     mysql_password = vault_generic_secret.mojaloop_mysql_password.data.value
     mysql_root_password = vault_generic_secret.mojaloop_mysql_root_password.data.value
-    elasticsearch_url = "http://${data.terraform_remote_state.infrastructure.outputs.elasticsearch-services-private-fqdn}:30000" 
-    kibana_url = "http://${data.terraform_remote_state.infrastructure.outputs.kibana-services-private-fqdn}:30000"
-    wso2is_host = "https://${data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn}"
+    elasticsearch_url = "http://localhost" 
+    kibana_url = "http://localhost"
+    wso2is_host = "https://iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
     portal_oauth_app_id = vault_generic_secret.mojaloop_fin_portal_backend_client_id.data.value
     portal_oauth_app_token = vault_generic_secret.mojaloop_fin_portal_backend_client_secret.data.value
     internal_ttk_enabled = var.internal_ttk_enabled
     internal_sim_enabled = var.internal_sim_enabled
+    storage_class_name = var.ebs_storage_class_name
   }
   portal_users = [
     for user in var.finance_portal_users :
@@ -109,7 +113,7 @@ locals {
   ]
 }
 
-resource "helm_release" "esp-mojaloop" {
+/* resource "helm_release" "esp-mojaloop" {
   name         = "esp-mojaloop"
   repository   = "http://mojaloop.io/helm/repo"
   chart        = "eventstreamprocessor"
@@ -134,7 +138,7 @@ resource "helm_release" "esp-mojaloop" {
   provider = helm.helm-gateway
 
   depends_on = [helm_release.mojaloop]
-}
+} */
 
 resource "random_password" "mojaloop_mysql_password" {
   length = 16
@@ -207,12 +211,11 @@ resource "vault_generic_secret" "finance_portal_user_password" {
 
 module "fin-portal-iskm" {
   source    = "git::https://github.com/mojaloop/wso2is-populate.git//terraform?ref=v2.0.4"
-  wso2_host = "https://${data.terraform_remote_state.infrastructure.outputs.iskm_private_fqdn}:9443"
+  wso2_host = "https://iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}:443"
   admin_user = "admin"
-  admin_password  = vault_generic_secret.wso2_admin_password.data.value
+  admin_password  = data.vault_generic_secret.ws02_admin_password.data.value
   auth_server_clientkey = vault_generic_secret.mojaloop_fin_portal_backend_client_id.data.value
   auth_server_clientsecret = vault_generic_secret.mojaloop_fin_portal_backend_client_secret.data.value
   wso2_oauth2_application_name = "portaloauth"
   portal_users = local.portal_users
-  depends_on = [null_resource.wait_for_iskm_readiness]
 }

@@ -43,21 +43,3 @@ resource "vault_generic_secret" "ext_pm4ml_onboarding_data" {
     }
   )
 }
-
-resource "null_resource" "pm4ml-haproxy-wso2-callbacks" {
-  
-  provisioner "remote-exec" {
-    connection {
-      host        = data.terraform_remote_state.infrastructure.outputs.haproxy_callback_private_ip
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("${var.project_root_path}/terraform/ssh_provisioner_key")
-    }
-    inline = [   
-      "sudo service vault restart",
-      "echo result is $?"
-    ]
-
-  }
-  depends_on = [vault_generic_secret.int_pm4ml_onboarding_data, vault_generic_secret.ext_pm4ml_onboarding_data]
-}

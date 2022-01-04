@@ -28,6 +28,11 @@ variable "aws_ami" {
   default     = "ami-0e219142c0bee4a6e"
 }
 
+variable "use_focal_ubuntu" {
+  description = "use focal or bionic"
+  type = bool
+  default = false
+}
 
 //AWS EC2 global Settings
 

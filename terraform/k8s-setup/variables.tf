@@ -1,49 +1,3 @@
-variable "helm_mysql_wso2_version" {
-  description = "Helm chart version to install MySQL used by wso2"
-}
-
-variable "wso2_mysql_database" {
-  description = "MySQL Database name"
-  type        = string
-  default     = "wso2"
-}
-
-variable "wso2_namespace" {
-  description = "Kubernetes namespace to install WSO2 into"
-  type        = string
-  default     = "wso2"
-}
-
-variable "wso2_mysql_host" {
-  description = "MySQL hostname for WSO2"
-  type        = string
-}
-variable "wso2_mysql_repo_version" {
-  description = "MySQL database version to install WSO2 into"
-  type        = string
-}
-
-variable "whitelist_mcm" {
-  description = "Enable/disable MCM access"
-  default     = []
-}
-
-variable "wso2_mysql_username" {
-  description = "MySQL username"
-  type        = string
-  default     = "wso2"
-}
-
-variable "wso2_email" {
-  description = "email address for wso2"
-  type        = string
-  default     = "cicd@modusbox.com"
-}
-
-variable "helm_efs_provisioner_version" {
-  description = "Chart version for the efs provisioner"
-}
-
 variable "helm_mysql_mcm_version" {
   description = "Chart version for MySQL used by MCM"
 }
@@ -73,10 +27,6 @@ variable "environment" {
 
 variable "helm_mcm_connection_manager_version" {
   description = "Helm char version to install MCM"
-}
-
-variable "helm_nginx_version" {
-  description = "Nginx version used by the ingress controller"
 }
 
 variable "helm_mojaloop_version" {
@@ -145,15 +95,9 @@ variable "kafka" {
   description = "Kafka default settings"
   default = {
     retention_hours = 24
-    storage_type    = "slow"
     storage_size    = "7Gi"
     mountPath       = "/opt/kafka/data"
   }
-}
-
-variable "grafana_slack_notifier_url" {
-  description = "URL for slack notifier. In the form of https://hooks.slack.com/services/<VALUE>"
-  type        = string
 }
 
 variable "private_registry_pw" {
@@ -332,12 +276,6 @@ variable "k8s_api_version" {
   default     = "1.19.2"
 }
 
-variable "iskmssl_name" {
-  description = "hostname for sep iskm with ssl cert signed by trusted ca"
-  type        = string
-  default     = "iskmssl"
-}
-
 variable "helm_oathkeeper_version"{
   description = "helm chart version of ory oathkeeper"
   type        = string
@@ -360,4 +298,20 @@ variable "helm_bof_version"{
   description = "helm chart version for bizops framework"
   type        = string
   default     = "1.0.0"
+}
+variable "cert_man_letsencrypt_cluster_issuer_name" {
+  description = "cluster issuer name for letsencrypt"
+  type        = string
+  default     = "letsencrypt"
+}
+variable "cert_man_vault_cluster_issuer_name" {
+  description = "cluster issuer name for vault"
+  type        = string
+  default     = "vault-issuer-int"
+}
+
+variable "ebs_storage_class_name" {
+  description = "storage class name"
+  type        = string
+  default     = "ebs"
 }

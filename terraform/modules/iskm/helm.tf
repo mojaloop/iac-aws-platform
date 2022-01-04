@@ -9,6 +9,10 @@ locals {
     extgw             = var.extgw_fqdn
     iskm              = var.iskm_fqdn
     wso2_admin_pw     = var.wso2_admin_pw
+    ingress_host      = var.iskm_fqdn
+    issuer_name       = var.cert_man_issuer_name
+    nginx_ssl_passthrough = var.nginx_ssl_passthrough
+    iskm_proxy_port   = 443
   }
 }
 
@@ -16,14 +20,14 @@ resource "helm_release" "app" {
   name          = var.iskm_release_name
   repository    = "https://mojaloop.github.io/wso2-helm-charts-simple/repo"
   chart         = "wso2-is-km"
-  version       = "2.0.10"
+  version       = "2.2.11"
   namespace     = var.namespace
   timeout       = 500
   force_update  = true
   create_namespace = true
 
   values = [
-    file("${path.module}/helm/values.yaml"),
+    templatefile("${path.module}/helm/values.yaml", local.env_values),
     templatefile("${path.module}/templates/env-values.yaml.tpl", local.env_values)
   ]
   set {

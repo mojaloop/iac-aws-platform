@@ -61,13 +61,13 @@
   },
 
   "reverseProxy" : {
-    "enabled" : false,    // values true , false , "auto" - will look for  X-Forwarded-* headers
-    "host" : "@API_GW_HOST@", // If reverse proxy do not have a domain name use IP
+    "enabled" : true,    // values true , false , "auto" - will look for  X-Forwarded-* headers
+    "host" : "@API_STORE_HOST@", // If reverse proxy do not have a domain name use IP
     "context":"/store"
     //"regContext":"" // Use only if different path is used for registry
   },
 
   
   "mapExistingAuthApps" : false,
-  "whiteListedHostNames" : ["localhost","@API_GW_HOST@","wso2am-wso2-am-allinone-ext"]
+  "whiteListedHostNames" : ["localhost","@API_STORE_HOST@","wso2am-wso2-am-allinone-ext"]
 }

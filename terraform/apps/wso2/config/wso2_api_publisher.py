@@ -41,6 +41,11 @@ options:
             - Hostname of the WSO2 service
         required: true
         type: str
+    token_hostname
+        description:
+            - Hostname of the WSO2 token service
+        required: true
+        type: str
     username:
         description:
             - Username used for initial authentication to WSO2
@@ -57,13 +62,13 @@ options:
         description:
             - WSO2 ReST API port number
         required: false
-        default: 9443
+        default: 443
         type: int
     token_port:
         description:
             - WSO2 port number for performing functions with that API
         required: false
-        default: 8243
+        default: 443
         type: int
     client_reg_path:
         description:
@@ -575,7 +580,7 @@ class WSO2(StateMachine):
         p = module.params
 
         request = dict(
-            url=f"https://{p['hostname']}:{p['token_port']}{p['token_path']}",
+            url=f"https://{p['token_hostname']}:{p['token_port']}{p['token_path']}",
             headers={"Content-Type": "application/x-www-form-urlencoded", },
             data=dict(
                 grant_type="password",
@@ -857,11 +862,12 @@ def main():
 
     module_args = dict(
         hostname=dict(type="str", required=True),
+        token_hostname=dict(type="str", required=True),
         username=dict(type="str", required=False, default="admin"),
         password=dict(type="str", required=False,
                       default="admin", no_log=True),
-        rest_port=dict(type="int", required=False, default=9443),
-        token_port=dict(type="int", required=False, default=8243),
+        rest_port=dict(type="int", required=False, default=443),
+        token_port=dict(type="int", required=False, default=443),
         client_reg_path=dict(
             type="str", required=False, default="/client-registration/v0.14/register"
         ),

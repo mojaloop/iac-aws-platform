@@ -1,60 +1,71 @@
-module "nlb_wso2" {
-  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=v1.0.21"
+module "nlb_ext" {
+  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=split-target-listen-port"
   vpc_id = data.aws_vpc.selected.id
-  prefix = "wso2-${var.client}-${var.environment}"
+  internal_lb = false
+  prefix = "ext-${var.client}-${var.environment}"
+  preserve_client_ip = true
+  proxy_protocol = true
   nlb_listeners = [
     {
-      target_port          = 9443
+      target_port          = 32443
+      listen_port          = 443
       protocol             = "TCP"
       deregistration_delay = 90
       interval             = 10
-      health_port          = 9443
+      health_port          = 32080
       protocol             = "TCP"
       healthy_threshold    = 3
       unhealthy_threshold  = 3
     },
     {
-      target_port          = 9543
+      target_port          = 32080
+      listen_port          = 80
       protocol             = "TCP"
       deregistration_delay = 90
       interval             = 10
-      health_port          = 9543
-      protocol             = "TCP"
-      healthy_threshold    = 3
-      unhealthy_threshold  = 3
-    },
-    {
-      target_port          = 8243
-      protocol             = "TCP"
-      deregistration_delay = 90
-      interval             = 10
-      health_port          = 8243
-      protocol             = "TCP"
-      healthy_threshold    = 3
-      unhealthy_threshold  = 3
-    },
-    {
-      target_port          = 30000
-      protocol             = "TCP"
-      deregistration_delay = 90
-      interval             = 10
-      health_port          = 30000
-      protocol             = "TCP"
-      healthy_threshold    = 3
-      unhealthy_threshold  = 3
-    },
-    {
-      target_port          = 80
-      protocol             = "TCP"
-      deregistration_delay = 90
-      interval             = 10
-      health_port          = 80
+      health_port          = 32080
       protocol             = "TCP"
       healthy_threshold    = 3
       unhealthy_threshold  = 3
     }
 
   ]
-  instance_ids = [module.k8-cluster-gateway.haproxy_id]
+  instance_ids = module.k8-cluster-gateway.worker_nodes_id
+  subnet_id    = data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-gateway"]["id"]
+}
+
+module "nlb_int" {
+  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=split-target-listen-port"
+  vpc_id = data.aws_vpc.selected.id
+  internal_lb = true
+  prefix = "int-${var.client}-${var.environment}"
+  preserve_client_ip = false  
+  proxy_protocol = false 
+  nlb_listeners = [
+    {
+      target_port          = 31443
+      listen_port          = 443
+      protocol             = "TCP"
+      deregistration_delay = 90
+      interval             = 10
+      health_port          = 31080
+      protocol             = "TCP"
+      healthy_threshold    = 3
+      unhealthy_threshold  = 3
+    },
+    {
+      target_port          = 31080
+      listen_port          = 80
+      protocol             = "TCP"
+      deregistration_delay = 90
+      interval             = 10
+      health_port          = 31080
+      protocol             = "TCP"
+      healthy_threshold    = 3
+      unhealthy_threshold  = 3
+    }
+
+  ]
+  instance_ids = module.k8-cluster-gateway.worker_nodes_id
   subnet_id    = data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-gateway"]["id"]
 }

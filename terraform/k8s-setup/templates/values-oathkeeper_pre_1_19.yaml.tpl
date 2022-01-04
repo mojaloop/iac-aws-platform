@@ -14,8 +14,8 @@ service:
     port: 4455
     # -- If you do want to specify annotations, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'annotations:'.
-    annotations: {}
-    # kubernetes.io/ingress.class: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
     labels: {}
     #      If you do want to specify additional labels, uncomment the following
@@ -32,8 +32,8 @@ service:
     port: 4456
     # -- If you do want to specify annotations, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'annotations:'.
-    annotations: {}
-    # kubernetes.io/ingress.class: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
     labels: {}
     #      If you do want to specify additional labels, uncomment the following
@@ -49,7 +49,7 @@ ingress:
     className: ""
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /$2
-#     kubernetes.io/ingress.class: nginx
+      kubernetes.io/ingress.class: nginx
 #     kubernetes.io/tls-acme: "true"
     hosts:
       - host: ${portal_fqdn}

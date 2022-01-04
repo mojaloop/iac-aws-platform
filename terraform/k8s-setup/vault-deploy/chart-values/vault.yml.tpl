@@ -47,14 +47,21 @@ server:
           labelSelector:
             matchLabels:
               app: vault
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      kubernetes.io/ingress.class: nginx
+      external-dns.alpha.kubernetes.io/hostname: ${host_name}
+    hosts:
+      - host: ${host_name}
+    tls:
+      - secretName: vault-ing-tls
+        hosts:
+          - ${host_name}
+
 ui:
   enabled: true
-  serviceType: LoadBalancer
-  externalPort: 80
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
-    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "3600"
-    service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0
 
 injector:
   enabled: true

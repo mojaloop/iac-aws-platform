@@ -8,10 +8,11 @@
       wso2_api_publisher:
         username: admin
         password: "{{ wso2_admin_pw }}"
-        hostname: "extgw.{{ env_domain }}"
+        hostname: "i-extgw.{{ external_domain }}"
+        token_hostname: "i-token-extgw.{{ external_domain }}"
         api_template: apis/admin/api_template.json
         swagger_url: "https://raw.githubusercontent.com/mojaloop/central-ledger/master/src/api/interface/swagger.json"
-        endpoint_url: "http://interop-switch.{{ env_domain }}.internal:30000/admin"
+        endpoint_url: "http://interop-switch.{{ internal_domain }}/admin"
         inbound_mediation:
           - apis/admin/remove-fspiop-source.xml
       tags: admin
@@ -19,19 +20,21 @@
       wso2_api_publisher:
         username: admin
         password: "{{ wso2_admin_pw }}"
-        hostname: "extgw.{{ env_domain }}"
+        hostname: "i-extgw.{{ external_domain }}"
+        token_hostname: "i-token-extgw.{{ external_domain }}"
         api_template: apis/als-admin/api_template.json
         swagger_url: "https://raw.githubusercontent.com/mojaloop/account-lookup-service/master/src/interface/admin-swagger.yaml"
-        endpoint_url: "http://account-lookup-service-admin.{{ env_domain }}.internal:30000"
+        endpoint_url: "http://account-lookup-service-admin.{{ internal_domain }}"
       tags: alsadmin
     - name: FSPIOP API
       wso2_api_publisher:
         username: admin
         password: "{{ wso2_admin_pw }}"
-        hostname: "extgw.{{ env_domain }}"
+        hostname: "i-extgw.{{ external_domain }}"
+        token_hostname: "i-token-extgw.{{ external_domain }}"
         api_template: apis/fspiop/api_template.json
         swagger_url: "https://raw.githubusercontent.com/mojaloop/mojaloop-specification/master/fspiop-api/documents/v1.1-document-set/fspiop-v1.1-openapi2.yaml"
-        endpoint_url: "http://interop-switch.{{ env_domain }}.internal:30000"
+        endpoint_url: "http://interop-switch.{{ internal_domain }}"
         inbound_mediation:
           - apis/fspiop/add_accept_header.xml
       tags: fspiop
@@ -39,10 +42,11 @@
       wso2_api_publisher:
         username: admin
         password: "{{ wso2_admin_pw }}"
-        hostname: "extgw.{{ env_domain }}"
+        hostname: "i-extgw.{{ external_domain }}"
+        token_hostname: "i-token-extgw.{{ external_domain }}"
         api_template: apis/settlements/api_template.json
-        swagger_url: "http://interop-switch.{{ env_domain }}.internal:30000/settlements/api-docs"
-        endpoint_url: "http://interop-switch.{{ env_domain }}.internal:30000/settlements"
+        swagger_url: "http://interop-switch.{{ internal_domain }}/settlements/api-docs"
+        endpoint_url: "http://interop-switch.{{ internal_domain }}/settlements"
         inbound_mediation:
           - apis/settlements/remove-fspiop-source.xml
       tags: settlement

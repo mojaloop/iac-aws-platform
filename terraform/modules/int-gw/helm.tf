@@ -9,6 +9,8 @@ locals {
     intgw                 = var.intgw_fqdn
     iskm                  = var.iskm_fqdn
     wso2_admin_pw         = var.wso2_admin_pw
+    ingress_host          = var.intgw_fqdn
+    token_ingress_host    = "token-${var.intgw_fqdn}"
   }
 }
 
@@ -16,13 +18,13 @@ resource "helm_release" "app" {
   name         = "wso2-am-int"
   repository   = "https://mojaloop.github.io/wso2-helm-charts-simple/repo"
   chart        = "wso2-am"
-  version      = "2.0.10"
+  version      = "2.2.12"
   namespace    = var.namespace
   timeout      = 500
   force_update = true
   create_namespace = true
   values = [
-    file("${path.module}/helm/values.yaml"),
+    templatefile("${path.module}/helm/values.yaml", local.env_values),
     templatefile("${path.module}/templates/env-values.yaml.tpl", local.env_values)
   ]
   set {

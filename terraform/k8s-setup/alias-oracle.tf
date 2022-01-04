@@ -1,12 +1,3 @@
-resource "aws_route53_record" "alias-oracle-gateway-private" {
-  count   = var.use_alias_oracle_endpoint == "yes" ? 1 : 0
-  zone_id = data.terraform_remote_state.infrastructure.outputs.private_zone_id
-  name    = var.alias_oracle_name
-  type    = "A"
-  ttl     = "300"
-  records = [data.terraform_remote_state.infrastructure.outputs.haproxy_gateway_private_ip]
-}
-
 resource "helm_release" "alias-oracle" {
   count      = var.use_alias_oracle_endpoint == "yes" ? 1 : 0
   name       = "alias-oracle"
@@ -18,7 +9,7 @@ resource "helm_release" "alias-oracle" {
 
   values = [
     templatefile("${path.module}/templates/values-alias-oracle.yaml.tpl", {
-      ingress_host        = aws_route53_record.alias-oracle-gateway-private[0].fqdn
+      ingress_host = "${var.alias_oracle_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
     })
   ]
   provider = helm.helm-gateway
@@ -27,5 +18,5 @@ resource "helm_release" "alias-oracle" {
 
 output "alias-oracle-fqdn" {
   description = "FQDN for the private hostname of the Internal GW service."
-  value = var.use_alias_oracle_endpoint == "yes" ? aws_route53_record.alias-oracle-gateway-private[0].fqdn : "not used"
+  value = var.use_alias_oracle_endpoint == "yes" ? "${var.alias_oracle_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}" : "not used"
 }
