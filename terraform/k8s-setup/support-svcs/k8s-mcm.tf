@@ -50,6 +50,11 @@ resource "helm_release" "mcm-connection-manager" {
     type  = "string"
   }
   set {
+    name  = "api.wso2TokenIssuer.cert.stringValue"
+    value = module.iskm.iskm_cert
+    type  = "string"
+  }
+  set {
     name  = "api.oauth.key"
     value = module.mcm-iskm-key-secret-gen.mcm-key
     type  = "string"
