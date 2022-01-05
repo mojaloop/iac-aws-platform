@@ -1,9 +1,0 @@
-{{- range gets "/whitelist_nat/*" }}
-{{ replace .Value "," "\n" -1 }}
-{{- end }}
-{{- range gets "/whitelist_vpn/*"}}
-{{ replace .Value "," "\n" -1 }}
-{{- end}}
-{{- range gets "/whitelist_mcm/*"}}
-{{ replace .Value "," "\n" -1 }}
-{{- end}}
