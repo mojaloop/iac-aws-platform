@@ -1,5 +1,5 @@
 module "nlb_ext" {
-  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=split-target-listen-port"
+  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=v2.0.0"
   vpc_id = data.aws_vpc.selected.id
   internal_lb = false
   prefix = "ext-${var.client}-${var.environment}"
@@ -35,7 +35,7 @@ module "nlb_ext" {
 }
 
 module "nlb_int" {
-  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=split-target-listen-port"
+  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=v2.0.0"
   vpc_id = data.aws_vpc.selected.id
   internal_lb = true
   prefix = "int-${var.client}-${var.environment}"

@@ -61,7 +61,7 @@ locals {
 }
 
 module "external_provision_pm4ml_to_wso2" {
-  source            = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/create-test-user?ref=separate-extgw-hosts"
+  source            = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/create-test-user?ref=v2.0.0"
   extgw_fqdn        = "i-extgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   token_extgw_fqdn  = "i-token-extgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   extgw_token_service_port = 443
@@ -72,7 +72,7 @@ module "external_provision_pm4ml_to_wso2" {
 }
 
 module "external_provision_pm4ml_callbacks_to_wso2" {
-  source            = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/callbacks-post-config?ref=separate-extgw-hosts"
+  source            = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/callbacks-post-config?ref=v2.0.0"
   intgw_fqdn        = "intgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   intgw_token_fqdn  = "token-intgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   intgw_rest_port   = 443
