@@ -28,6 +28,7 @@ cp ${WORKING_DIRECTORY}/conf/master-datasources.xml $WSO2_SERVER_HOME/repository
 cp ${WORKING_DIRECTORY}/conf/registry.xml $WSO2_SERVER_HOME/repository/conf/registry.xml
 cp ${WORKING_DIRECTORY}/conf/user-mgt.xml $WSO2_SERVER_HOME/repository/conf/user-mgt.xml
 cp ${WORKING_DIRECTORY}/conf/log4j.properties $WSO2_SERVER_HOME/repository/conf/log4j.properties
+cp ${WORKING_DIRECTORY}/conf/catalina-server.xml $WSO2_SERVER_HOME/repository/conf/tomcat/catalina-server.xml
 #cp ${WORKING_DIRECTORY}/conf/oidc-scope-config.xml $WSO2_SERVER_HOME/repository/conf/identity/oidc-scope-config.xml
 
 # java keystores (jks)

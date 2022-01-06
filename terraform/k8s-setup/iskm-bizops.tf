@@ -16,7 +16,7 @@ resource "random_password" "bizops_portaladmin_password" {
 }
 
 resource "vault_generic_secret" "bizops_portaladmin_password" {
-  path = "secret/mojaloop/bizopsportal/portaladmin"
+  path = "secret/mojaloop/bizopsportal/bofportaladmin"
   data_json = jsonencode({
     "value" = random_password.bizops_portaladmin_password.result
   })
@@ -58,7 +58,7 @@ module "bizops-portal-iskm-user-portaladmin" {
   iskm_admin_port = "443"
   admin_user      = "admin"
   admin_password  = data.vault_generic_secret.ws02_admin_password.data.value
-  account_username = "portaladmin"
+  account_username = "bofportaladmin"
   account_password = vault_generic_secret.bizops_portaladmin_password.data.value
   account_email = "portaladmin@test.com"
 }

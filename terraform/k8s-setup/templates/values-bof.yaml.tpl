@@ -71,6 +71,17 @@ reporting-hub-bop-api-svc:
       kubernetes.io/ingress.class: nginx
       nginx.ingress.kubernetes.io/rewrite-target: /$2
 
+reporting-legacy-api:
+  enabled: true
+  ingress:
+    enabled: false
+    hostname: ${api_fqdn}
+    path: /reports(/|$)(.*)
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+  install-templates: true
+
 ## Front-end UI services
 ### Shell and helper UI services
 reporting-hub-bop-shell:

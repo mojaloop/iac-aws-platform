@@ -1,6 +1,6 @@
 default: 
   image: 
-    name: ghcr.io/mojaloop/iac-aws-platform:1.4.0
+    name: ghcr.io/mojaloop/iac-aws-platform:2.0.0
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -36,7 +36,7 @@ stages:
   - "Deploy AWS infrastructure"
   - "Run Kubespray"
   - "Run k3s"
-  - "Deploy Vault"
+  - "Deploy Base Platform"
   - "Deploy Platform"
   - "Run Tests"
   - "Maintain Platform"
@@ -79,9 +79,7 @@ Destroy Mojaloop K8s Stack:
     - terraform validate
     - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
     - kubectl --kubeconfig=../../admin-gateway.conf delete namespace mojaloop || true
-    ##kill force kill efs provsioner
-    - kubectl --kubeconfig=../../admin-gateway.conf delete pods --all -n wso2 --grace-period=0 --force
-    - kubectl --kubeconfig=../../admin-gateway.conf delete namespace wso2
+
   when: manual
 
 Destroy Add-On Apps:
@@ -121,6 +119,21 @@ Destroy Vault:
     - terraform destroy -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   when: manual
 
+Destroy Base Services:
+  stage: Destroy
+  script:
+    - cd terraform/k8s-setup/support-svcs
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform validate
+    - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    ##kill force kill efs provsioner
+    - kubectl --kubeconfig=../../../admin-gateway.conf delete pods --all -n wso2 --grace-period=0 --force
+    - kubectl --kubeconfig=../../../admin-gateway.conf delete namespace wso2 || true
+    ##kill force wso2-bizops
+    - kubectl --kubeconfig=../../../admin-gateway.conf delete pods --all -n wso2-bizops --grace-period=0 --force
+    - kubectl --kubeconfig=../../../admin-gateway.conf delete namespace wso2-bizops || true
+  when: manual
+
 Destroy Environment:
   stage: Destroy
   script:
@@ -135,7 +148,7 @@ Destroy Environment:
 Destroy k3s Cluster:
   stage: "Destroy"  
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.14.1
+    name: ghcr.io/pm4ml/k3sbootstrap:0.15.0
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"')
@@ -174,7 +187,7 @@ Destroy k3s Cluster:
 Undeploy PM4ML Charts:
   stage: "Destroy"  
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.14.1
+    name: ghcr.io/pm4ml/k3sbootstrap:0.15.0
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -227,7 +240,7 @@ Deploy AWS Infrastructure:
 Create k3s Cluster:
   stage: "Run k3s"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.14.1
+    name: ghcr.io/pm4ml/k3sbootstrap:0.15.0
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -281,8 +294,8 @@ Create Gateway Cluster:
     - aws s3 cp inventory/artifacts/cluster/admin.conf s3://$BUCKET/$environment/admin-gateway.conf --sse
   when: manual
 
-Deploy Vault:
-  stage: "Deploy Vault"
+1. Deploy Vault:
+  stage: "Deploy Base Platform"
   script:
     - cd terraform/k8s-setup/vault-deploy
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
@@ -290,7 +303,15 @@ Deploy Vault:
     - aws s3 cp $CI_IMAGE_PROJECT_DIR/vault_seal_key s3://${BUCKET}/${environment}/ --sse
   when: manual
 
-1. Initial Install Base Platform:
+2. Deploy Base Services:
+  stage: "Deploy Base Platform"
+  script:
+    - cd terraform/k8s-setup/support-svcs
+    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+  when: manual
+
+1. Initial Install Base Apps:
   stage: "Deploy Platform"
   script:
     - cd terraform/k8s-setup
@@ -322,7 +343,7 @@ Deploy Vault:
 2b. Install Internal PM4MLs:
   stage: "Deploy Platform"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.14.1
+    name: ghcr.io/pm4ml/k3sbootstrap:0.15.0
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -590,3 +611,33 @@ Deploy Vault:
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   when: manual
+
+
+11. Gateway K8S Cluste Deployments:
+  stage: "Run Tests"
+  script:
+    - aws s3 cp s3://${BUCKET}/${environment}/admin-gateway.conf ${CI_IMAGE_PROJECT_DIR}/reports/admin-gateway.conf
+    - cd ${CI_IMAGE_PROJECT_DIR}/reports
+    - export KUBECONFIG=admin-gateway.conf
+    - export REPORT_NAME=GW_K8S_CLUSTER_$(date +"%Y-%m-%d-%M").csv
+    - echo "Namespace,Helm Chart,Deployment Name,Docker image,Creation Timestamp,Number of Available Replicas,Available Status Change Timestamp,Is Available?" > ${CI_PROJECT_DIR}/gw-cluster-report.csv
+    - kubectl get deployments --all-namespaces -o=jsonpath="{range .items[*]}{.metadata.namespace}{','}{.metadata.labels.chart}{','}{.metadata.name}{','}{.spec.template.spec.containers..image}{','}{.metadata.creationTimestamp}{','}{.status.availableReplicas}{','}{.status.conditions[?(@.type=='Available')].lastUpdateTime}{','}{.status.conditions[?(@.type=='Available')].status}{'\n'}{end}" >> ${CI_PROJECT_DIR}/gw-cluster-report.csv
+#    - curl -F file=@"GW_K8S_CLUSTER_${REPORT_DATE}.csv" -F channels="${SLACK_CHANNEL}" -F token="${SLACK_API_TOKEN}" -F title="k8s Deployment Report for ${K8S_CLUSTER_NAME_DMZ_DEV} cluster on ${REPORT_DATE}"  https://slack.com/api/files.upload
+  when: manual
+  artifacts:
+    paths:
+      - gw-cluster-report.csv
+
+12. Add-ons K8S Cluste Deployments:
+  stage: "Run Tests"
+  script:
+    - aws s3 cp s3://${BUCKET}/${environment}/admin-add-ons.conf ${CI_IMAGE_PROJECT_DIR}/reports/admin-add-ons.conf
+    - cd ${CI_IMAGE_PROJECT_DIR}/reports
+    - export KUBECONFIG=admin-add-ons.conf
+    - echo "Namespace,Helm Chart,Deployment Name,Docker image,Creation Timestamp,Number of Available Replicas,Available Status Change Timestamp,Is Available?" > ${CI_PROJECT_DIR}/add-ons-cluster-report.csv
+    - kubectl get deployments --all-namespaces -o=jsonpath="{range .items[*]}{.metadata.namespace}{','}{.metadata.labels.chart}{','}{.metadata.name}{','}{.spec.template.spec.containers..image}{','}{.metadata.creationTimestamp}{','}{.status.availableReplicas}{','}{.status.conditions[?(@.type=='Available')].lastUpdateTime}{','}{.status.conditions[?(@.type=='Available')].status}{'\n'}{end}" >> ${CI_PROJECT_DIR}/add-ons-cluster-report.csv
+#    - curl -F file=@"ADD-ONS_K8S_CLUSTER_${REPORT_DATE}.csv" -F channels="${SLACK_CHANNEL}" -F token="${SLACK_API_TOKEN}" -F title="k8s Deployment Report for ${K8S_CLUSTER_NAME_DMZ_DEV} cluster on ${REPORT_DATE}"  https://slack.com/api/files.upload
+  when: manual
+  artifacts:
+    paths:
+      - add-ons-cluster-report.csv
