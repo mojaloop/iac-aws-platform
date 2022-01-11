@@ -1,6 +1,6 @@
-productVersion: 5.7.1
+productVersion: 5.7.0
 image:
-  tag: v1.3.2-iskm5.7.1
+  tag: v1.3.8
   pullPolicy: IfNotPresent
 persistentVolume:
   pvEnabled: false

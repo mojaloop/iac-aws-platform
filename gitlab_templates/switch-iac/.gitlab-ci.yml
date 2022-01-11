@@ -307,6 +307,7 @@ Create Gateway Cluster:
   stage: "Deploy Base Platform"
   script:
     - cd terraform/k8s-setup/support-svcs
+    - kubectl --kubeconfig=../../../admin-gateway.conf -n default wait --for=condition=ready certificate/vault-ing-tls --timeout=180s
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   when: manual
