@@ -45,7 +45,7 @@ module "bizops-portal-iskm" {
   user      = "admin"
   password  = data.vault_generic_secret.ws02_admin_password.data.value
   create_service_provider = "y"
-  callback_url = "http://${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}/kratos/self-service/methods/oidc/callback/idp"
+  callback_url = "https://${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}/kratos/self-service/methods/oidc/callback/idp"
   // portal_users = local.bizops_portal_users_with_passwords
   providers = {
     external = external.wso2-automation-iskm-mcm

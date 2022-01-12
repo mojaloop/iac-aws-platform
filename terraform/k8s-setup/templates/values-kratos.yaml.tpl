@@ -68,16 +68,15 @@ ingress:
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /$2
       kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
+      cert-manager.io/cluster-issuer: letsencrypt
     hosts:
-      -
-        host: ${portal_fqdn}
+      - host: ${portal_fqdn}
         paths: 
           - /kratos(/|$)(.*)
-    tls: []
-    #  - secretName: kratos-public-tls
-    #    hosts:
-    #      - ${portal_fqdn}
+    tls:
+      - secretName: kratos-public
+      - hosts:
+        - "${portal_fqdn}"
 
 kratos:
   log:
@@ -164,7 +163,7 @@ kratos:
         connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true&legacy_ssl=true
     serve:
       public:
-        base_url: http://${portal_fqdn}/kratos/
+        base_url: https://${portal_fqdn}/kratos/
         port: 4433
         cors:
           enabled: true
@@ -172,9 +171,9 @@ kratos:
         port: 4434
 
     selfservice:
-      default_browser_return_url: http://${portal_fqdn}/
+      default_browser_return_url: https://${portal_fqdn}/
       whitelisted_return_urls:
-        - http://${portal_fqdn}/
+        - https://${portal_fqdn}/
 
       methods:
         oidc:
@@ -207,24 +206,24 @@ kratos:
               - openid
       flows:
         error:
-          ui_url: http://${portal_fqdn}/selfui/error
+          ui_url: https://${portal_fqdn}/selfui/error
 
         settings:
-          ui_url: http://${portal_fqdn}/selfui/settings
+          ui_url: https://${portal_fqdn}/selfui/settings
           privileged_session_max_age: 15m
 
         recovery:
           enabled: true
-          ui_url: http://${portal_fqdn}/selfui/recovery
+          ui_url: https://${portal_fqdn}/selfui/recovery
 
         verification:
           enabled: true
-          ui_url: http://${portal_fqdn}/selfui/verify
+          ui_url: https://${portal_fqdn}/selfui/verify
           after:
-            default_browser_return_url: http://${portal_fqdn}/selfui/
+            default_browser_return_url: https://${portal_fqdn}/selfui/
 
         login:
-          ui_url: http://${portal_fqdn}/selfui/auth/login
+          ui_url: https://${portal_fqdn}/selfui/auth/login
           lifespan: 10m
 
         logout:
@@ -233,7 +232,7 @@ kratos:
 
         registration:
           lifespan: 10m
-          ui_url: http://${portal_fqdn}/selfui/auth/
+          ui_url: https://${portal_fqdn}/selfui/auth/
           after:
             oidc:
               hooks:

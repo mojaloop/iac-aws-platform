@@ -50,16 +50,16 @@ ingress:
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /$2
       kubernetes.io/ingress.class: nginx
-#     kubernetes.io/tls-acme: "true"
+      cert-manager.io/cluster-issuer: letsencrypt
     hosts:
       - host: ${portal_fqdn}
         paths: 
           - path: /proxy(/|$)(.*)
               
-#    tls: []
-#        hosts:
-#          - ${portal_fqdn}
-#      - secretName: oathkeeper-proxy-example-tls
+    tls:
+      - secretName: oathkeeper-proxy
+      - hosts:
+        - "${portal_fqdn}"
 
   api:
     # -- En-/Disable the api ingress.
@@ -146,7 +146,7 @@ oathkeeper:
           enabled: true
           config:
             # set this to whatever the main URL is, it'll ensure that browser errors redirect there
-            to: http://${portal_fqdn}/
+            to: https://${portal_fqdn}/
             when:
             - error:
               - unauthorized

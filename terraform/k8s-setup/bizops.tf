@@ -78,7 +78,7 @@ resource "helm_release" "oathkeeper" {
     templatefile(split(".", var.k8s_api_version)[1] > 18 ? "${path.module}/templates/values-oathkeeper.yaml.tpl" : "${path.module}/templates/values-oathkeeper_pre_1_19.yaml.tpl", {
       wso2_host = "https://iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
       wso2_admin_creds = base64encode("admin:${data.vault_generic_secret.ws02_admin_password.data.value}")
-      portal_fqdn = "${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
+      portal_fqdn = "${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
     })
   ]
   provider = helm.helm-gateway
@@ -113,7 +113,7 @@ resource "helm_release" "kratos" {
   values = [
     templatefile("${path.module}/templates/values-kratos.yaml.tpl", {
       wso2_host = "https://iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
-      portal_fqdn = "${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
+      portal_fqdn = "${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
       wso2_client_id = module.bizops-portal-iskm.consumer-key
       wso2_client_secret = module.bizops-portal-iskm.consumer-secret
     })
@@ -137,12 +137,12 @@ resource "helm_release" "bof" {
   values = [
     templatefile("${path.module}/templates/values-bof.yaml.tpl", {
       wso2_host = "https://iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
-      portal_fqdn = "${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
-      api_fqdn = "${var.bofapi_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
-      iamui_fqdn = "${var.bofiamui_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
-      transfersui_fqdn = "${var.boftransfersui_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
-      settlementsui_fqdn = "${var.bofsettlementsui_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
-      positionsui_fqdn = "${var.bofpositionsui_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
+      portal_fqdn = "${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      api_fqdn = "${var.bofapi_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      iamui_fqdn = "${var.bofiamui_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      transfersui_fqdn = "${var.boftransfersui_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      settlementsui_fqdn = "${var.bofsettlementsui_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      positionsui_fqdn = "${var.bofpositionsui_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
       central_admin_host = "moja-centralledger-service"
       central_settlements_host = "moja-centralsettlement-service"
       kafka_host = "moja-kafka-headless"
@@ -192,7 +192,7 @@ resource "helm_release" "bof-rules" {
   force_update = true
   set {
     name  = "base_domain"
-    value = data.terraform_remote_state.infrastructure.outputs.private_subdomain
+    value = data.terraform_remote_state.infrastructure.outputs.public_subdomain
     type  = "string"
   }
   set {

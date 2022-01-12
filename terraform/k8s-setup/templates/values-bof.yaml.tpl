@@ -83,13 +83,17 @@ reporting-legacy-api:
   install-templates: true
 
 ## Front-end UI services
-### Shell and helper UI services
+### Shell and helper UI services - 
+
 reporting-hub-bop-shell:
   enabled: true
   ingress:
     hostname: ${portal_fqdn}
     annotations:
       kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt
+    tls: true
+    selfSigned: true
   config:
     env:
       AUTH_MOCK_API: false
@@ -99,10 +103,10 @@ reporting-hub-bop-shell:
       LOGOUT_URL: /kratos/self-service/browser/flows/logout
       AUTH_TOKEN_URL: /kratos/sessions/whoami
       AUTH_ENABLED: true
-      REMOTE_1_URL: http://${iamui_fqdn}
-      REMOTE_2_URL: http://${transfersui_fqdn}
-      REMOTE_3_URL: http://${settlementsui_fqdn}
-      REMOTE_4_URL: http://${positionsui_fqdn}
+      REMOTE_1_URL: https://${iamui_fqdn}
+      REMOTE_2_URL: https://${transfersui_fqdn}
+      REMOTE_3_URL: https://${settlementsui_fqdn}
+      REMOTE_4_URL: https://${positionsui_fqdn}
 
 security-hub-bop-kratos-ui:
   enabled: true
@@ -119,8 +123,11 @@ security-hub-bop-kratos-ui:
     annotations:
       kubernetes.io/ingress.class: nginx
       nginx.ingress.kubernetes.io/rewrite-target: /$2
-
+      cert-manager.io/cluster-issuer: letsencrypt
+    tls: true
+    selfSigned: true
 ### Micro-frontends
+
 reporting-hub-bop-role-ui:
   enabled: true
   ingress:
@@ -130,9 +137,12 @@ reporting-hub-bop-role-ui:
     path: /
     annotations:
       kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt
+    tls: true
+    selfSigned: true
   config:
     env:
-      REACT_APP_API_BASE_URL: http://${portal_fqdn}/proxy/iam
+      REACT_APP_API_BASE_URL: https://${portal_fqdn}/proxy/iam
       REACT_APP_MOCK_API: false
 
 
@@ -144,35 +154,44 @@ reporting-hub-bop-trx-ui:
     hostname: ${transfersui_fqdn}
     annotations:
       kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt
+    tls: true
+    selfSigned: true
   config:
     env:
-      REACT_APP_API_BASE_URL: http://${portal_fqdn}/proxy/transfers
+      REACT_APP_API_BASE_URL: https://${portal_fqdn}/proxy/transfers
       REACT_APP_MOCK_API: false
 
 reporting-hub-bop-settlements-ui:
   enabled: true
   config:
     env:
-      CENTRAL_LEDGER_ENDPOINT: http://${portal_fqdn}/proxy/central-admin
-      CENTRAL_SETTLEMENTS_ENDPOINT: http://${portal_fqdn}/proxy/central-settlements
+      CENTRAL_LEDGER_ENDPOINT: https://${portal_fqdn}/proxy/central-admin
+      CENTRAL_SETTLEMENTS_ENDPOINT: https://${portal_fqdn}/proxy/central-settlements
   ingress:
     enabled: true
     pathType: ImplementationSpecific
     hostname: ${settlementsui_fqdn}
     annotations:
       kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt
+    tls: true
+    selfSigned: true
 
 reporting-hub-bop-positions-ui:
   enabled: true
   config:
     env:
-      CENTRAL_LEDGER_ENDPOINT: http://${portal_fqdn}/proxy/central-admin
+      CENTRAL_LEDGER_ENDPOINT: https://${portal_fqdn}/proxy/central-admin
   ingress:
     enabled: true
     pathType: ImplementationSpecific
     hostname: ${positionsui_fqdn}
     annotations:
       kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt
+    tls: true
+    selfSigned: true
 
 ## Other services
 security-role-perm-operator-svc:
