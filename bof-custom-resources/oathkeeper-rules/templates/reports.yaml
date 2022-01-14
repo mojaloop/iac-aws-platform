@@ -2,26 +2,22 @@
 apiVersion: oathkeeper.ory.sh/v1alpha1
 kind: Rule
 metadata:
-  name: transfer-api
+  name: reporting-api
 spec:
   upstream:
     # set to whatever URL this request should be forwarded to
-    url: http://{{ .Values.bof_release_name }}-reporting-hub-bop-api-svc/
-    stripPath: /transfers
+    url: http://{{ .Values.bof_release_name }}-reporting-legacy-api/
+    stripPath: /reports
   match:
     # this might need to be http even if external is https, it depends on how ingress does things
     # my recommendation is to have a given prefix, then the "everything else in the domain name" matcher
     # so it doesn't need to be changed when the config is moved between various main domains
     # then whatever is needed for the specific path (this is set to match all subpaths)
     # regexes go in between angle brackets
-    url: http://bofportal.{{ .Values.base_domain }}/transfers
+    url: http://bofportal.{{ .Values.base_domain }}/reports/<.*>
     methods:
     # whatever method(s) this rule applies to
     - GET
-    - POST
-    - PUT
-    - DELETE
-    - PATCH
   authenticators:
     # - handler: noop
     - handler: oauth2_introspection
@@ -38,7 +34,7 @@ spec:
       payload: |
         {
           "namespace": "permission",
-          "object": "transferApi",
+          "object": "reportingApi",
           "relation": "granted",
           "subject": "{{ printf "{{ print .Subject }}" }}"
         }

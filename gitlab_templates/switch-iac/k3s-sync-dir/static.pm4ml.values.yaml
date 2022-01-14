@@ -47,8 +47,8 @@ management-api:
       
 mojaloop-core-connector:
   image:
-    repository: pm4ml/mojaloop-payment-manager-simulator-core-connector
-    tag: 1.4.2
+    repository: pm4ml/wallet-core-connector
+    tag: 1.0.10
   env:
     MLCONN_OUTBOUND_ENDPOINT: "http://{{ item.value.helm_release_name }}-pm4ml-mojaloop-connector:4001"
     BACKEND_ENDPOINT: "http://sim-backend:3000"
@@ -56,3 +56,10 @@ mojaloop-core-connector:
     enabled: true
   readinessProbe:
     enabled: true
+
+pm4ml-mojaloop-connector:
+  env:
+    RESOURCE_VERSIONS: transfers=1.1,
+    RESERVE_NOTIFICATION: true
+    AUTO_ACCEPT_PARTY: true
+    AUTO_ACCEPT_QUOTES: true

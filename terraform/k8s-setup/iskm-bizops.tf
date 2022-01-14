@@ -93,7 +93,7 @@ resource "kubernetes_job" "assign-admin-role-to-portaladmin" {
           command = [
             "sh",
             "-c",
-            "curl --location --request PUT 'http://keto-write/relation-tuples' --header 'Content-Type: application/json' --data-raw '{\"namespace\": \"role\",\"object\": \"ADMIN_ROLE\",\"relation\": \"member\",\"subject\": \"${module.bizops-portal-iskm-user-portaladmin.account_userid}\"}'"
+            "curl --location --request PUT 'http://keto-write/relation-tuples' --header 'Content-Type: application/json' --data-raw '{\"namespace\": \"role\",\"object\": \"manager\",\"relation\": \"member\",\"subject\": \"${module.bizops-portal-iskm-user-portaladmin.account_userid}\"}'"
           ]
         }
         restart_policy = "Never"
