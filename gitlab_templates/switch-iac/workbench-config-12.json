@@ -3,7 +3,6 @@
   "environment": "dev",
   "region": "eu-west-1",
   "AWS_DEFAULT_REGION": "eu-west-1",
-  "aws_ami": "ami-0e5657f6d3c3ea350",
   "helm_mysql_wso2_version": "1.6.1",
   "helm_mysql_mcm_version": "1.6.1",
   "helm_esp_version": "11.0.1",

@@ -21,13 +21,6 @@ variable "environment" {
   type        = string
 }
 
-
-variable "aws_ami" {
-  description = "AMI image ID"
-  type        = string
-  default     = "ami-0e219142c0bee4a6e"
-}
-
 variable "use_focal_ubuntu" {
   description = "use focal or bionic"
   type = bool
