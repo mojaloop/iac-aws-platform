@@ -55,8 +55,12 @@ role-assignment-service:
   configFiles:
     default.json: {
         "ROLES_LIST": [
-          "USER_ROLE",
-          "ADMIN_ROLE"
+          "manager",
+          "operator",
+          "clerk",
+          "financeManager",
+          "dfspReconciliationReports",
+          "audit"
         ]
       }
 
@@ -68,6 +72,17 @@ reporting-hub-bop-api-svc:
     path: /transfers(/|$)(.*)
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /$2
+
+reporting-legacy-api:
+  enabled: true
+  ingress:
+    enabled: false
+    hostname: ${api_fqdn}
+    path: /reports(/|$)(.*)
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+  install-templates: true
+  auth: true
 
 ## Front-end UI services
 ### Shell and helper UI services

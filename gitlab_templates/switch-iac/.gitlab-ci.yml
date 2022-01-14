@@ -8,8 +8,8 @@ default:
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
     # Define the contents of the workbench-config file as environment variables for use in gitlab and optionally in terraform
-    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - export ENVIRONMENT=$environment
     - test -n "$BUCKET"
     - cd $CI_IMAGE_PROJECT_DIR
@@ -142,8 +142,8 @@ Destroy k3s Cluster:
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
-    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - IFS=$'\n'; for var in $(jq -r "to_entries[] | \"\(.key)='\(.value)'\n\"" ./workbench-config.json); do export $var; done
+    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
@@ -181,8 +181,8 @@ Undeploy PM4ML Charts:
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
-    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
@@ -234,8 +234,8 @@ Create k3s Cluster:
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
-    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
@@ -337,8 +337,8 @@ Deploy Vault:
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
-    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
@@ -598,3 +598,32 @@ Deploy Vault:
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   when: manual
+
+11. Gateway K8S Cluste Deployments:
+  stage: "Run Tests"
+  script:
+    - aws s3 cp s3://${BUCKET}/${environment}/admin-gateway.conf ${CI_IMAGE_PROJECT_DIR}/reports/admin-gateway.conf
+    - cd ${CI_IMAGE_PROJECT_DIR}/reports
+    - export KUBECONFIG=admin-gateway.conf
+    - export REPORT_NAME=GW_K8S_CLUSTER_$(date +"%Y-%m-%d-%M").csv
+    - echo "Namespace,Helm Chart,Deployment Name,Docker image,Creation Timestamp,Number of Available Replicas,Available Status Change Timestamp,Is Available?" > ${CI_PROJECT_DIR}/gw-cluster-report.csv
+    - kubectl get deployments --all-namespaces -o=jsonpath="{range .items[*]}{.metadata.namespace}{','}{.metadata.labels.chart}{','}{.metadata.name}{','}{.spec.template.spec.containers..image}{','}{.metadata.creationTimestamp}{','}{.status.availableReplicas}{','}{.status.conditions[?(@.type=='Available')].lastUpdateTime}{','}{.status.conditions[?(@.type=='Available')].status}{'\n'}{end}" >> ${CI_PROJECT_DIR}/gw-cluster-report.csv
+#    - curl -F file=@"GW_K8S_CLUSTER_${REPORT_DATE}.csv" -F channels="${SLACK_CHANNEL}" -F token="${SLACK_API_TOKEN}" -F title="k8s Deployment Report for ${K8S_CLUSTER_NAME_DMZ_DEV} cluster on ${REPORT_DATE}"  https://slack.com/api/files.upload
+  when: manual
+  artifacts:
+    paths:
+      - gw-cluster-report.csv
+
+12. Add-ons K8S Cluste Deployments:
+  stage: "Run Tests"
+  script:
+    - aws s3 cp s3://${BUCKET}/${environment}/admin-add-ons.conf ${CI_IMAGE_PROJECT_DIR}/reports/admin-add-ons.conf
+    - cd ${CI_IMAGE_PROJECT_DIR}/reports
+    - export KUBECONFIG=admin-add-ons.conf
+    - echo "Namespace,Helm Chart,Deployment Name,Docker image,Creation Timestamp,Number of Available Replicas,Available Status Change Timestamp,Is Available?" > ${CI_PROJECT_DIR}/add-ons-cluster-report.csv
+    - kubectl get deployments --all-namespaces -o=jsonpath="{range .items[*]}{.metadata.namespace}{','}{.metadata.labels.chart}{','}{.metadata.name}{','}{.spec.template.spec.containers..image}{','}{.metadata.creationTimestamp}{','}{.status.availableReplicas}{','}{.status.conditions[?(@.type=='Available')].lastUpdateTime}{','}{.status.conditions[?(@.type=='Available')].status}{'\n'}{end}" >> ${CI_PROJECT_DIR}/add-ons-cluster-report.csv
+#    - curl -F file=@"ADD-ONS_K8S_CLUSTER_${REPORT_DATE}.csv" -F channels="${SLACK_CHANNEL}" -F token="${SLACK_API_TOKEN}" -F title="k8s Deployment Report for ${K8S_CLUSTER_NAME_DMZ_DEV} cluster on ${REPORT_DATE}"  https://slack.com/api/files.upload
+  when: manual
+  artifacts:
+    paths:
+      - add-ons-cluster-report.csv
