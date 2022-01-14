@@ -80,11 +80,10 @@ module "iskm" {
   db_host            = var.wso2_mysql_host
   contact_email      = var.wso2_email
   iskm_fqdn          = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
-  intgw_fqdn         = "intgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
-  extgw_fqdn         = "extgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  intgw_fqdn         = "intgw-mgmt-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  extgw_fqdn         = "extgw-mgmt-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   wso2_admin_pw      = vault_generic_secret.wso2_admin_password.data.value
-  cert_man_issuer_name = var.cert_man_letsencrypt_cluster_issuer_name
-  nginx_ssl_passthrough = "false"
+  int_ingress_controller_name  = "nginx"
 
   providers = {
     helm = helm.helm-gateway
@@ -104,15 +103,16 @@ module "intgw" {
   # TODO: workout where to get keystore and JWS password from
   keystore_password       = "wso2carbon"
   jws_password            = "wso2carbon"
-  public_domain_name      = data.terraform_remote_state.tenant.outputs.public_zone_name
+  public_domain_name      = data.terraform_remote_state.infrastructure.outputs.public_subdomain
   db_user                 = "root"
   db_password             = vault_generic_secret.wso2_mysql_root_password.data.value
   db_host                 = var.wso2_mysql_host  
   contact_email           = var.wso2_email
-  intgw_fqdn              = "intgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   iskm_fqdn               = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   wso2_admin_pw           = vault_generic_secret.wso2_admin_password.data.value
   efs_storage_class_name  = "efs"
+  hostname                     = "intgw"
+  int_ingress_controller_name  = "nginx"
   
   providers = {
     helm = helm.helm-gateway
@@ -132,13 +132,12 @@ module "extgw" {
   root_private_key = module.wso2_init.root_private_key
   # TODO: workout where to get keystore and JWS password from
   keystore_password             = "wso2carbon"
-  public_domain_name            = data.terraform_remote_state.tenant.outputs.public_zone_name
+  public_domain_name            = data.terraform_remote_state.infrastructure.outputs.public_subdomain
   db_user                       = "root"
   db_password                   = vault_generic_secret.wso2_mysql_root_password.data.value
   db_host                       = var.wso2_mysql_host
   contact_email                 = var.wso2_email
   iskm_fqdn                     = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
-  extgw_fqdn                    = "extgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   service_account_name          = kubernetes_service_account.vault-auth-gateway.metadata[0].name
   vault_role_name               = vault_kubernetes_auth_backend_role.kubernetes-gateway.role_name
   vault_secret_file_name        = "main-wl-config.xml"
@@ -149,11 +148,10 @@ module "extgw" {
   wso2_iskm_helm_name           = module.iskm.helm_release_name
   wso2_admin_pw                 = vault_generic_secret.wso2_admin_password.data.value
   efs_storage_class_name        = "efs"
-  api_int_issuer_name           = var.cert_man_letsencrypt_cluster_issuer_name
-  token_int_issuer_name         = var.cert_man_letsencrypt_cluster_issuer_name
-  api_ext_issuer_name           = var.cert_man_vault_cluster_issuer_name
-  token_ext_issuer_name         = var.cert_man_vault_cluster_issuer_name
-  nginx_ssl_passthrough         = "false"
+  data_ext_issuer_name         = var.cert_man_vault_cluster_issuer_name
+  hostname                     = "extgw"
+  ext_ingress_controller_name  = "nginx-ext"
+  int_ingress_controller_name  = "nginx"
 
   providers = {
     helm = helm.helm-gateway

@@ -91,9 +91,11 @@ reporting-hub-bop-shell:
     hostname: ${portal_fqdn}
     annotations:
       kubernetes.io/ingress.class: nginx
-      cert-manager.io/cluster-issuer: letsencrypt
+      #cert-manager.io/cluster-issuer: letsencrypt
     tls: true
     selfSigned: true
+    tlsSetSecretManual: true
+    tlsManualSecretName: ""
   config:
     env:
       AUTH_MOCK_API: false
@@ -123,9 +125,11 @@ security-hub-bop-kratos-ui:
     annotations:
       kubernetes.io/ingress.class: nginx
       nginx.ingress.kubernetes.io/rewrite-target: /$2
-      cert-manager.io/cluster-issuer: letsencrypt
+      #cert-manager.io/cluster-issuer: letsencrypt
     tls: true
     selfSigned: true
+    tlsSetSecretManual: true
+    tlsManualSecretName: ""
 ### Micro-frontends
 
 reporting-hub-bop-role-ui:
@@ -137,9 +141,11 @@ reporting-hub-bop-role-ui:
     path: /
     annotations:
       kubernetes.io/ingress.class: nginx
-      cert-manager.io/cluster-issuer: letsencrypt
+      #cert-manager.io/cluster-issuer: letsencrypt
     tls: true
     selfSigned: true
+    tlsSetSecretManual: true
+    tlsManualSecretName: ""
   config:
     env:
       REACT_APP_API_BASE_URL: https://${portal_fqdn}/proxy/iam
@@ -154,9 +160,11 @@ reporting-hub-bop-trx-ui:
     hostname: ${transfersui_fqdn}
     annotations:
       kubernetes.io/ingress.class: nginx
-      cert-manager.io/cluster-issuer: letsencrypt
+      #cert-manager.io/cluster-issuer: letsencrypt
     tls: true
     selfSigned: true
+    tlsSetSecretManual: true
+    tlsManualSecretName: ""
   config:
     env:
       REACT_APP_API_BASE_URL: https://${portal_fqdn}/proxy/transfers
@@ -174,9 +182,11 @@ reporting-hub-bop-settlements-ui:
     hostname: ${settlementsui_fqdn}
     annotations:
       kubernetes.io/ingress.class: nginx
-      cert-manager.io/cluster-issuer: letsencrypt
+      #cert-manager.io/cluster-issuer: letsencrypt
     tls: true
     selfSigned: true
+    tlsSetSecretManual: true
+    tlsManualSecretName: ""
 
 reporting-hub-bop-positions-ui:
   enabled: true
@@ -189,9 +199,11 @@ reporting-hub-bop-positions-ui:
     hostname: ${positionsui_fqdn}
     annotations:
       kubernetes.io/ingress.class: nginx
-      cert-manager.io/cluster-issuer: letsencrypt
+      #cert-manager.io/cluster-issuer: letsencrypt
     tls: true
     selfSigned: true
+    tlsSetSecretManual: true
+    tlsManualSecretName: ""
 
 ## Other services
 security-role-perm-operator-svc:

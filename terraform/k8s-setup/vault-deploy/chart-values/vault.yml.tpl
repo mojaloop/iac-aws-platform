@@ -50,15 +50,12 @@ server:
   ingress:
     enabled: true
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt
       kubernetes.io/ingress.class: nginx
-      external-dns.alpha.kubernetes.io/hostname: ${host_name}
     hosts:
-      - host: ${host_name}
+      - host: ${host_name}.${domain_name}
     tls:
-      - secretName: vault-ing-tls
-        hosts:
-          - ${host_name}
+      - hosts:
+        - "*.${domain_name}"
 
 ui:
   enabled: true

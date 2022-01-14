@@ -4,7 +4,7 @@
 	"values": [
 		{
 			"key": "HOST_SWITCH",
-			"value": "https://i-token-extgw.${LAB_DOMAIN}:443",
+			"value": "https://extgw-data-int.${LAB_DOMAIN}:443",
 			"enabled": true
 		},
 		{
@@ -14,7 +14,7 @@
 		},
 		{
 			"key": "HOST_CENTRAL_LEDGER",
-			"value": "https://i-token-extgw.${LAB_DOMAIN}:443/admin/1.0",
+			"value": "https://extgw-data-int.${LAB_DOMAIN}:443/admin/1.0",
 			"enabled": true
 		},
 		{
@@ -24,7 +24,7 @@
 		},
 		{
 			"key": "HOST_CENTRAL_SETTLEMENT",
-			"value": "https://i-token-extgw.${LAB_DOMAIN}:443/settlements/1.0",
+			"value": "https://extgw-data-int.${LAB_DOMAIN}:443/settlements/1.0",
 			"enabled": true
 		},
 		{
@@ -94,7 +94,7 @@
 		},
 		{
 			"key": "WS02_INT_GWY_ENDPOINT",
-			"value": "https://token-intgw.${LAB_DOMAIN}",
+			"value": "https://intgw-data-int.${LAB_DOMAIN}",
 			"enabled": true
 		},
 		{

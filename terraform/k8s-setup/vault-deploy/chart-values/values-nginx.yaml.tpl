@@ -7,6 +7,7 @@ controller:
   extraArgs:
     publish-status-address: ${lb_name}
     enable-ssl-passthrough: false
+    default-ssl-certificate: ${tls_sec_name}
   service:
     externalTrafficPolicy: "Local"
     type: NodePort

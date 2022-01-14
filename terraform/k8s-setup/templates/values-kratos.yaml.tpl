@@ -74,9 +74,9 @@ ingress:
         paths: 
           - /kratos(/|$)(.*)
     tls:
-      - secretName: kratos-public
       - hosts:
         - "${portal_fqdn}"
+        secretName: ""
 
 kratos:
   log:

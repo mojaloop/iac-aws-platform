@@ -8,11 +8,6 @@ output "certificate" {
   value       = tls_locally_signed_cert.wso2.cert_pem
 }
 
-output "fqdn" {
-  description = "FQDN of Internal GW Service"
-  value       = var.intgw_fqdn
-}
-
 output "helm_status" {
   description = "Status of Helm deployemnt. Can be used in flow control"
   value       = helm_release.app.status

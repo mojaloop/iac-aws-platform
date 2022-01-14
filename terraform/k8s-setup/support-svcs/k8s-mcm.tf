@@ -36,7 +36,7 @@ resource "helm_release" "mcm-connection-manager" {
   repository = "https://modusbox.github.io/helm"
   chart      = "connection-manager"
   version    = var.helm_mcm_connection_manager_version
-  namespace  = "mcm"
+  namespace  = kubernetes_namespace.mcm.metadata[0].name
   create_namespace = true
   timeout    = 500
 
@@ -82,6 +82,11 @@ locals {
     env_o             = "Modusbox"
     env_ou            = "MCM"
     storage_class_name = var.ebs_storage_class_name
+    k8s_vault_role    = vault_kubernetes_auth_backend_role.kubernetes-mcm.role_name
+    vault_endpoint    = "http://vault.default.svc.cluster.local:8200"
+    pki_base_domain   = data.terraform_remote_state.infrastructure.outputs.public_subdomain
+    service_account_name = kubernetes_service_account.vault-auth-mcm.metadata[0].name
+    #tls_secret_name   = var.int_wildcard_cert_sec_name
   }
 }
 
@@ -109,4 +114,29 @@ resource "vault_generic_secret" "mcm_mysql_root_password" {
   data_json = jsonencode({
     "value" = random_password.mcm_mysql_root_password.result
   })
+}
+
+
+resource "kubernetes_namespace" "mcm" {
+  metadata {
+   name = var.mcm_namespace
+  }
+  provider = kubernetes.k8s-gateway
+}
+resource "kubernetes_service_account" "vault-auth-mcm" {
+  metadata {
+    name      = "vault-auth-mcm"
+    namespace = kubernetes_namespace.mcm.metadata[0].name
+  }
+  automount_service_account_token = true
+  provider                        = kubernetes.k8s-gateway
+}
+
+resource "vault_kubernetes_auth_backend_role" "kubernetes-mcm" {
+  backend                          = vault_auth_backend.kubernetes-gateway.path
+  role_name                        = "kubernetes-mcm-role"
+  bound_service_account_names      = [kubernetes_service_account.vault-auth-mcm.metadata[0].name]
+  bound_service_account_namespaces = [kubernetes_namespace.mcm.metadata[0].name]
+  token_ttl                        = 3600
+  token_policies                   = [vault_policy.read-whitelist-addresses-gateway.name]
 }

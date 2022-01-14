@@ -68,11 +68,6 @@ variable "iskm_fqdn" {
   type = string
 }
 
-variable "extgw_fqdn" {
-  description = "FQDN of Ext GW service"
-  type = string
-}
-
 variable "helm_deployment" {
   description = "Kubernetes Deployment name for ISKM"
   type = string
@@ -124,28 +119,18 @@ variable "wso2_iskm_helm_name" {
   type = string
 }
 
-variable "api_ext_issuer_name" {
-  description = "cert man issuer name for extgw"
+variable "ext_ingress_controller_name" {
+  description = "ext_ingress_controller_name"
   type = string
-  default = "letsencrypt"
+  default = "nginx-ext"
 }
-variable "token_ext_issuer_name" {
-  description = "cert man issuer name for token-extgw"
+variable "data_ext_issuer_name" {
+  description = "cert man issuer name for data extgw"
   type = string
   default = "vault-issuer-int"
 }
-variable "api_int_issuer_name" {
-  description = "cert man issuer name for extgw"
+variable "int_ingress_controller_name" {
+  description = "int_ingress_controller_name"
   type = string
-  default = "letsencrypt"
-}
-variable "token_int_issuer_name" {
-  description = "cert man issuer name for token-extgw"
-  type = string
-  default = "vault-issuer-int"
-}
-variable "nginx_ssl_passthrough" {
-  description = "nginx_ssl_passthrough"
-  type = string
-  default = "true"
+  default = "nginx"
 }

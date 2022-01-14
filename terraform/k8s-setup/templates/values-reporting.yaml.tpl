@@ -2,13 +2,13 @@ ingress:
   enabled: true
   annotations:
     kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt
+    #cert-manager.io/cluster-issuer: letsencrypt
   hosts:
     - host: ${ingress_host}
       paths: 
       - path: "/"
   tls:
-    - secretName: ml-rpting-tls
+    - secretName: ""
       hosts:
       - ${ingress_host}
 dbHost: ${db_host}

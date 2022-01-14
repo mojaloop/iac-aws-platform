@@ -1,15 +1,15 @@
 dependencyConfigProps:
   API_GW_HOST:
     name: "API_GW_HOST"
-    propValue: "${intgw}"
+    propValue: "${api_gw_host}"
     releasePrefixValue: false
   API_STORE_HOST:
     name: "API_STORE_HOST"
-    propValue: "${intgw}"
+    propValue: "${api_store_host}"
     releasePrefixValue: false
   API_PUB_HOST:
     name: "API_PUB_HOST"
-    propValue: "${intgw}"
+    propValue: "${api_pub_host}"
     releasePrefixValue: false
   WSO2_DB_HOST:
     name: "WSO2_DB_HOST"

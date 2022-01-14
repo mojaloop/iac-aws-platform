@@ -33,6 +33,12 @@ variable "wso2_namespace" {
   default     = "wso2"
 }
 
+variable "mcm_namespace" {
+  description = "Kubernetes namespace to install connection manager into"
+  type        = string
+  default     = "mcm"
+}
+
 variable "cert_man_namespace" {
   description = "Kubernetes namespace to install WSO2 into"
   type        = string

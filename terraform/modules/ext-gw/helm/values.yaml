@@ -16,82 +16,75 @@ livenessProbe:
   enabled: true
   initialDelaySeconds: 180
 ingress:
-  apiServer:
+  mgmt:
     internal: 
       enabled: true
       annotations:
-        kubernetes.io/ingress.class: nginx
+        kubernetes.io/ingress.class: ${int_ingress_controller_name}
         nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-        nginx.ingress.kubernetes.io/ssl-passthrough: "${nginx_ssl_passthrough}"
-        cert-manager.io/cluster-issuer: ${api_int_issuer_name}
-        #nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-        #nginx.ingress.kubernetes.io/auth-tls-secret: namespace/secretName
+        nginx.ingress.kubernetes.io/ssl-passthrough: "false"
         
       hosts:
-        - host: ${api_int_host}
+        - host: ${mgmt_int_host}
           paths:
             - path: "/"
               servicePort: wso2
       tls:
-        - secretName: extgw-int-tls
+        - secretName: ""
           hosts:
-            - ${api_int_host}
+            - ${mgmt_int_host}
     external: 
       enabled: true
       annotations:
-        kubernetes.io/ingress.class: nginx-ext
+        kubernetes.io/ingress.class: ${ext_ingress_controller_name}
         nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-        nginx.ingress.kubernetes.io/ssl-passthrough: "${nginx_ssl_passthrough}"
-        cert-manager.io/cluster-issuer: ${api_ext_issuer_name}
-        #nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-        #nginx.ingress.kubernetes.io/auth-tls-secret: namespace/secretName
+        nginx.ingress.kubernetes.io/ssl-passthrough: "false"
         
       hosts:
-        - host: ${api_ext_host}
+        - host: ${mgmt_ext_host}
           paths:
             - path: "/"
               servicePort: wso2
       tls:
-        - secretName: extgw-ext-tls
+        - secretName: ""
           hosts:
-            - ${api_ext_host}
-  tokenServer:
+            - ${mgmt_ext_host}
+  data:
     external:
       enabled: true
       annotations:
-        kubernetes.io/ingress.class: nginx-ext
+        kubernetes.io/ingress.class: ${ext_ingress_controller_name}
         nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-        nginx.ingress.kubernetes.io/ssl-passthrough: "${nginx_ssl_passthrough}"
-        cert-manager.io/cluster-issuer: ${token_ext_issuer_name}
+        nginx.ingress.kubernetes.io/ssl-passthrough: "false"
+        cert-manager.io/cluster-issuer: ${data_ext_issuer_name}
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-        nginx.ingress.kubernetes.io/auth-tls-secret: wso2/tokenextgw-tls-ext
+        nginx.ingress.kubernetes.io/auth-tls-secret: ${namespace}/tokenextgw-tls-ext
         
       hosts:
-        - host: ${token_ext_host}
+        - host: ${data_ext_host}
           paths:
             - path: "/"
               servicePort: wso2https
       tls:
         - secretName: tokenextgw-tls-ext
           hosts:
-            - ${token_ext_host}
+            - ${data_ext_host}
     internal:
       enabled: true
       annotations:
-        kubernetes.io/ingress.class: nginx
+        kubernetes.io/ingress.class: ${int_ingress_controller_name}
         nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-        nginx.ingress.kubernetes.io/ssl-passthrough: "${nginx_ssl_passthrough}"
-        cert-manager.io/cluster-issuer: ${token_int_issuer_name}
+        nginx.ingress.kubernetes.io/ssl-passthrough: "false"
         
       hosts:
-        - host: ${token_int_host}
+        - host: ${data_int_host}
           paths:
             - path: "/"
               servicePort: wso2https
       tls:
-        - secretName: tokenextgw-tls-int
+        - secretName: ""
           hosts:
-            - ${token_int_host}
+            - ${data_int_host}
 service:
   type: ClusterIP
   ports:

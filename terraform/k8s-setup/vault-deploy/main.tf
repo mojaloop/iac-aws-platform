@@ -53,7 +53,8 @@ resource "helm_release" "deploy_vault" {
     kms_access_key = var.aws_access_key,
     kms_secret_key = var.aws_secret_key,
     kube_engine_path = var.kubernetes_auth_path
-    host_name = "vault.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+    host_name = "vault"
+    domain_name = data.terraform_remote_state.infrastructure.outputs.public_subdomain
   })]
   force_update = true
   cleanup_on_fail = true
@@ -145,7 +146,6 @@ resource "helm_release" "external-dns" {
         region = var.region
       })
   ]
-  depends_on = [helm_release.external-nginx-ingress-controller, helm_release.internal-nginx-ingress-controller]
 }
 
 resource "helm_release" "external-nginx-ingress-controller" {
@@ -166,8 +166,10 @@ resource "helm_release" "external-nginx-ingress-controller" {
         lb_name            = data.terraform_remote_state.infrastructure.outputs.external_load_balancer_dns
         use_proxy_protocol = true
         enable_real_ip     = true
+        tls_sec_name = "default/${var.int_wildcard_cert_sec_name}"
       })
   ]
+  depends_on = [helm_release.common-cert-crds]
 }
 
 resource "helm_release" "internal-nginx-ingress-controller" {
@@ -188,6 +190,8 @@ resource "helm_release" "internal-nginx-ingress-controller" {
         lb_name            = data.terraform_remote_state.infrastructure.outputs.internal_load_balancer_dns
         use_proxy_protocol = false
         enable_real_ip     = false
+        tls_sec_name = "default/${var.int_wildcard_cert_sec_name}"
       })
   ]
+  depends_on = [helm_release.common-cert-crds]
 }

@@ -8,8 +8,8 @@
       wso2_api_publisher:
         username: admin
         password: "{{ wso2_admin_pw }}"
-        hostname: "i-extgw.{{ external_domain }}"
-        token_hostname: "i-token-extgw.{{ external_domain }}"
+        hostname: "extgw-mgmt-int.{{ external_domain }}"
+        token_hostname: "extgw-data-int.{{ external_domain }}"
         api_template: apis/admin/api_template.json
         swagger_url: "https://raw.githubusercontent.com/mojaloop/central-ledger/master/src/api/interface/swagger.json"
         endpoint_url: "http://interop-switch.{{ internal_domain }}/admin"
@@ -20,8 +20,8 @@
       wso2_api_publisher:
         username: admin
         password: "{{ wso2_admin_pw }}"
-        hostname: "i-extgw.{{ external_domain }}"
-        token_hostname: "i-token-extgw.{{ external_domain }}"
+        hostname: "extgw-mgmt-int.{{ external_domain }}"
+        token_hostname: "extgw-data-int.{{ external_domain }}"
         api_template: apis/als-admin/api_template.json
         swagger_url: "https://raw.githubusercontent.com/mojaloop/account-lookup-service/master/src/interface/admin-swagger.yaml"
         endpoint_url: "http://account-lookup-service-admin.{{ internal_domain }}"
@@ -30,8 +30,8 @@
       wso2_api_publisher:
         username: admin
         password: "{{ wso2_admin_pw }}"
-        hostname: "i-extgw.{{ external_domain }}"
-        token_hostname: "i-token-extgw.{{ external_domain }}"
+        hostname: "extgw-mgmt-int.{{ external_domain }}"
+        token_hostname: "extgw-data-int.{{ external_domain }}"
         api_template: apis/fspiop/api_template.json
         swagger_url: "https://raw.githubusercontent.com/mojaloop/mojaloop-specification/master/fspiop-api/documents/v1.1-document-set/fspiop-v1.1-openapi2.yaml"
         endpoint_url: "http://interop-switch.{{ internal_domain }}"
@@ -42,8 +42,8 @@
       wso2_api_publisher:
         username: admin
         password: "{{ wso2_admin_pw }}"
-        hostname: "i-extgw.{{ external_domain }}"
-        token_hostname: "i-token-extgw.{{ external_domain }}"
+        hostname: "extgw-mgmt-int.{{ external_domain }}"
+        token_hostname: "extgw-data-int.{{ external_domain }}"
         api_template: apis/settlements/api_template.json
         swagger_url: "http://interop-switch.{{ internal_domain }}/settlements/api-docs"
         endpoint_url: "http://interop-switch.{{ internal_domain }}/settlements"

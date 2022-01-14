@@ -155,7 +155,7 @@ resource "helm_release" "bof" {
     })
   ]
   provider = helm.helm-gateway
-  depends_on = [helm_release.mojaloop]
+  depends_on = [helm_release.mojaloop, helm_release.kratos]
 }
 
 resource "kubernetes_secret" "wso2-is-admin-creds" {

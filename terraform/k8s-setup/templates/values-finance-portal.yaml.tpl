@@ -2,10 +2,10 @@ ingress:
   enabled: true
   annotations:
     kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt
+    #cert-manager.io/cluster-issuer: letsencrypt
   externalHostname: ${ingress_host}
   tls:
-    secretName: fin-portal-v2-sec
+    secretName: ""
   authService:
     name: ${mojaloop_release}-finance-portal
     portName: 3000

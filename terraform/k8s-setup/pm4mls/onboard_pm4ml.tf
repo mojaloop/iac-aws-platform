@@ -33,7 +33,7 @@ locals {
       "private_reg_pass"     = var.private_registry_pw
       "private_reg_url"      = "modusbox-mbx-docker.jfrog.io"
       "dfsp_id"              = pm4ml_config.DFSP_NAME
-      "extgw_fqdn"           = "token-extgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      "extgw_fqdn"           = "extgw-data.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
       "mcm_host_url"         = "mcm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
       "p12_pass_phrase"       = "samplepass"
       "ml_connector_image_tag" = "12.0.4"
@@ -41,7 +41,7 @@ locals {
       "ttk_enabled"          = false
       "extgw_client_key"     = module.internal_provision_pm4ml_to_wso2.client-ids[pm4ml_config.DFSP_NAME]
       "extgw_client_secret"  = module.internal_provision_pm4ml_to_wso2.client-secrets[pm4ml_config.DFSP_NAME]
-      "OAUTH_TOKEN_ENDPOINT" = "https://token-extgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}:443/oauth2/token"
+      "OAUTH_TOKEN_ENDPOINT" = "https://extgw-data.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}:443/oauth2/token"
       "tls_outbound_cacert"  = data.terraform_remote_state.suppsvcs.outputs.root_signed_intermediate_ca_cert_chain
       "tls_outbound_privkey" = vault_pki_secret_backend_cert.internal-switch-pm4ml-client[pm4ml_config.DFSP_NAME].private_key
       "tls_outbound_cert"    = vault_pki_secret_backend_cert.internal-switch-pm4ml-client[pm4ml_config.DFSP_NAME].certificate
@@ -55,7 +55,7 @@ locals {
       "DFSP_NAME" = pm4ml_config.DFSP_NAME
       "DFSP_CURRENCY" = pm4ml_config.DFSP_CURRENCY
       "DFSP_MSISDN" = pm4ml_config.DFSP_MSISDN
-      "GENERIC_DFSP_CALLBACK_URL" = "https://token-intgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}:443/${pm4ml_config.DFSP_NAME}/1.0"
+      "GENERIC_DFSP_CALLBACK_URL" = "https://intgw-data-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}:443/${pm4ml_config.DFSP_NAME}/1.0"
       "GENERIC_DFSP_BACKEND_TESTAPI_URL" = "http://test.${pm4ml_config.DFSP_NAME}.${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}/sim-backend-test"
       "DFSP_ACCOUNT_ID" = pm4ml_config.DFSP_ACCOUNT_ID
       "DFSP_NOTIFICATION_EMAIL" = pm4ml_config.DFSP_NOTIFICATION_EMAIL
@@ -86,8 +86,8 @@ resource "local_file" "pm4ml_personal_client_key" {
 
 module "internal_provision_pm4ml_to_wso2" {
   source            = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/create-test-user?ref=v2.0.0"
-  extgw_fqdn        = "i-extgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
-  token_extgw_fqdn  = "i-token-extgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  extgw_fqdn        = "extgw-mgmt-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  token_extgw_fqdn  = "extgw-data-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   extgw_token_service_port = 443
   extgw_admin_port = 443
   test_user_details = local.internal_pm4ml_details
@@ -97,8 +97,8 @@ module "internal_provision_pm4ml_to_wso2" {
 
 module "provision_pm4ml_callbacks_to_wso2" {
   source            = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/callbacks-post-config?ref=v2.0.0"
-  intgw_fqdn        = "intgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
-  intgw_token_fqdn  = "token-intgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  intgw_fqdn        = "intgw-mgmt-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  intgw_token_fqdn  = "intgw-data-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   intgw_rest_port   = 443
   intgw_token_port  = 443
   test_user_details = local.internal_pm4ml_details

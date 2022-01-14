@@ -55,6 +55,11 @@ resource "kubernetes_cluster_role_binding" "role-tokenreview-binding-vault" {
     name      = kubernetes_service_account.vault-auth-gateway.metadata[0].name
     namespace = kubernetes_namespace.wso2.metadata[0].name
   }
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account.vault-auth-mcm.metadata[0].name
+    namespace = kubernetes_namespace.mcm.metadata[0].name
+  }
   provider   = kubernetes.k8s-gateway
 }
 

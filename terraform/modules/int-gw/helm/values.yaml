@@ -15,40 +15,44 @@ livenessProbe:
   enabled: true
   initialDelaySeconds: 180
 ingress:
-  apiServer:
-    enabled: true
-    annotations:
-      kubernetes.io/ingress.class: nginx
-      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-      nginx.ingress.kubernetes.io/ssl-passthrough: "false"
-      cert-manager.io/cluster-issuer: letsencrypt
-      
-    hosts:
-      - host: ${ingress_host}
-        paths:
-          - path: "/"
-            servicePort: wso2
-    tls:
-      - secretName: intgw-tls
-        hosts:
-          - ${ingress_host}
-  tokenServer:
-    enabled: true
-    annotations:
-      kubernetes.io/ingress.class: nginx
-      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-      nginx.ingress.kubernetes.io/ssl-passthrough: "false"
-      cert-manager.io/cluster-issuer: letsencrypt
-      
-    hosts:
-      - host: ${token_ingress_host}
-        paths:
-          - path: "/"
-            servicePort: wso2https
-    tls:
-      - secretName: tokenintgw-tls
-        hosts:
-          - ${token_ingress_host}
+  mgmt:
+    internal: 
+      enabled: true
+      annotations:
+        kubernetes.io/ingress.class: ${int_ingress_controller_name}
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+        nginx.ingress.kubernetes.io/ssl-passthrough: "false"
+        
+      hosts:
+        - host: ${mgmt_int_host}
+          paths:
+            - path: "/"
+              servicePort: wso2
+      tls:
+        - secretName: ""
+          hosts:
+            - ${mgmt_int_host}
+    external: 
+      enabled: false
+  data:
+    external:
+      enabled: false
+    internal:
+      enabled: true
+      annotations:
+        kubernetes.io/ingress.class: ${int_ingress_controller_name}
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+        nginx.ingress.kubernetes.io/ssl-passthrough: "false"
+        
+      hosts:
+        - host: ${data_int_host}
+          paths:
+            - path: "/"
+              servicePort: wso2https
+      tls:
+        - secretName: ""
+          hosts:
+            - ${data_int_host}
 service:
   type: ClusterIP
   ports:

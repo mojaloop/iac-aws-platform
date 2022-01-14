@@ -15,8 +15,8 @@ locals {
 
 module "provision_accounts_to_wso2" {
   source            = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/create-test-user?ref=v2.0.0"
-  extgw_fqdn        = "i-extgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
-  token_extgw_fqdn  = "i-token-extgw.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  extgw_fqdn        = "extgw-mgmt-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+  token_extgw_fqdn  = "extgw-data-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   extgw_token_service_port = 443
   extgw_admin_port = 443
   test_user_details = local.account_details

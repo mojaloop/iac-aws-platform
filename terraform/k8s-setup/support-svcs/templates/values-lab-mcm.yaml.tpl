@@ -25,18 +25,18 @@ api:
       enabled: true
   oauth:
     enabled: true
-    issuer: https://${iskm_private_fqdn}:443/oauth2/token
+    issuer: https://${iskm_private_fqdn}/oauth2/token
     key: change_me_later
     secret: change_me_later
     resetPassword:
-      issuer: https://${iskm_private_fqdn}:443/scim2/Users
+      issuer: https://${iskm_private_fqdn}/scim2/Users
       user: admin
       pass: ${admin_pw}
   auth2fa:
     enabled: false
   totp:
     admin:
-      issuer: https://${iskm_private_fqdn}:443/services/TOTPAdminService
+      issuer: https://${iskm_private_fqdn}/services/TOTPAdminService
       user: admin
       password: ${admin_pw}
     label: MCM
@@ -44,7 +44,7 @@ api:
   wso2:
     manager:
       service:
-        url: https://${iskm_private_fqdn}:443/services/RemoteUserStoreManagerService.RemoteUserStoreManagerServiceHttpsSoap12Endpoint
+        url: https://${iskm_private_fqdn}/services/RemoteUserStoreManagerService.RemoteUserStoreManagerServiceHttpsSoap12Endpoint
         user: admin
         pass: ${admin_pw}
   env:
@@ -54,7 +54,22 @@ api:
     cn: ${env_cn}
     o: ${env_o}
     ou: ${env_ou}
-
+vault:
+  auth:
+    k8s:
+      enabled: true
+      token: /var/run/secrets/kubernetes.io/serviceaccount/token
+      role: ${k8s_vault_role}
+  endpoint: ${vault_endpoint}
+  mounts:
+    pki: pki-root-ca
+    intermediatePki: pki-int-ca
+    kv: secrets
+  pkiBaseDomain: ${pki_base_domain}
+  signExpiryHours: 43800
+serviceAccountNameOverride: ${service_account_name}
+rbac:
+  enabled: false
 ui:
   oauth:
     enabled: true
@@ -63,10 +78,9 @@ ingress:
   enabled: true
   host: ${mcm_public_fqdn}
   tls:
-  - secretName: mcm-tls
-    hosts:
-      - ${mcm_public_fqdn}
+    - hosts:
+      - "*.${mcm_public_fqdn}"
   annotations:
     kubernetes.io/ingress.class: nginx-ext
-    cert-manager.io/cluster-issuer: letsencrypt
+    #cert-manager.io/cluster-issuer: letsencrypt
     nginx.ingress.kubernetes.io/ssl-redirect: "false"

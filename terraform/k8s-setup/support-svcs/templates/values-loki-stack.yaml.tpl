@@ -27,13 +27,12 @@ grafana:
   ingress:
     enabled: true
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt
+      #cert-manager.io/cluster-issuer: letsencrypt
       kubernetes.io/ingress.class: nginx
     hosts: 
       - ${grafana_host}
     tls:
-    - secretName: grafana-tls
-      hosts:
+      - hosts:
         - ${grafana_host}
 prometheus:
   enabled: true

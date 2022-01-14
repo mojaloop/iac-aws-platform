@@ -1,18 +1,17 @@
 locals {
   env_values = {
-    db_host           = var.db_host
-    db_port           = var.db_port
-    db_user           = var.db_user
-    db_password       = var.db_password
-    keystore_password = var.keystore_password
-    intgw             = var.intgw_fqdn
-    extgw             = var.extgw_fqdn
-    iskm              = var.iskm_fqdn
-    wso2_admin_pw     = var.wso2_admin_pw
-    ingress_host      = var.iskm_fqdn
-    issuer_name       = var.cert_man_issuer_name
-    nginx_ssl_passthrough = var.nginx_ssl_passthrough
-    iskm_proxy_port   = 443
+    db_host                       = var.db_host
+    db_port                       = var.db_port
+    db_user                       = var.db_user
+    db_password                   = var.db_password
+    keystore_password             = var.keystore_password
+    intgw                         = var.intgw_fqdn
+    extgw                         = var.extgw_fqdn
+    iskm                          = var.iskm_fqdn
+    wso2_admin_pw                 = var.wso2_admin_pw
+    ingress_host                  = var.iskm_fqdn
+    int_ingress_controller_name       = var.int_ingress_controller_name
+    iskm_proxy_port               = 443
   }
 }
 

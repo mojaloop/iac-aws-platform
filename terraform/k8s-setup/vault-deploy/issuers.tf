@@ -15,7 +15,7 @@ resource "kubernetes_secret" "certmanager-route53-credentials" {
 }
 resource "helm_release" "issuer-crds" {
   name       = "issuer-crds"
-  chart = "./k8s-manifests"
+  chart = "./cluster-issuer"
   namespace  = var.cert_man_namespace
   timeout    = 300
   provider = helm.helm-gateway
@@ -61,4 +61,30 @@ resource "time_sleep" "wait_90_seconds" {
   depends_on = [helm_release.issuer-crds]
   create_duration = "90s"
   destroy_duration = "90s"
+}
+
+# Create a secret to store the aws secret key which is passed to the clusterissuer below
+resource "helm_release" "common-cert-crds" {
+  name       = "common-cert-crds"
+  chart = "./wildcard-cert"
+  namespace  = "default"
+  timeout    = 300
+  provider = helm.helm-gateway
+  
+  set {
+    name  = "domain_name"
+    value = data.terraform_remote_state.infrastructure.outputs.public_subdomain
+    type  = "string"
+  }
+  set {
+    name  = "issuer_name"
+    value = var.cert_man_letsencrypt_cluster_issuer_name
+    type  = "string"
+  }
+  set {
+    name  = "secret_name"
+    value = var.int_wildcard_cert_sec_name
+    type  = "string"
+  }
+  depends_on = [helm_release.issuer-crds]
 }

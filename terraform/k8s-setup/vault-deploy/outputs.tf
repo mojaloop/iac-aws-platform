@@ -8,3 +8,8 @@ output "cert_man_secret_key" {
   sensitive   = true
   description = "cert_man_secret_key"
 }
+
+output "int_wildcard_cert_sec_name" {
+  description = "wildcard cert for internal ops tls"
+  value       = var.int_wildcard_cert_sec_name
+}

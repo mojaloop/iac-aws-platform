@@ -73,11 +73,6 @@ variable "iskm_fqdn" {
   type = string
 }
 
-variable "intgw_fqdn" {
-  description = "FQDN of Int GW service"
-  type = string
-}
-
 variable "wso2_admin_pw" {
   description = "admin password for wso2"
   type = string
@@ -88,4 +83,8 @@ variable "efs_storage_class_name" {
   type = string
   default = "efs"
 }
-
+variable "int_ingress_controller_name" {
+  description = "ingress controller ref"
+  type = string
+  default = "nginx"
+}

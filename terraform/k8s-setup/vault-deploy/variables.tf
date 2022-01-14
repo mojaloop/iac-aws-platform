@@ -100,3 +100,8 @@ variable "cert_man_vault_cluster_issuer_name" {
   type        = string
   default     = "vault-issuer-int"
 }
+variable "int_wildcard_cert_sec_name" {
+  description = "letsenc wildcard sec for operations tls endpoints"
+  type        = string
+  default     = "int-ops-wildcard-tls"
+}
