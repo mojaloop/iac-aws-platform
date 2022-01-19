@@ -1,4 +1,4 @@
 config:
-  efk_host: ${ELASTICSEARCH_HOST}:30000
+  efk_host: ${ELASTICSEARCH_HOST}
   apm_host: ${APM_HOST}
-  apm_port: 30000
+  apm_port: 80

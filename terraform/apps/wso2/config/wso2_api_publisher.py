@@ -163,16 +163,16 @@ EXAMPLES = """
   wso2_api_publisher:
     hostname: extgw.otc-546.infra.modusbox.io
     api_template: fspiop/api_template.json
-    swagger_url: "http://account-lookup-service.otc-546.infra.modusbox.io.internal:30000/api-docs"
-    endpoint_url: "http://account-lookup-service-admin.otc-546.infra.modusbox.io.internal:30000"
+    swagger_url: "http://account-lookup-service.otc-546.infra.modusbox.io.internal/api-docs"
+    endpoint_url: "http://account-lookup-service-admin.otc-546.infra.modusbox.io.internal"
 
 # publish API with mediations
 - name: publish API with mediations
   wso2_api_publisher:
     hostname: extgw.otc-546.infra.modusbox.io
     api_template: fspiop/api_template.json
-    swagger_url: "http://account-lookup-service.otc-546.infra.modusbox.io.internal:30000/api-docs"
-    endpoint_url: "http://account-lookup-service-admin.otc-546.infra.modusbox.io.internal:30000"
+    swagger_url: "http://account-lookup-service.otc-546.infra.modusbox.io.internal/api-docs"
+    endpoint_url: "http://account-lookup-service-admin.otc-546.infra.modusbox.io.internal"
     inbound_mediation:
         - "fspiop/add_accept_header.xml"
 """

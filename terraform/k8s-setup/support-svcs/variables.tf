@@ -140,3 +140,9 @@ variable "cert_man_vault_cluster_issuer_name" {
   type        = string
   default     = "vault-issuer-int"
 }
+
+variable "helm_haproxy_version" {
+  description = "version of haproxy chart (mojaloop fork)"
+  type        = string
+  default     = "1.7.2"
+}

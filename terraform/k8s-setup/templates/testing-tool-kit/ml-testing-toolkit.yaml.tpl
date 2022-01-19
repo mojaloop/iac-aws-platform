@@ -410,7 +410,7 @@ ml-testing-toolkit:
           port: 6060
           paths: ['/']
     config:
-      API_BASE_URL: http://ttkbackend.${env}.${name}.${domain}.internal:30000
+      API_BASE_URL: http://ttkbackend.${env}.${name}.${domain}.internal
 
 ml-ttk-test-setup:
   testCaseEnvironmentFile:  *ttkInputValues

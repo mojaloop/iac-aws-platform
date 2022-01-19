@@ -46,6 +46,7 @@
   "grafana_slack_notifier_url": "webhookid",
   "TAG_ML_GP": "v12.0.3",
   "k8s_api_version": "1.21.6",
+  "helm_haproxy_version": "1.7.2",
   "TAG_PM4ML_GP": "v1.1.3",
   "internal_ttk_enabled": "true",
   "internal_sim_enabled": "true",

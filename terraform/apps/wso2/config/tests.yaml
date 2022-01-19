@@ -9,7 +9,7 @@
         verify_ssl: false
         api_template: apis/fspiop/api_template.json
         swagger_url: "https://raw.githubusercontent.com/mojaloop/sdk-scheme-adapter/{{ mj_version }}/src/InboundServer/api.yaml"
-        endpoint_url: "http://account-lookup-service-admin.{{ env_domain }}.internal:30000"
+        endpoint_url: "http://account-lookup-service-admin.{{ env_domain }}.internal"
       register: api
 
     - assert:
@@ -41,7 +41,7 @@
         verify_ssl: false
         api_template: apis/fspiop/api_template.json
         swagger_url: "https://raw.githubusercontent.com/mojaloop/sdk-scheme-adapter/{{ mj_version }}/src/InboundServer/api.yaml"
-        endpoint_url: "http://account-lookup-service-admin.{{ env_domain }}.internal:30000"
+        endpoint_url: "http://account-lookup-service-admin.{{ env_domain }}.internal"
         inbound_mediation:
           - apis/fspiop/add_accept_header.xml
       register: api
@@ -77,7 +77,7 @@
         verify_ssl: false
         api_template: apis/fspiop/api_template.json
         swagger_url: "https://raw.githubusercontent.com/mojaloop/sdk-scheme-adapter/{{ mj_version }}/src/InboundServer/api.yaml"
-        endpoint_url: "http://account-lookup-service-admin.{{ env_domain }}.internal:30000"
+        endpoint_url: "http://account-lookup-service-admin.{{ env_domain }}.internal"
         inbound_mediation:
           - apis/fspiop/add_accept_header.xml
       register: api

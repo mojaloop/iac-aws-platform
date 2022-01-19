@@ -562,7 +562,7 @@ Create Gateway Cluster:
       export testCasesZipUrl=https://github.com/mojaloop/testing-toolkit-test-cases/archive/v${helm_mojaloop_version}.zip;
       export provisioningTestCasesPathInZip=testing-toolkit-test-cases-${helm_mojaloop_version}/collections/hub/golden_path;
       export goldenPathTestCasesPathInZip=testing-toolkit-test-cases-${helm_mojaloop_version}/collections/hub/provisioning;
-      export ttkBackendUrl=http://ttkbackend.${private_subdomain}:30000;
+      export ttkBackendUrl=http://ttkbackend.${private_subdomain};
     - |
       echo "Downloading the test collection...";
       cd /opt/mojaloop-testing-toolkit;

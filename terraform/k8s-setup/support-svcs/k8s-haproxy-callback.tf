@@ -1,8 +1,8 @@
 resource "helm_release" "haproxy-callback" {
   name       = "haproxy-callback"
-  #repository = "https://haproxytech.github.io/helm-charts"
-  chart      = "./haproxy-1.7.2.tgz"
-  #version    = var.helm_finance_portal_version
+  repository = "https://mojaloop.github.io/haproxy-helm-charts/repo"
+  chart      = "haproxy"
+  version    = var.helm_haproxy_version
   namespace  = "wso2"
   timeout    = 150
   create_namespace = true
