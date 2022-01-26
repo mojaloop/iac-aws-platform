@@ -29,7 +29,7 @@ resource "helm_release" "mysql" {
   }
   set {
     name  = "persistence.storageClass"
-    value = "slow"
+    value = var.mysql_storage_class_name
     type  = "string"
   }
 
@@ -43,7 +43,6 @@ resource "helm_release" "mysql" {
     value = "8Gi"
     type  = "string"
   }
-  depends_on = [kubernetes_storage_class.wso2]
 }
 
 resource "kubernetes_job" "mysql_int" {
@@ -58,7 +57,7 @@ resource "kubernetes_job" "mysql_int" {
         container {
           name    = "mysql-init-int"
           image   = "mysql:5.7"
-          command = ["/bin/bash", "-c", "apt update && apt install git -y && git clone -b ${var.wso2_mysql_repo_version} https://github.com/mojaloop/wso2-mysql.git && cd wso2-mysql && ./mysql-init.sh -h ${var.db_host} -u root -p ${var.db_root_password} -l int -r 260 -d y"]
+          command = ["/bin/bash", "-c", "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29 && apt update && apt install git -y && git clone -b ${var.wso2_mysql_repo_version} https://github.com/mojaloop/wso2-mysql.git && cd wso2-mysql && ./mysql-init.sh -h ${var.db_host} -u root -p ${var.db_root_password} -l int -r 260 -d y"]
         }
         restart_policy = "Never"
       }
@@ -81,7 +80,7 @@ resource "kubernetes_job" "mysql_ext" {
         container {
           name    = "mysql-init-ext"
           image   = "mysql:5.7"
-          command = ["/bin/bash", "-c", "apt update && apt install git -y && git clone -b ${var.wso2_mysql_repo_version} https://github.com/mojaloop/wso2-mysql.git && cd wso2-mysql && ./mysql-init.sh -h ${var.db_host} -u root -p ${var.db_root_password} -l ext -r 260 -d y"]
+          command = ["/bin/bash", "-c", "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29 && apt update && apt install git -y && git clone -b ${var.wso2_mysql_repo_version} https://github.com/mojaloop/wso2-mysql.git && cd wso2-mysql && ./mysql-init.sh -h ${var.db_host} -u root -p ${var.db_root_password} -l ext -r 260 -d y"]
         }
         restart_policy = "Never"
       }
