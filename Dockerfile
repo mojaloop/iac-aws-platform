@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     mysql-client \
     golang-go \
+    make \
     && rm -rf /var/lib/apt/lists/*
 
 # Install tools and configure the environment
@@ -59,6 +60,6 @@ RUN pip3 install "openshift>=0.6" "setuptools>=40.3.0" \
 
 RUN pip3 install "openshift>=0.6" "setuptools>=40.3.0"
 
-RUN go install github.com/jrhouston/tfk8s@latest
+RUN git clone https://github.com/jrhouston/tfk8s.git && cd tfk8s && export PATH=$PATH:$(go env GOPATH)/bin && make install
 
 COPY . iac-run-dir
