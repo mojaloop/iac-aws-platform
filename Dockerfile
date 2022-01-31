@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install -y \
     wget \
     zip \
     mysql-client \
-    golang-go \
     make \
     && rm -rf /var/lib/apt/lists/*
 
@@ -60,6 +59,9 @@ RUN pip3 install "openshift>=0.6" "setuptools>=40.3.0" \
 
 RUN pip3 install "openshift>=0.6" "setuptools>=40.3.0"
 
-RUN git clone https://github.com/jrhouston/tfk8s.git && cd tfk8s && export PATH=$PATH:$(go env GOPATH)/bin && make install
+RUN wget -q -O- https://dl.google.com/go/go1.13.9.linux-amd64.tar.gz | tar xz && \
+    mv go /usr/local/go-1.13 && \
+    export GOROOT=/usr/local/go-1.13 && export PATH=$GOROOT/bin:$PATH && \
+    git clone https://github.com/jrhouston/tfk8s.git && cd tfk8s && export PATH=$PATH:$(go env GOPATH)/bin && make install
 
 COPY . iac-run-dir
