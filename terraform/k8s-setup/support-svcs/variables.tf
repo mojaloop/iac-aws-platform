@@ -146,3 +146,15 @@ variable "helm_haproxy_version" {
   type        = string
   default     = "1.7.2"
 }
+
+variable "helm_oathkeeper_version"{
+  description = "helm chart version of ory oathkeeper"
+  type        = string
+  default     = "0.21.5"
+}
+
+variable "mcm_secret_path" {
+  description = "vault kv secret path for mcm use"
+  type        = string
+  default     = "secret/mcm"
+}

@@ -86,6 +86,8 @@ locals {
     vault_endpoint    = "http://vault.default.svc.cluster.local:8200"
     pki_base_domain   = data.terraform_remote_state.infrastructure.outputs.public_subdomain
     service_account_name = kubernetes_service_account.vault-auth-mcm.metadata[0].name
+    k8s_auth_path     = vault_auth_backend.kubernetes-gateway.path
+    mcm_kv_secret_path = var.mcm_secret_path
     #tls_secret_name   = var.int_wildcard_cert_sec_name
   }
 }
@@ -138,5 +140,32 @@ resource "vault_kubernetes_auth_backend_role" "kubernetes-mcm" {
   bound_service_account_names      = [kubernetes_service_account.vault-auth-mcm.metadata[0].name]
   bound_service_account_namespaces = [kubernetes_namespace.mcm.metadata[0].name]
   token_ttl                        = 3600
-  token_policies                   = [vault_policy.read-whitelist-addresses-gateway.name]
+  token_policies                   = [vault_policy.mcm-policy.name]
+}
+
+resource "vault_policy" "mcm-policy" {
+  name = "mcm_policy"
+
+  policy = <<EOT
+path "${var.whitelist_secret_name_prefix}*" {
+  capabilities = ["read", "list"]
+}
+
+path "secret/onboarding_*" {
+  capabilities = ["read", "list"]
+}
+
+path "pki-int-ca/*" {
+  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+}
+
+path "pki-root-ca/*" {
+  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+}
+
+path "${var.mcm_secret_path}/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+EOT
 }

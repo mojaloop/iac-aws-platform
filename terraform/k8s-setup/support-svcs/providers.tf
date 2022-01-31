@@ -10,6 +10,10 @@ terraform {
     kubernetes = "~> 2.6"
     tls = "~> 2.0"
     external = "~> 1.2.0"
+    keycloak = {
+      source = "mrparkers/keycloak"
+      version = ">= 2.0.0"
+    }
   }
 }
 provider "external" {
@@ -28,6 +32,14 @@ provider "vault" {
 
 provider "tls" {
   alias = "wso2"
+}
+
+provider "keycloak" {
+  client_id     = "admin-cli"
+  username      = "user"
+  password      = vault_generic_secret.keycloak_pw.data.value
+  initial_login = false
+  url           = "https://keycloak.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
 }
 
 ############################

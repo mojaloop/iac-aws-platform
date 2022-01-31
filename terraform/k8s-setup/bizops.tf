@@ -174,15 +174,6 @@ resource "kubernetes_secret" "wso2-is-admin-creds" {
   depends_on = [helm_release.mojaloop]
 }
 
-resource "helm_release" "bof-crds" {
-  name       = "bof-crds"
-  chart = "./k8s-manifests"
-  namespace  = "mojaloop"
-  timeout    = 300
-  provider = helm.helm-gateway
-  depends_on = [helm_release.mojaloop]
-}
-
 resource "helm_release" "bof-rules" {
   name       = "bof-oathkeeper-rules"
   chart      = "${var.project_root_path}/bof-custom-resources/oathkeeper-rules"

@@ -16,7 +16,7 @@ db:
   schema: mcm
 
 api:
-  url: http://${mcm_public_fqdn}
+  url: https://${mcm_public_fqdn}
   extraTLS:
     rootCert:
       enabled: true
@@ -47,29 +47,25 @@ api:
         url: https://${iskm_private_fqdn}/services/RemoteUserStoreManagerService.RemoteUserStoreManagerServiceHttpsSoap12Endpoint
         user: admin
         pass: ${admin_pw}
-  env:
-    # Name is mandatory- other details are optional. If name is omitted, no environment will be
-    # created before the server starts.
-    name: ${env_name}
-    cn: ${env_cn}
-    o: ${env_o}
-    ou: ${env_ou}
-vault:
-  auth:
-    k8s:
-      enabled: true
-      token: /var/run/secrets/kubernetes.io/serviceaccount/token
-      role: ${k8s_vault_role}
-  endpoint: ${vault_endpoint}
-  mounts:
-    pki: pki-root-ca
-    intermediatePki: pki-int-ca
-    kv: secrets
-  pkiBaseDomain: ${pki_base_domain}
-  signExpiryHours: 43800
-serviceAccountNameOverride: ${service_account_name}
-rbac:
-  enabled: false
+  vault:
+    auth:
+      k8s:
+        enabled: true
+        token: /var/run/secrets/kubernetes.io/serviceaccount/token
+        role: ${k8s_vault_role}
+        mountPoint: ${k8s_auth_path}
+    endpoint: ${vault_endpoint}
+    mounts:
+      pki: pki-root-ca
+      intermediatePki: pki-int-ca
+      kv: ${mcm_kv_secret_path}
+    pkiBaseDomain: ${pki_base_domain}
+    signExpiryHours: 43800
+  serviceAccount:
+    externallyManaged: true
+    serviceAccountNameOverride: ${service_account_name}
+  rbac:
+    enabled: false
 ui:
   oauth:
     enabled: true

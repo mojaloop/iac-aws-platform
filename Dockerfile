@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     zip \
     mysql-client \
+    golang-go \
     && rm -rf /var/lib/apt/lists/*
 
 # Install tools and configure the environment
@@ -57,5 +58,7 @@ RUN pip3 install "openshift>=0.6" "setuptools>=40.3.0" \
      && ansible-galaxy collection install community.kubernetes
 
 RUN pip3 install "openshift>=0.6" "setuptools>=40.3.0"
+
+RUN go install github.com/jrhouston/tfk8s@latest
 
 COPY . iac-run-dir

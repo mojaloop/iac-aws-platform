@@ -41,7 +41,10 @@ global:
   kafka:
     host: ${kafka_host}
     port: 9092
-  mojalooprole: {}
+  rolePermOperator:
+    mojaloopRole: {}
+    mojaloopPermissionExclusion: {}
+    apiSvc: {}
 
 ## Backend API services
 role-assignment-service:
@@ -208,7 +211,6 @@ reporting-hub-bop-positions-ui:
 ## Other services
 security-role-perm-operator-svc:
   enabled: true
-  installCRDs: false
 
 reporting-events-processor-svc:
   enabled: true

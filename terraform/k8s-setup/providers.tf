@@ -76,6 +76,15 @@ data "terraform_remote_state" "support-svcs" {
   }
 }
 
+data "terraform_remote_state" "vault" {
+  backend = "s3"
+  config = {
+    region = var.region
+    bucket = "${var.client}-mojaloop-state"
+    key    = "${var.environment}/terraform-vault.tfstate"
+  }
+}
+
 data "vault_generic_secret" "ws02_admin_password" {
   path = "secret/wso2/adminpw"
 }
