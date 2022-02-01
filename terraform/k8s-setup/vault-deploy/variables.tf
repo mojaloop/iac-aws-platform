@@ -105,8 +105,3 @@ variable "int_wildcard_cert_sec_name" {
   type        = string
   default     = "int-ops-wildcard-tls"
 }
-variable "helm_keycloak_version" {
-  description = "version of keycloak chart"
-  type        = string
-  default     = "6.0.0"
-}
