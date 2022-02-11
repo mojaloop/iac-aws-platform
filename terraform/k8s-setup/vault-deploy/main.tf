@@ -1,15 +1,3 @@
-terraform {
-  required_version = ">= 1.0"
-  backend "s3" {
-    key     = "##environment##/terraform-vault.tfstate"
-    encrypt = true
-  }
-  required_providers {
-    helm = "~> 2.3"
-    kubernetes = "~> 2.6"
-  }
-}
-
 resource "kubernetes_storage_class" "ebs" {
   metadata {
     name = "ebs"

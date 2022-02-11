@@ -4,6 +4,9 @@ terraform {
     key     = "##environment##/terraform.tfstate"
     encrypt = true
   }
+  required_providers {
+    aws = "~> 3.74"
+  }
 }
 
 provider "aws" {
