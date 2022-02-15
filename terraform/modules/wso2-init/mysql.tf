@@ -29,7 +29,7 @@ resource "helm_release" "mysql" {
   }
   set {
     name  = "persistence.storageClass"
-    value = var.mysql_storage_class_name
+    value = "slow"
     type  = "string"
   }
 
@@ -43,6 +43,7 @@ resource "helm_release" "mysql" {
     value = "8Gi"
     type  = "string"
   }
+  depends_on = [kubernetes_storage_class.wso2]
 }
 
 resource "kubernetes_job" "mysql_int" {
