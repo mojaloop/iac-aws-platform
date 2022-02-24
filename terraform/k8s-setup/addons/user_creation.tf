@@ -2,13 +2,8 @@ locals {
   account_details = {
     "hub_operator" = {
       sim_name              = "hub_operator"
-      sim_password          = "hub_operator123"
+      sim_password          = vault_generic_secret.hub_operator_password.data.value
       subscribe_to_api_list = "CentralLedgerAdminAPI,CentralSettlementsAPI,ALSAdminAPI,FSPIOP"
-    }
-    "noresponsepayeefsp" = {
-      sim_name              = "noresponsepayeefsp"
-      sim_password          = "noresponsepayeefsp123"
-      subscribe_to_api_list = "FSPIOP"
     }
   }
 }
@@ -22,4 +17,17 @@ module "provision_accounts_to_wso2" {
   test_user_details = local.account_details
   admin_user        = "admin"
   admin_password    = local.wso2_admin_pw
+}
+
+resource "random_password" "hub_operator_password" {
+  length = 16
+  special = false
+}
+
+resource "vault_generic_secret" "hub_operator_password" {
+  path = "secret/mojaloop/huboperatorpw"
+
+  data_json = jsonencode({
+    "value" = random_password.hub_operator_password.result
+  })
 }

@@ -13,11 +13,6 @@ variable "environment" {
   type = string
 }
 
-variable "mysql_version" {
-  description = "Version of MySQL to deploy"
-  type = string
-}
-
 variable "wso2_mysql_repo_version" {
   description = "https://github.com/mojaloop/wso2-mysql.git repo tag or branch name"
   type = string
@@ -28,23 +23,8 @@ variable "db_host" {
   type = string
 }
 
-variable "db_name" {
-  description = "MySQL Database name"
-  type = string
-}
-
 variable "db_root_password" {
   description = "Password for DB 'root' user"
-  type = string
-}
-
-variable "db_username" {
-  description = "Username for DB"
-  type = string
-}
-
-variable "db_password" {
-  description = "Password for DB user"
   type = string
 }
 
@@ -53,9 +33,9 @@ variable "helm_efs_provisioner_version" {
   type = string
 }
 
-variable "efs_subnet_id" {
-  description = "Subnet ID to use with EFS"
-  type = string
+variable "efs_subnet_ids" {
+  description = "Subnet IDs to use with EFS"
+  type = list(string)
 }
 
 variable "efs_security_groups"  {
@@ -67,12 +47,6 @@ variable "efs_storage_class_name" {
   description = "storage class name for efs"
   type = string
   default = "efs"
-}
-
-variable "mysql_storage_class_name" {
-  description = "storage class name for mysql"
-  type = string
-  default = "ebs"
 }
 
 variable "namespace" {

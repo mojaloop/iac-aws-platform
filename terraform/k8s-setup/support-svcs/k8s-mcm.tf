@@ -1,15 +1,9 @@
-resource "helm_release" "mysql-mcm" {
-  name       = "mysql-mcm"
-  repository = "https://charts.helm.sh/stable"
-  chart      = "mysql"
-  version    = var.helm_mysql_mcm_version
-  namespace  = "mysql-mcm"
-  create_namespace = true
-
-  values = [
-    templatefile("${path.module}/templates/values-lab-mcm.yaml.tpl", local.mcm_values)
-  ]
-  provider = helm.helm-gateway
+resource "vault_mount" "root" {
+  type                      = "pki"
+  path                      = "pki-root-ca"
+  default_lease_ttl_seconds = 31556952  # 1 years
+  max_lease_ttl_seconds     = 157680000 # 5 years
+  description               = "Root Certificate Authority"
 }
 
 resource "null_resource" "wait_for_iskm_readiness" {
@@ -31,6 +25,10 @@ module "mcm-iskm-key-secret-gen" {
   depends_on = [null_resource.wait_for_iskm_readiness]
 }
 
+data "vault_generic_secret" "mcm_db_password" {
+  path = "${var.stateful_resources[local.mcm_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/mcm-db"
+}
+
 resource "helm_release" "mcm-connection-manager" {
   name       = "connection-manager"
   repository = "https://modusbox.github.io/helm"
@@ -41,19 +39,8 @@ resource "helm_release" "mcm-connection-manager" {
   timeout    = 500
 
   values = [
-    templatefile("${path.module}/templates/values-lab-mcm.yaml.tpl", local.mcm_values)
+    templatefile("${path.module}/templates/values-mcm.yaml.tpl", local.mcm_values)
   ]
-
-  set {
-    name  = "api.extraTLS.rootCert.stringValue"
-    value = tls_self_signed_cert.ca_cert.cert_pem
-    type  = "string"
-  }
-  set {
-    name  = "api.wso2TokenIssuer.cert.stringValue"
-    value = module.iskm.iskm_cert
-    type  = "string"
-  }
   set {
     name  = "api.oauth.key"
     value = module.mcm-iskm-key-secret-gen.mcm-key
@@ -65,59 +52,49 @@ resource "helm_release" "mcm-connection-manager" {
     type  = "string"
   }
 
+  set {
+    name  = "api.wso2TokenIssuer.cert.stringValue"
+    value = module.iskm.iskm_cert
+    type  = "string"
+  }
+
   provider = helm.helm-gateway
-  depends_on = [helm_release.mysql-mcm]
 }
 
 locals {
+  mcm_resource_index = index(var.stateful_resources.*.resource_name, "mcm-db")
   mcm_values = {
-    password          = vault_generic_secret.mcm_mysql_password.data.value
-    root_password     = vault_generic_secret.mcm_mysql_root_password.data.value
+    db_password       = data.vault_generic_secret.mcm_db_password.data.value
+    db_user           = var.stateful_resources[local.mcm_resource_index].local_resource.mysql_data.user
+    db_schema         = var.stateful_resources[local.mcm_resource_index].local_resource.mysql_data.database_name
+    db_port           = var.stateful_resources[local.mcm_resource_index].logical_service_port
+    db_host           = "${var.stateful_resources[local.mcm_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
     totp_issuer       = var.mcm-totp-issuer
-    mcm_public_fqdn   = "mcm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+    mcm_public_fqdn   = "${var.mcm_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
     iskm_private_fqdn = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
     admin_pw          = vault_generic_secret.wso2_admin_password.data.value
     env_name          = data.terraform_remote_state.infrastructure.outputs.environment
-    env_cn            = "mcm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+    env_cn            = data.terraform_remote_state.infrastructure.outputs.public_subdomain
     env_o             = "Modusbox"
-    env_ou            = "MCM"
-    storage_class_name = var.ebs_storage_class_name
+    env_ou            = "Infra"
+    storage_class_name = var.storage_class_name
     k8s_vault_role    = vault_kubernetes_auth_backend_role.kubernetes-mcm.role_name
     vault_endpoint    = "http://vault.default.svc.cluster.local:8200"
     pki_base_domain   = data.terraform_remote_state.infrastructure.outputs.public_subdomain
     service_account_name = kubernetes_service_account.vault-auth-mcm.metadata[0].name
     k8s_auth_path     = vault_auth_backend.kubernetes-gateway.path
     mcm_kv_secret_path = var.mcm_secret_path
-    #tls_secret_name   = var.int_wildcard_cert_sec_name
+    pki_path          = vault_mount.root.path
+    dfsp_client_cert_bundle = "${var.onboarding_secret_name_prefix}_pm4mls"
+    dfsp_internal_whitelist_secret = "${var.whitelist_secret_name_prefix}_pm4mls"
+    dfsp_external_whitelist_secret = "${var.whitelist_secret_name_prefix}_fsps"
+    pki_client_role = vault_pki_secret_backend_role.role-client-cert.name
+    pki_server_role = vault_pki_secret_backend_role.role-server-cert.name
+    server_cert_secret_name = var.vault-certman-secretname
+    server_cert_secret_namespace = kubernetes_namespace.wso2.metadata[0].name
+    switch_domain        = data.terraform_remote_state.infrastructure.outputs.public_subdomain
   }
 }
-
-resource "random_password" "mcm_mysql_password" {
-  length = 16
-  special = false
-}
-
-resource "vault_generic_secret" "mcm_mysql_password" {
-  path = "secret/mcm/mysqlpassword"
-
-  data_json = jsonencode({
-    "value" = random_password.mcm_mysql_password.result
-  })
-}
-
-resource "random_password" "mcm_mysql_root_password" {
-  length = 16
-  special = false
-}
-
-resource "vault_generic_secret" "mcm_mysql_root_password" {
-  path = "secret/mcm/mysqlrootpassword"
-
-  data_json = jsonencode({
-    "value" = random_password.mcm_mysql_root_password.result
-  })
-}
-
 
 resource "kubernetes_namespace" "mcm" {
   metadata {
@@ -134,6 +111,37 @@ resource "kubernetes_service_account" "vault-auth-mcm" {
   provider                        = kubernetes.k8s-gateway
 }
 
+
+resource "kubernetes_role" "wso2-secret-update" {
+  metadata {
+    name = "wso2-secret-update"
+    namespace = kubernetes_namespace.wso2.metadata[0].name
+  }
+  rule {
+    api_groups = [""]
+    resources  = ["secrets"]
+    verbs      = ["get", "list", "watch", "create", "update", "patch", "delete"]
+  }
+  provider = kubernetes.k8s-gateway
+}
+resource "kubernetes_role_binding" "mcm-wso2-secret-update-binding" {
+  metadata {
+    name      = "mcm-wso2-secret-update-binding"
+    namespace = kubernetes_namespace.wso2.metadata[0].name
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = kubernetes_role.wso2-secret-update.metadata[0].name
+  }
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account.vault-auth-mcm.metadata[0].name
+    namespace = kubernetes_namespace.mcm.metadata[0].name
+  }
+  provider = kubernetes.k8s-gateway
+}
+
 resource "vault_kubernetes_auth_backend_role" "kubernetes-mcm" {
   backend                          = vault_auth_backend.kubernetes-gateway.path
   role_name                        = "kubernetes-mcm-role"
@@ -148,15 +156,11 @@ resource "vault_policy" "mcm-policy" {
 
   policy = <<EOT
 path "${var.whitelist_secret_name_prefix}*" {
-  capabilities = ["read", "list"]
+  capabilities = ["create", "read", "update", "delete", "list"]
 }
 
 path "secret/onboarding_*" {
-  capabilities = ["read", "list"]
-}
-
-path "pki-int-ca/*" {
-  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+  capabilities = ["create", "read", "update", "delete", "list"]
 }
 
 path "pki-root-ca/*" {

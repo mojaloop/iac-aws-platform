@@ -4,57 +4,27 @@ output "sg_id" {
 }
 
 output "internal_load_balancer_dns" {
-  value = module.nlb_int.private_dns
+  value = aws_lb.internal-lb.dns_name
 }
 
 output "external_load_balancer_dns" {
-  value = module.nlb_ext.public_dns
+  value = aws_lb.external-lb.dns_name
 }
 
-output "gateway_k8s_master_nodes_private_ip" {
-  value = module.k8-cluster-gateway.master_nodes_private_ip
+output "k8s_master_nodes_private_ip" {
+  value = module.k8-cluster-main.master_nodes_private_ip
 }
-output "gateway_k8s_master_nodes_private_dns" {
-  value = module.k8-cluster-gateway.master_nodes_private_dns
-}
-
-output "gateway_k8s_worker_nodes_private_ip" {
-  value = module.k8-cluster-gateway.worker_nodes_private_ip
+output "k8s_master_nodes_private_dns" {
+  value = module.k8-cluster-main.master_nodes_private_dns
 }
 
-output "gateway_k8s_worker_nodes_private_dns" {
-  value = module.k8-cluster-gateway.worker_nodes_private_dns
+output "k8s_worker_nodes_private_ip" {
+  value = module.k8-cluster-main.worker_nodes_private_ip
 }
 
-/* output "mcm_fqdn" {
-  description = "FQDN for the public hostname of the Connection Manager service."
-  value       = aws_route53_record.mcmweb-public.fqdn
+output "k8s_worker_nodes_private_dns" {
+  value = module.k8-cluster-main.worker_nodes_private_dns
 }
-
-output "extgw_public_fqdn" {
-  description = "FQDN for the public hostname of the External GW service."
-  value       = aws_route53_record.extgw-public.fqdn
-}
-
-output "intgw_public_fqdn" {
-  description = "FQDN for the public hostname of the Internal GW service."
-  value       = aws_route53_record.intgw-public.fqdn
-}
-
-output "intgw_private_fqdn" {
-  description = "FQDN for the private hostname of the Internal GW service."
-  value       = aws_route53_record.intgw-private.fqdn
-}
-
-output "iskm_public_fqdn" {
-  description = "FQDN for the public hostname of the ISKM service."
-  value       = aws_route53_record.iskm-public.fqdn
-}
-
-output "iskm_private_fqdn" {
-  description = "FQDN for the private hostname of the ISKM service."
-  value       = aws_route53_record.iskm-private.fqdn
-} */
 
 output "interop_switch_private_fqdn" {
   description = "FQDN for the private hostname of the Mojaloop switch."
@@ -82,15 +52,16 @@ output "environment" {
   value       = var.environment
 }
 
- output "finance_portal_fqdn" {
-  description = "FQDN for the private hostname of the Mojaloop switch."
-  value       = join(".", ["finance-portal", trimsuffix(aws_route53_zone.main_private.name, ".")])
+output "perm1" {
+  description = "Name of the environment built"
+  value       = local.worker_kube_ec2_config
 }
-/*output "grafana-services-private-fqdn" {
-  description = "FQDN for the private hostname of grafana in the sup svcs cluster."
-  value       = aws_route53_record.grafana-services-private.fqdn
+output "perm2" {
+  description = "Name of the environment built"
+  value       = local.master_kube_ec2_config
 }
-output "prometheus-services-private-fqdn" {
-  description = "FQDN for the private hostname of prometheus in the sup svcs cluster."
-  value       = aws_route53_record.prometheus-services-private.fqdn
-} */
+
+output "available_zones" {
+  description = "available azs at time of infra build"
+  value       = data.aws_availability_zones.available.names
+}

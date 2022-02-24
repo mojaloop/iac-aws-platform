@@ -99,7 +99,7 @@
 		},
 		{
 			"key": "MCM_ENDPOINT",
-			"value": "https://mcmweb.${LAB_DOMAIN}",
+			"value": "https://${MCM_NAME}.${LAB_DOMAIN}",
 			"enabled": true
 		},
 		{

@@ -170,7 +170,7 @@ secret:
 keto:
   # https://www.ory.sh/keto/docs/reference/configuration
   config:
-    dsn: mysql://user:password@tcp(keto-db:3306)/keto?max_conns=20&max_idle_conns=4
+    dsn: mysql://${keto_db_user}:${keto_db_password}@tcp(${keto_db_host}:3306)/${keto_db_database}?max_conns=20&max_idle_conns=4
     serve:
       read:
         port: 4466

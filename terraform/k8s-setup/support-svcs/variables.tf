@@ -17,14 +17,10 @@ variable "client" {
   description = "Name of client"
   type        = string
 }
-variable "helm_mysql_wso2_version" {
-  description = "Helm chart version to install MySQL used by wso2"
-}
 
-variable "wso2_mysql_database" {
-  description = "MySQL Database name"
+variable "wso2_mysql_repo_version" {
+  description = "MySQL database version to install WSO2 into"
   type        = string
-  default     = "wso2"
 }
 
 variable "wso2_namespace" {
@@ -45,24 +41,9 @@ variable "cert_man_namespace" {
   default     = "cert-manager"
 }
 
-variable "wso2_mysql_host" {
-  description = "MySQL hostname for WSO2"
-  type        = string
-}
-variable "wso2_mysql_repo_version" {
-  description = "MySQL database version to install WSO2 into"
-  type        = string
-}
-
 variable "whitelist_mcm" {
   description = "Enable/disable MCM access"
   default     = []
-}
-
-variable "wso2_mysql_username" {
-  description = "MySQL username"
-  type        = string
-  default     = "wso2"
 }
 
 variable "wso2_email" {
@@ -82,10 +63,10 @@ variable "helm_nginx_version" {
   description = "Nginx version used by the ingress controller"
 }
 
-variable "mcm-name" {
+variable "mcm_name" {
   description = "Hostname of Connection Manager service"
   type        = string
-  default     = "mcmweb"
+  default     = "mcm"
 }
 
 variable "mcm-totp-issuer" {
@@ -97,9 +78,7 @@ variable "mcm-totp-issuer" {
 variable "helm_mcm_connection_manager_version" {
   description = "Helm char version to install MCM"
 }
-variable "helm_mysql_mcm_version" {
-  description = "Chart version for MySQL used by MCM"
-}
+
 
 variable "whitelist_secret_name_prefix" {
   default = "secret/whitelist"
@@ -115,10 +94,10 @@ variable "k8s_api_version" {
   default     = "1.19.2"
 }
 
-variable "ebs_storage_class_name" {
+variable "storage_class_name" {
   description = "storage class name"
   type        = string
-  default     = "ebs"
+  default     = "longhorn"
 }
 
 variable "grafana_slack_notifier_url" {
@@ -138,7 +117,7 @@ variable "cert_man_letsencrypt_cluster_issuer_name" {
 variable "cert_man_vault_cluster_issuer_name" {
   description = "cluster issuer name for vault"
   type        = string
-  default     = "vault-issuer-int"
+  default     = "vault-issuer-root"
 }
 
 variable "helm_haproxy_version" {
@@ -151,4 +130,54 @@ variable "mcm_secret_path" {
   description = "vault kv secret path for mcm use"
   type        = string
   default     = "secret/mcm"
+}
+variable "vault-certman-secretname" {
+  description = "secret name to create for tls offloading via certmanager"
+  type = string
+  default = "tokenextgw-tls-ext"
+}
+
+variable "stateful_resources" {
+  description = "stateful resource config data"
+  type = list(object({
+    resource_name     = string
+    resource_namespace   = string
+    logical_service_port = number
+    logical_service_name = string
+    vault_credential_paths = object({
+      pw_data = object({
+        user_password_path_prefix = string
+        root_password_path_prefix = string
+      })
+    }) 
+    external_service = object({
+      external_endpoint = string
+      external_credentials = string
+    })
+    local_resource = object({
+      resource_helm_repo = string
+      resource_helm_chart = string
+      resource_helm_chart_version = string
+      resource_helm_values_ref = string
+      create_resource_random_password = bool
+      mysql_data = object({
+        root_password = string
+        user = string
+        user_password = string
+        database_name = string
+        storage_size = string
+      })
+      mongodb_data = object({
+        root_password = string
+        user = string
+        user_password = string
+        database_name = string
+        storage_size = string
+      })
+      kafka_data = object({
+        storage_size = string
+      })
+    }) 
+  }))
+  default = []
 }

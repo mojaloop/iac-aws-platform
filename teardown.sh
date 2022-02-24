@@ -66,6 +66,19 @@ else
   echo "terraform-suppsvcs.tfstate not found. Skipping terraform/terraform-suppsvcs.tfstate ..."
 fi
 
+if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-state-setup.tfstate ]; then
+  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/state-setup
+  terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
+  terraform validate
+  #making sure to avoid failure on vault bug
+  terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+  aws s3 rm s3://$BUCKET/$ENVIRONMENT/terraform-state-setup.tfstate
+  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
+  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform-state-setup.tfstate-md5"}}' --return-values ALL_OLD
+else
+  echo "terraform-state-setup.tfstate not found. Skipping terraform/terraform-state-setup.tfstate ..."
+fi
+
 if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-vault.tfstate ]; then
   cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/vault-deploy
   terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl

@@ -1,31 +1,16 @@
-module "k8-cluster-gateway" {
-  name             = "gateway"
+module "k8-cluster-main" {
+  name             = "main"
   source           = "./modules/k8-cluster"
-  kube_master_num  = var.gateway_kube_master_num
-  kube_master_size = var.gateway_kube_master_size
-  kube_worker_num  = var.gateway_kube_worker_num
-  kube_worker_size = var.gateway_kube_worker_size
-  # TODO: get AZ from bootstrap tfstate
-  availability_zone         = "${var.region}a"
-  aws_ami                   = var.use_focal_ubuntu ? module.ubuntu-focal-ami.id : module.ubuntu-bionic-ami.id
-  kubemaster_iam_profile    = module.aws-iam.kube-master-profile
-  kubeworker_iam_profile    = module.aws-iam.kube-worker-profile
   environment               = var.environment
   default_tags              = local.default_tags
-  security_group_ids        = [aws_security_group.internet.id]
-  ssh_key_name              = aws_key_pair.provisioner_key.key_name
-  tenant                     = var.client
-  subnet_id                 = data.terraform_remote_state.tenant.outputs.private_subnet_ids["${var.environment}-wso2"]["id"]
-  kube_master_ebs_optimized = "false"
-  kube_worker_ebs_optimized = "false"
+  tenant                    = var.client
   inventory_file            = var.inventory_file_gateway
-  haproxy_enabled           = false
-  haproxy_size              = var.gw_haproxy_size
-  haproxy_aliases           = var.k8-balancer-gateway-aliases
   route53_private_zone_id   = aws_route53_zone.main_private.zone_id
   route53_public_zone_id    = aws_route53_zone.main_private.zone_id
   route53_private_zone_name = aws_route53_zone.main_private.name
   route53_public_zone_name  = aws_route53_zone.main_private.name
+  worker_kube_ec2_config = local.worker_kube_ec2_config
+  master_kube_ec2_config = local.master_kube_ec2_config
 }
 
 module "ubuntu-bionic-ami" {
@@ -36,4 +21,40 @@ module "ubuntu-bionic-ami" {
 module "ubuntu-focal-ami" {
   source  = "git::https://github.com/mojaloop/iac-shared-modules.git//aws/ami-ubuntu?ref=v1.0.41"
   release = "20.04"
+}
+
+locals {
+  master_node_permutations = {for pair in setproduct(data.aws_availability_zones.available.names, range(var.kube_master_num)) : "${pair[0]}-${pair[1]}" => pair[0]}
+  worker_node_permutations = {for pair in setproduct(data.aws_availability_zones.available.names, range(var.kube_worker_num)) : "${pair[0]}-${pair[1]}" => pair[0]}  
+  
+  master_kube_ec2_config = [
+    for cluster_ref, az in local.master_node_permutations : 
+    {
+      "subnet_id" = data.terraform_remote_state.tenant.outputs.private_subnet_ids["${var.environment}-${az}"]["id"]
+      "availability_zone" = az
+      "ec2_ref" = cluster_ref
+      "aws_ami" = var.use_focal_ubuntu ? module.ubuntu-focal-ami.id : module.ubuntu-bionic-ami.id
+      "ec2_size" = var.kube_master_size
+      "ebs_optimized" = false
+      "security_group_ids" = [aws_security_group.internet.id]
+      "ssh_key_name"       = aws_key_pair.provisioner_key.key_name
+      "iam_profile" = module.aws-iam.kube-master-profile
+      "root_volume_size" = var.kube_master_rootfs_size
+    }
+  ]
+  worker_kube_ec2_config = [
+    for cluster_ref, az in local.worker_node_permutations : 
+    {
+      "subnet_id" = data.terraform_remote_state.tenant.outputs.private_subnet_ids["${var.environment}-${az}"]["id"]
+      "availability_zone" = az
+      "ec2_ref" = cluster_ref
+      "aws_ami" = var.use_focal_ubuntu ? module.ubuntu-focal-ami.id : module.ubuntu-bionic-ami.id
+      "ec2_size" = var.kube_worker_size
+      "ebs_optimized" = false
+      "security_group_ids" = [aws_security_group.internet.id]
+      "ssh_key_name"       = aws_key_pair.provisioner_key.key_name
+      "iam_profile" = module.aws-iam.kube-worker-profile
+      "root_volume_size" = var.kube_worker_rootfs_size
+    }
+  ]
 }

@@ -157,7 +157,7 @@ kratos:
 
   config:
     # dsn: memory
-    dsn: mysql://user:password@tcp(kratos-db:3306)/kratos?max_conns=20&max_idle_conns=4
+    dsn: mysql://${kratos_db_user}:${kratos_db_password}@tcp(${kratos_db_host}:3306)/${kratos_db_database}?max_conns=20&max_idle_conns=4
     courier:
       smtp:
         connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true&legacy_ssl=true
@@ -314,16 +314,15 @@ deployment:
           echo MySQL ok!;
       env:
       - name: DB_HOST
-        value: 'kratos-db'
+        value: '${kratos_db_host}'
       - name: DB_PORT
         value: '3306'
       - name: DB_USER
-        value: 'user'
+        value: '${kratos_db_user}'
       - name: DB_PASSWORD
-        value: 'password'
+        value: '${kratos_db_password}'
       - name: DB_DATABASE
-        value: 'kratos'
-
+        value: '${kratos_db_database}'
   # -- Configuration for tracing providers. Only datadog is currently supported through this block.
   # If you need to use a different tracing provider, please manually set the configuration values
   # via "kratos.config" or via "deployment.extraEnv".

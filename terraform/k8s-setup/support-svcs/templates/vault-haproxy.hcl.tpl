@@ -59,7 +59,7 @@ items:
 
 template {
   contents = <<EOH
-{{- with secret "pki-int-ca/issue/server-cert-role" "common_name=${haproxy_common_name}" -}}
+{{- with secret "${vault_pki_name}/issue/${vault_server_role}" "common_name=${haproxy_common_name}" -}}
 {{ .Data.private_key }}
 {{ .Data.certificate }}
 {{ .Data.issuing_ca }}

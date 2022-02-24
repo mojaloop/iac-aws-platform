@@ -12,51 +12,28 @@ resource "vault_generic_secret" "wso2_admin_password" {
   })
 }
 
-resource "random_password" "wso2_mysql_root_password" {
-  length = 16
-  special = false
+data "vault_generic_secret" "wso2_db_password" {
+  path = "${var.stateful_resources[local.wso2_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/wso2-db"
 }
-
-resource "vault_generic_secret" "wso2_mysql_root_password" {
-  path = "secret/wso2/mysqlrootpw"
-
-  data_json = jsonencode({
-    "value" = random_password.wso2_mysql_root_password.result
-  })
+data "vault_generic_secret" "wso2_root_db_password" {
+  path = "${var.stateful_resources[local.wso2_resource_index].vault_credential_paths.pw_data.root_password_path_prefix}/wso2-db"
 }
-
-resource "random_password" "wso2_mysql_password" {
-  length = 16
-  special = false
+locals {
+  wso2_resource_index = index(var.stateful_resources.*.resource_name, "wso2-db")
 }
-
-resource "vault_generic_secret" "wso2_mysql_password" {
-  path = "secret/wso2/mysqlpw"
-
-  data_json = jsonencode({
-    "value" = random_password.wso2_mysql_password.result
-  })
-}
-
 module "wso2_init" {
   source = "../../modules/wso2-init"
 
   kubeconfig                   = "${var.project_root_path}/admin-gateway.conf"
   namespace                    = kubernetes_namespace.wso2.metadata[0].name
   environment                  = var.environment
-  mysql_version                = var.helm_mysql_wso2_version
   wso2_mysql_repo_version      = var.wso2_mysql_repo_version
-  db_root_password             = vault_generic_secret.wso2_mysql_root_password.data.value
-  db_username                  = var.wso2_mysql_username
-  db_password                  = vault_generic_secret.wso2_mysql_password.data.value
-  db_name                      = var.wso2_mysql_database
-  db_host                      = var.wso2_mysql_host
-  efs_subnet_id                = data.terraform_remote_state.tenant.outputs.private_subnet_ids["${var.environment}-wso2"]["id"]
+  db_root_password             = data.vault_generic_secret.wso2_root_db_password.data.value
+  db_host                      = "${var.stateful_resources[local.wso2_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+  efs_subnet_ids               = [for az in data.terraform_remote_state.infrastructure.outputs.available_zones : data.terraform_remote_state.tenant.outputs.private_subnet_ids["${var.environment}-${az}"]["id"]]
   efs_security_groups          = [data.terraform_remote_state.infrastructure.outputs.sg_id]
   helm_efs_provisioner_version = var.helm_efs_provisioner_version
   region                       = var.region
-  efs_storage_class_name       = "efs"
-  mysql_storage_class_name     = var.ebs_storage_class_name
 
   providers = {
     helm = helm.helm-gateway
@@ -76,8 +53,8 @@ module "iskm" {
   keystore_password  = "wso2carbon"
   public_domain_name = data.terraform_remote_state.tenant.outputs.public_zone_name
   db_user            = "root"
-  db_password        = vault_generic_secret.wso2_mysql_root_password.data.value
-  db_host            = var.wso2_mysql_host
+  db_password        = data.vault_generic_secret.wso2_root_db_password.data.value
+  db_host            = "${var.stateful_resources[local.wso2_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
   contact_email      = var.wso2_email
   iskm_fqdn          = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   intgw_fqdn         = "intgw-mgmt-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
@@ -98,19 +75,18 @@ module "intgw" {
 
   kubeconfig              = "${var.project_root_path}/admin-gateway.conf"
   namespace               = kubernetes_namespace.wso2.metadata[0].name
-  root_certificate        = tls_self_signed_cert.ca_cert.cert_pem
+  root_certificate        = module.wso2_init.root_certificate
   root_private_key        = module.wso2_init.root_private_key
   # TODO: workout where to get keystore and JWS password from
   keystore_password       = "wso2carbon"
   jws_password            = "wso2carbon"
   public_domain_name      = data.terraform_remote_state.infrastructure.outputs.public_subdomain
   db_user                 = "root"
-  db_password             = vault_generic_secret.wso2_mysql_root_password.data.value
-  db_host                 = var.wso2_mysql_host  
+  db_password             = data.vault_generic_secret.wso2_root_db_password.data.value
+  db_host                 = "${var.stateful_resources[local.wso2_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
   contact_email           = var.wso2_email
   iskm_fqdn               = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   wso2_admin_pw           = vault_generic_secret.wso2_admin_password.data.value
-  efs_storage_class_name  = "efs"
   hostname                     = "intgw"
   int_ingress_controller_name  = "nginx"
   
@@ -134,8 +110,8 @@ module "extgw" {
   keystore_password             = "wso2carbon"
   public_domain_name            = data.terraform_remote_state.infrastructure.outputs.public_subdomain
   db_user                       = "root"
-  db_password                   = vault_generic_secret.wso2_mysql_root_password.data.value
-  db_host                       = var.wso2_mysql_host
+  db_password                   = data.vault_generic_secret.wso2_root_db_password.data.value
+  db_host                       = "${var.stateful_resources[local.wso2_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
   contact_email                 = var.wso2_email
   iskm_fqdn                     = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   service_account_name          = kubernetes_service_account.vault-auth-gateway.metadata[0].name
@@ -147,12 +123,12 @@ module "extgw" {
   helm_deployment               = "wso2-is-km"
   wso2_iskm_helm_name           = module.iskm.helm_release_name
   wso2_admin_pw                 = vault_generic_secret.wso2_admin_password.data.value
-  efs_storage_class_name        = "efs"
-  data_ext_issuer_name         = var.cert_man_vault_cluster_issuer_name
+  data_ext_issuer_name         = kubernetes_manifest.vault-issuer-root.manifest.metadata.name
   hostname                     = "extgw"
   ext_ingress_controller_name  = "nginx-ext"
   int_ingress_controller_name  = "nginx"
-
+  vault-certman-secretname     = var.vault-certman-secretname
+  storage_class_name = var.storage_class_name
   providers = {
     helm = helm.helm-gateway
     kubernetes = kubernetes.k8s-gateway

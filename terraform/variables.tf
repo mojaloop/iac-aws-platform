@@ -52,134 +52,46 @@ variable "region" {
   default     = "eu-west-1"
 }
 
-variable "haproxy_size" {
-  description = "Instance size of Kube Master Nodes for mojaloop k8"
-  type        = string
-  default     = "t2.small"
-}
-
-variable "gw_haproxy_size" {
-  description = "Instance size of Kube Master Nodes for mojaloop k8"
-  type        = string
-  default     = "t2.small"
-}
-
-variable "gateway_kube_master_num" {
-  description = "Number of Kubernetes Master Nodes for mojaloop k8"
+variable "kube_master_num" {
+  description = "Number of Kubernetes Master Nodes for mojaloop k8 per az"
   type        = number
-  default     = 3
+  default     = 1
 }
 
-variable "gateway_kube_worker_num" {
-  description = "Number of Kubernetes Worker Nodes for mojaloop k8"
+variable "kube_worker_num" {
+  description = "Number of Kubernetes Worker Nodes for mojaloop k8 per az"
   type        = number
-  default     = 6
+  default     = 2
 }
-variable "gateway_kube_worker_size" {
+variable "kube_worker_size" {
   description = "Instance size of Kubernetes Worker Nodes for mojaloop k8"
   type        = string
   default     = "m5.large"
 }
 
-variable "gateway_kube_master_size" {
+variable "kube_master_size" {
   description = "Instance size of Kube Master Nodes for mojaloop k8"
   type        = string
   default     = "t2.medium"
 }
 
+variable "kube_worker_rootfs_size" {
+  description = "ebs vol size of Kube worker Nodes for mojaloop k8 in Gi"
+  type        = number
+  default     = 300
+}
+
+variable "kube_master_rootfs_size" {
+  description = "ebs vol size of Kube Master Nodes for mojaloop k8 in Gi"
+  type        = number
+  default     = 100
+}
+
+
 variable "inventory_file_gateway" {
   description = "Where to store the generated inventory file for gateway k8 cluster"
   type        = string
   default     = "../kubespray-inventory/hosts-gateway"
-}
-
-variable "k8-balancer-gateway-aliases" {
-  description = "List of gateway services for HAProxy to alias"
-  type        = list(string)
-  default = [
-    "k8-api-gateway-lb",
-    "wso2-api-lb",
-    "k8-api-mojaloop-lb",
-    "interop-switch",
-    "account-lookup-service",
-    "account-lookup-service-admin",
-    "central-event-processor",
-    "central-kms",
-    "central-ledger-admin-transfer",
-    "central-ledger-timeout",
-    "central-ledger-transfer-fulfil",
-    "central-ledger-transfer-get",
-    "central-ledger-transfer-position",
-    "central-ledger-transfer-prepare",
-    "central-ledger",
-    "central-settlement",
-    "email-notifier",
-    "ml-api-adapter-notification",
-    "ml-api-adapter",
-    "quoting-service",
-    "moja-simulator",
-    "finance-portal",
-    "finance-portal-v2",
-    "ttkbackend",
-    "ttkfrontend",
-    "mojaloop-reporting",
-    "kowl"
-  ]
-}
-
-variable "mcm-name" {
-  description = "Hostname of Connection Manager service"
-  type        = string
-  default     = "mcmweb"
-}
-
-variable "iskm_hostname" {
-  description = "Hostname to use with ISKM service"
-  type        = string
-  default     = "iskm"
-}
-
-variable "intgw_hostname" {
-  description = "Hostname to use with WSO2 Internal gateway service"
-  type        = string
-  default     = "intgw"
-}
-
-variable "extgw_hostname" {
-  description = "Hostname to use with WSO2 External gateway service"
-  type        = string
-  default     = "extgw"
-}
-
-variable "finance-portal-name" {
-  description = "Hostname of Connection Manager service"
-  type        = string
-  default     = "finance-portal"
-}
-variable "prometheus-services-name" {
-  description = "Hostname to use with prometheus in support services"
-  type        = string
-  default     = "prometheus-services"
-}
-variable "grafana-services-name" {
-  description = "Hostname to use with grafana in support services"
-  type        = string
-  default     = "grafana"
-}
-variable "kibana-services-name" {
-  description = "Hostname to use with kibana in support services"
-  type        = string
-  default     = "kibana"
-}
-variable "elasticsearch-services-name" {
-  description = "Hostname to use with elasticsearch"
-  type        = string
-  default     = "elasticsearch"
-}
-variable "apm-services-name" {
-  description = "Hostname to use with apm"
-  type        = string
-  default     = "apm"
 }
 
 variable "custom_tags" {

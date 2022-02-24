@@ -32,7 +32,7 @@ resource "kubernetes_role_binding" "nginx-ext-cm-all-binding" {
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "Role"
-    name      = "nginx-ext-cm-all"
+    name      = kubernetes_role.nginx-ext-cm-all.metadata[0].name
   }
   subject {
     kind      = "ServiceAccount"
@@ -112,7 +112,7 @@ path "secret/onboarding_*" {
   capabilities = ["read", "list"]
 }
 
-path "pki-int-ca/*" {
+path "pki-root-ca/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 EOT
@@ -173,7 +173,7 @@ resource "kubernetes_secret" "certman-issuer-secret" {
   provider = kubernetes.k8s-gateway
 } */
 
-resource "kubernetes_manifest" "vault-issuer-int" {
+resource "kubernetes_manifest" "vault-issuer-root" {
   manifest = {
     apiVersion = "cert-manager.io/v1"
     kind       = "ClusterIssuer"
@@ -185,7 +185,7 @@ resource "kubernetes_manifest" "vault-issuer-int" {
     spec = {
       vault = {
         server = "http://vault.default.svc.cluster.local:8200"
-        path = "pki-int-ca/sign/server-cert-role"
+        path = "pki-root-ca/sign/${vault_pki_secret_backend_role.role-server-cert.name}"
         auth = {
           appRole = {
             path = "approle"
@@ -210,53 +210,8 @@ resource "kubernetes_manifest" "vault-issuer-int" {
   provider = kubernetes.k8s-gateway
 }
 
-
-resource "vault_mount" "pki_int" {
-  type                      = "pki"
-  path                      = "pki-int-ca"
-  default_lease_ttl_seconds = 63072000 # 2 years
-  max_lease_ttl_seconds     = 63072000 # 2 years
-  description               = "Intermediate Authority for ${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
-}
-
-resource "vault_pki_secret_backend_intermediate_cert_request" "intermediate" {
-  depends_on = [vault_mount.pki_int]
-
-  backend            = vault_mount.pki_int.path
-  type               = "internal"
-  common_name        = "${data.terraform_remote_state.infrastructure.outputs.private_subdomain} Intermediate CA"
-  format             = "pem"
-  private_key_format = "der"
-  key_type           = "rsa"
-  key_bits           = "2048"
-}
-
-resource "vault_pki_secret_backend_root_sign_intermediate" "intermediate" {
-  depends_on = [vault_pki_secret_backend_intermediate_cert_request.intermediate, vault_pki_secret_backend_config_ca.ca_config]
-  backend    = vault_mount.root.path
-
-  csr                  = vault_pki_secret_backend_intermediate_cert_request.intermediate.csr
-  common_name          = "${data.terraform_remote_state.infrastructure.outputs.private_subdomain} Intermediate CA"
-  exclude_cn_from_sans = true
-  ou                   = "Infrastructure Team"
-  organization         = "ModusBox"
-  ttl                  = 252288000 #8 years
-
-}
-resource "local_file" "signed_intermediate" {
-  sensitive_content = vault_pki_secret_backend_root_sign_intermediate.intermediate.certificate
-  filename          = "${path.root}/output/int_ca/int_cert.pem"
-  file_permission   = "0400"
-}
-
-resource "vault_pki_secret_backend_intermediate_set_signed" "intermediate" {
-  backend = vault_mount.pki_int.path
-
-  certificate = "${vault_pki_secret_backend_root_sign_intermediate.intermediate.certificate}\n${tls_self_signed_cert.ca_cert.cert_pem}"
-}
-
 resource "vault_pki_secret_backend_role" "role-server-cert" {
-  backend            = vault_mount.pki_int.path
+  backend            = vault_mount.root.path
   name               = "server-cert-role"
   allowed_domains    = [trimsuffix(data.terraform_remote_state.infrastructure.outputs.private_subdomain, "."), trimsuffix(data.terraform_remote_state.infrastructure.outputs.public_subdomain, "."), "wso2.svc.cluster.local"]
   allow_subdomains   = true
@@ -268,16 +223,16 @@ resource "vault_pki_secret_backend_role" "role-server-cert" {
   client_flag        = false
   ou                 = ["Infrastructure Team"]
   organization       = ["ModusBox"]
-  key_bits           = 2048
+  key_bits           = 4096
   # 2 years
-  max_ttl  = 63113904
-  ttl      = 63113904
+  max_ttl  = 2592000
+  ttl      = 2592000
   no_store = true
   require_cn = false
 }
 
 resource "vault_pki_secret_backend_role" "role-client-cert" {
-  backend            = vault_mount.pki_int.path
+  backend            = vault_mount.root.path
   name               = "client-cert-role"
   allowed_domains    = [data.terraform_remote_state.infrastructure.outputs.private_subdomain, trimsuffix(data.terraform_remote_state.infrastructure.outputs.public_subdomain, ".")]
   allow_subdomains   = true
@@ -292,8 +247,17 @@ resource "vault_pki_secret_backend_role" "role-client-cert" {
   organization       = ["ModusBox"]
   key_bits           = 4096
   # 2 years
-  max_ttl  = 63113904
-  ttl      = 63113904
+  max_ttl  = 2592000
+  ttl      = 2592000
   no_store = true
   require_cn = false
+}
+
+resource "kubectl_manifest" "vault-tls-cert" {
+    yaml_body = templatefile("${path.module}/templates/vault-cert.yaml.tpl", {
+      domain_name = "extgw-data.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      secret_name = var.vault-certman-secretname
+      issuer_name = kubernetes_manifest.vault-issuer-root.manifest.metadata.name})
+    override_namespace = kubernetes_namespace.wso2.metadata[0].name
+    provider = kubectl.k8s-gateway
 }

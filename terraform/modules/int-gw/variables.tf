@@ -78,13 +78,14 @@ variable "wso2_admin_pw" {
   type = string
 }
 
-variable "efs_storage_class_name" {
-  description = "storage class name for efs"
-  type = string
-  default = "efs"
-}
 variable "int_ingress_controller_name" {
   description = "ingress controller ref"
   type = string
   default = "nginx"
+}
+
+variable "storage_class_name" {
+  description = "storage class name"
+  type        = string
+  default     = "longhorn"
 }

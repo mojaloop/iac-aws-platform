@@ -9,8 +9,6 @@ ${list_master}
 [kube-node]
 ${list_node}
 
-[gluster]
-${list_node}
 
 [etcd]
 ${list_master}

@@ -47,6 +47,7 @@ resource "local_file" "gp_postman_environment_file" {
     ACCOUNT_ORACLE_ADMIN_API_ENDPOINT  = "http://${data.terraform_remote_state.k8s-base.outputs.mfi-account-oracle-fqdn}/admin-api",
     PM4ML_DOMAIN                       = "${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}",
     MOJALOOP_RELEASE                   = var.helm_mojaloop_release_name
+    MCM_NAME                           = var.mcm_name
   })
   filename   = "${path.root}/sim_tests/Lab.postman_environment.json"
   depends_on = [module.provision_accounts_to_wso2]

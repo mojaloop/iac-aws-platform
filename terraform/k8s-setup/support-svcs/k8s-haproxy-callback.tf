@@ -15,7 +15,7 @@ resource "helm_release" "haproxy-callback" {
     })
   ]
   provider = helm.helm-gateway
-  depends_on = [kubernetes_config_map.vault-haproxy]
+  depends_on = [kubernetes_config_map.vault-haproxy, helm_release.mcm-connection-manager]
 }
 
 resource "kubernetes_config_map" "vault-haproxy" {
@@ -28,15 +28,17 @@ resource "kubernetes_config_map" "vault-haproxy" {
     "config.hcl" = templatefile("${path.module}/templates/vault-haproxy.hcl.tpl", {
       vault_role_name               = vault_kubernetes_auth_backend_role.kubernetes-gateway.role_name
       vault_secret_file_name        = "haproxy.conf"
-      vault_secret_name             = "secret/onboarding_pm4mls"
+      vault_secret_name             = "${var.onboarding_secret_name_prefix}_pm4mls"
       vault_k8sauth_backend         = vault_auth_backend.kubernetes-gateway.path
       haproxy_common_name           = "haproxy-callback.wso2.svc.cluster.local"
       k8s_version                   = var.k8s_api_version
+      vault_server_role             = vault_pki_secret_backend_role.role-server-cert.name
+      vault_pki_name                = vault_mount.root.path
     })
     "config-init.hcl" = templatefile("${path.module}/templates/vault-haproxy-init.hcl.tpl", {
       vault_role_name               = vault_kubernetes_auth_backend_role.kubernetes-gateway.role_name
       vault_secret_file_name        = "haproxy.conf"
-      vault_secret_name             = "secret/onboarding_pm4mls"
+      vault_secret_name             = "${var.onboarding_secret_name_prefix}_pm4mls"
       vault_k8sauth_backend         = vault_auth_backend.kubernetes-gateway.path
     })
   }

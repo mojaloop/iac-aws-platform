@@ -1,3 +1,0 @@
-domain_name: domain.com
-issuer_name: letsencrypt
-secret_name: wildcard-int-tls

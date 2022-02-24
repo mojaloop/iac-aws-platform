@@ -14,7 +14,7 @@ locals {
     vault_pm4ml_wl_secret_name = var.vault_pm4ml_wl_secret_name
     vault_pm4ml_wl_secret_file_name = var.vault_pm4ml_wl_secret_file_name
     wso2_admin_pw = var.wso2_admin_pw
-
+    storage_class_name = var.storage_class_name
     mgmt_int_host = "${var.hostname}-mgmt-int.${var.public_domain_name}"
     data_int_host = "${var.hostname}-data-int.${var.public_domain_name}"
     mgmt_ext_host = "${var.hostname}-mgmt.${var.public_domain_name}"
@@ -26,6 +26,7 @@ locals {
     data_ext_issuer_name       = var.data_ext_issuer_name
     ext_ingress_controller_name = var.ext_ingress_controller_name
     int_ingress_controller_name = var.int_ingress_controller_name
+    vault-certman-secretname = var.vault-certman-secretname
   }
 }
 
@@ -38,7 +39,7 @@ resource "helm_release" "app" {
   timeout       = 500
   force_update  = true
   create_namespace = true
-  reuse_values  = true
+  reuse_values  = false
   values = [
     templatefile("${path.module}/helm/values.yaml", local.env_values),
     templatefile("${path.module}/templates/env-values.yaml.tpl", local.env_values),
@@ -67,11 +68,6 @@ resource "helm_release" "app" {
   set {
     name  = "externalServiceAccount.serviceAccountName"
     value = var.service_account_name
-    type  = "string"
-  }
-  set {
-    name  = "persistentVolume.storageClass"
-    value = var.efs_storage_class_name
     type  = "string"
   }
 }

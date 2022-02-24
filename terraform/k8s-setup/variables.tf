@@ -1,7 +1,3 @@
-variable "helm_mysql_mcm_version" {
-  description = "Chart version for MySQL used by MCM"
-}
-
 variable "region" {
   description = "AWS region"
 }
@@ -25,10 +21,6 @@ variable "environment" {
   type        = string
 }
 
-variable "helm_mcm_connection_manager_version" {
-  description = "Helm char version to install MCM"
-}
-
 variable "helm_mojaloop_version" {
   description = "Mojaloop version to install via Helm"
 }
@@ -40,22 +32,6 @@ variable "helm_mojaloop_release_name" {
 
 variable "project_root_path" {
   description = "Root path for IaC project"
-}
-
-variable "helm_apm_version" {
-  description = "apm chart version to install via Helm"
-}
-
-variable "helm_fluentd_version" {
-  description = "fluentd-elasticsearch chart version to install via Helm"
-}
-
-variable "helm_elasticsearch_version" {
-  description = "elasticsearch chart version to install via Helm"
-}
-
-variable "helm_kibana_version" {
-  description = "kibana chart version to install via Helm"
 }
 
 variable "helm_prometheus_version" {
@@ -106,10 +82,10 @@ variable "private_registry_pw" {
   default     = "override this for private image repo usage"
 }
 
-variable "mcm-name" {
+variable "mcm_name" {
   description = "Hostname of Connection Manager service"
   type        = string
-  default     = "mcmweb"
+  default     = "mcm"
 }
 
 variable "mcm-totp-issuer" {
@@ -307,11 +283,56 @@ variable "cert_man_letsencrypt_cluster_issuer_name" {
 variable "cert_man_vault_cluster_issuer_name" {
   description = "cluster issuer name for vault"
   type        = string
-  default     = "vault-issuer-int"
+  default     = "vault-issuer-root"
 }
 
-variable "ebs_storage_class_name" {
+variable "storage_class_name" {
   description = "storage class name"
   type        = string
-  default     = "ebs"
+  default     = "longhorn"
+}
+
+variable "stateful_resources" {
+  description = "stateful resource config data"
+  type = list(object({
+    resource_name     = string
+    resource_namespace   = string
+    logical_service_port = number
+    logical_service_name = string
+    vault_credential_paths = object({
+      pw_data = object({
+        user_password_path_prefix = string
+        root_password_path_prefix = string
+      })
+    }) 
+    external_service = object({
+      external_endpoint = string
+      external_credentials = string
+    })
+    local_resource = object({
+      resource_helm_repo = string
+      resource_helm_chart = string
+      resource_helm_chart_version = string
+      resource_helm_values_ref = string
+      create_resource_random_password = bool
+      mysql_data = object({
+        root_password = string
+        user = string
+        user_password = string
+        database_name = string
+        storage_size = string
+      })
+      mongodb_data = object({
+        root_password = string
+        user = string
+        user_password = string
+        database_name = string
+        storage_size = string
+      })
+      kafka_data = object({
+        storage_size = string
+      })
+    }) 
+  }))
+  default = []
 }

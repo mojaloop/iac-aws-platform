@@ -108,12 +108,6 @@ variable "wso2_admin_pw" {
   type = string
 }
 
-variable "efs_storage_class_name" {
-  description = "storage class name for efs"
-  type = string
-  default = "efs"
-}
-
 variable "wso2_iskm_helm_name" {
   description = "placeholder to force dependency"
   type = string
@@ -127,10 +121,20 @@ variable "ext_ingress_controller_name" {
 variable "data_ext_issuer_name" {
   description = "cert man issuer name for data extgw"
   type = string
-  default = "vault-issuer-int"
+  default = "vault-issuer-root"
 }
 variable "int_ingress_controller_name" {
   description = "int_ingress_controller_name"
   type = string
   default = "nginx"
+}
+variable "vault-certman-secretname" {
+  description = "secret name to create for tls offloading via certmanager"
+  type = string
+  default = "tokenextgw-tls-ext"
+}
+variable "storage_class_name" {
+  description = "storage class name"
+  type        = string
+  default     = "longhorn"
 }

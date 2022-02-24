@@ -1,8 +1,10 @@
-module "nlb_ext" {
-  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=v2.0.0"
+/* module "nlb_ext" {
+  for_each = {for i, val in data.aws_availability_zones.available.names: i => val}
+  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=v2.0.1"
   vpc_id = data.aws_vpc.selected.id
   internal_lb = false
-  prefix = "ext-${var.client}-${var.environment}"
+  enable_cross_zone_load_balancing = true
+  prefix = "ext-${var.client}-${var.environment}-${each.value}"
   preserve_client_ip = true
   proxy_protocol = true
   nlb_listeners = [
@@ -30,15 +32,17 @@ module "nlb_ext" {
     }
 
   ]
-  instance_ids = module.k8-cluster-gateway.worker_nodes_id
-  subnet_id    = data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-gateway"]["id"]
+  instance_ids = [for worker in module.k8-cluster-main.worker_nodes : worker.id if worker.availability_zone == each.value]
+  subnet_id    = data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-${each.value}"]["id"]
 }
 
 module "nlb_int" {
-  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=v2.0.0"
+  for_each = {for i, val in data.aws_availability_zones.available.names: i => val}
+  source = "git::https://github.com/mojaloop/iac-shared-modules//aws/nlb?ref=v2.0.1"
   vpc_id = data.aws_vpc.selected.id
   internal_lb = true
-  prefix = "int-${var.client}-${var.environment}"
+  enable_cross_zone_load_balancing = true
+  prefix = "int-${var.client}-${var.environment}-${each.value}"
   preserve_client_ip = false  
   proxy_protocol = false 
   nlb_listeners = [
@@ -66,6 +70,6 @@ module "nlb_int" {
     }
 
   ]
-  instance_ids = module.k8-cluster-gateway.worker_nodes_id
-  subnet_id    = data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-gateway"]["id"]
-}
+  instance_ids = [for worker in module.k8-cluster-main.worker_nodes : worker.id if worker.availability_zone == each.value]
+  subnet_id    = data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-${each.value}"]["id"]
+} */

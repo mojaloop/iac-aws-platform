@@ -13,78 +13,40 @@ resource "kubernetes_secret" "certmanager-route53-credentials" {
   provider = kubernetes.k8s-gateway
   depends_on = [helm_release.cert-manager]
 }
-resource "helm_release" "issuer-crds" {
-  name       = "issuer-crds"
-  chart = "./cluster-issuer"
-  namespace  = var.cert_man_namespace
-  timeout    = 300
-  provider = helm.helm-gateway
-  set {
-    name  = "letsencrypt.external_dns_iam_access_key"
-    value = aws_iam_access_key.route53-external-dns.id
-    type  = "string"
-  }
-  set {
-    name  = "letsencrypt.region"
-    value = var.region
-    type  = "string"
-  }
-  set {
-    name  = "letsencrypt.domain"
-    value = data.terraform_remote_state.infrastructure.outputs.public_subdomain
-    type  = "string"
-  }
-  set {
-    name  = "letsencrypt.letsencrypt_server"
-    value = var.letsencrypt_server == "production" ? "https://acme-v02.api.letsencrypt.org/directory" : "https://acme-staging-v02.api.letsencrypt.org/directory"
-    type  = "string"
-  }
-  set {
-    name  = "letsencrypt.letsencrypt_email"
-    value = var.wso2_email
-    type  = "string"
-  }
-  set {
-    name  = "letsencrypt.secret_name"
-    value = kubernetes_secret.certmanager-route53-credentials.metadata[0].name
-    type  = "string"
-  }
-  set {
-    name  = "letsencrypt.issuer_name"
-    value = var.cert_man_letsencrypt_cluster_issuer_name
-    type  = "string"
-  }
-  depends_on = [helm_release.cert-manager]
+
+resource "kubectl_manifest" "lets-encrypt-issuer" {
+    yaml_body = templatefile("${path.module}/templates/lets-cluster-issuer.yaml.tpl", {
+      external_dns_iam_access_key = aws_iam_access_key.route53-external-dns.id
+      region = var.region
+      domain = data.terraform_remote_state.infrastructure.outputs.public_subdomain
+      letsencrypt_server = var.letsencrypt_server == "production" ? "https://acme-v02.api.letsencrypt.org/directory" : "https://acme-staging-v02.api.letsencrypt.org/directory"
+      letsencrypt_email = var.wso2_email
+      secret_name = kubernetes_secret.certmanager-route53-credentials.metadata[0].name
+      issuer_name = var.cert_man_letsencrypt_cluster_issuer_name
+    })
+    override_namespace = var.cert_man_namespace
+    provider = kubectl.k8s-gateway
+    depends_on = [helm_release.cert-manager]
 }
 
-resource "time_sleep" "wait_90_seconds" {
-  depends_on = [helm_release.issuer-crds]
+
+resource "kubectl_manifest" "lets-encrypt-wildcard-cert" {
+    yaml_body = templatefile("${path.module}/templates/lets-wildcard-cert.yaml.tpl", {
+      domain_name = data.terraform_remote_state.infrastructure.outputs.public_subdomain
+      secret_name = var.int_wildcard_cert_sec_name
+      issuer_name = var.cert_man_letsencrypt_cluster_issuer_name})
+    override_namespace = "default"
+    provider = kubectl.k8s-gateway
+    depends_on = [time_sleep.wait_90_seconds-issuer]
+}
+
+resource "time_sleep" "wait_90_seconds-issuer" {
+  depends_on = [kubectl_manifest.lets-encrypt-issuer]
   create_duration = "90s"
   destroy_duration = "90s"
 }
-
-# Create a secret to store the aws secret key which is passed to the clusterissuer below
-resource "helm_release" "common-cert-crds" {
-  name       = "common-cert-crds"
-  chart = "./wildcard-cert"
-  namespace  = "default"
-  timeout    = 300
-  provider = helm.helm-gateway
-  
-  set {
-    name  = "domain_name"
-    value = data.terraform_remote_state.infrastructure.outputs.public_subdomain
-    type  = "string"
-  }
-  set {
-    name  = "issuer_name"
-    value = var.cert_man_letsencrypt_cluster_issuer_name
-    type  = "string"
-  }
-  set {
-    name  = "secret_name"
-    value = var.int_wildcard_cert_sec_name
-    type  = "string"
-  }
-  depends_on = [helm_release.issuer-crds]
+resource "time_sleep" "wait_90_seconds-cert" {
+  depends_on = [kubectl_manifest.lets-encrypt-wildcard-cert]
+  create_duration = "90s"
+  destroy_duration = "90s"
 }

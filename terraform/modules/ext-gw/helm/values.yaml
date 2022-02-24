@@ -7,7 +7,7 @@ persistentVolume:
   pvEnabled: false
   pvcEnabled: true
   accessMode: ReadWriteMany
-  storageClass: efs
+  storageClass: ${storage_class_name}
   mountToSubPath: repository/deployment/server/synapse-configs
 readinessProbe:
   enabled: true
@@ -56,17 +56,16 @@ ingress:
         kubernetes.io/ingress.class: ${ext_ingress_controller_name}
         nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
         nginx.ingress.kubernetes.io/ssl-passthrough: "false"
-        cert-manager.io/cluster-issuer: ${data_ext_issuer_name}
+        #cert-manager.io/cluster-issuer: ${data_ext_issuer_name}
         nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-        nginx.ingress.kubernetes.io/auth-tls-secret: ${namespace}/tokenextgw-tls-ext
-        
+        nginx.ingress.kubernetes.io/auth-tls-secret: ${namespace}/${vault-certman-secretname}
       hosts:
         - host: ${data_ext_host}
           paths:
             - path: "/"
               servicePort: wso2https
       tls:
-        - secretName: tokenextgw-tls-ext
+        - secretName: ${vault-certman-secretname}
           hosts:
             - ${data_ext_host}
     internal:

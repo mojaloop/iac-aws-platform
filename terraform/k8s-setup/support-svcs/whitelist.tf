@@ -49,7 +49,7 @@ resource "vault_generic_secret" "whitelist_gateway" {
   path = "${var.whitelist_secret_name_prefix}_gateway"
 
   data_json = jsonencode({
-    "k8s-workernodes" = join(",", local.env.gateway_k8s_worker_nodes_private_ip)
+    "k8s-workernodes" = join(",", local.env.k8s_worker_nodes_private_ip)
     "gitlab"          = local.tenant.gitlab_ci_private_ip
     "gitlab_public"   = local.tenant.gitlab_ci_public_ip
   })

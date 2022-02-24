@@ -7,7 +7,7 @@ persistentVolume:
   pvcEnabled: true
   mountToSubPath: repository/deployment/server/synapse-configs
   accessMode: ReadWriteMany
-  storageClass: efs
+  storageClass: ${storage_class_name}
 readinessProbe:
   enabled: true
   initialDelaySeconds: 150

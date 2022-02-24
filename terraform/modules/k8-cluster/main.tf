@@ -1,29 +1,23 @@
 resource "aws_instance" "k8s-master" {
-  ami           = var.aws_ami
-  instance_type = var.kube_master_size
-
-  count         = var.kube_master_num
-  ebs_optimized = var.kube_master_ebs_optimized
-
-  availability_zone = var.availability_zone
-
-  subnet_id = var.subnet_id
-
-  vpc_security_group_ids = var.security_group_ids
-
-  iam_instance_profile = var.kubemaster_iam_profile
-
-  key_name = var.ssh_key_name
+  for_each    = {for kube_ec2_config in var.master_kube_ec2_config : kube_ec2_config.ec2_ref => kube_ec2_config }
+  ami           = each.value.aws_ami
+  instance_type = each.value.ec2_size
+  ebs_optimized = each.value.ebs_optimized
+  availability_zone = each.value.availability_zone
+  subnet_id = each.value.subnet_id
+  vpc_security_group_ids = each.value.security_group_ids
+  iam_instance_profile = each.value.iam_profile
+  key_name = each.value.ssh_key_name
 
   root_block_device {
     volume_type = "gp2"
-    volume_size = var.master_root_volume_size
+    volume_size = each.value.root_volume_size
   }
 
   tags = merge(
     var.default_tags,
     {
-      "Name"                                                            = "${var.environment}-kubernetes-master${count.index}"
+      "Name"                                                            = "${var.environment}-kubernetes-master-${each.key}"
       "kubernetes.io/cluster/${var.tenant}-${var.environment}-mojaloop" = "member"
       "Role"                                                            = "master"
       "k8s-cluster"                                                     = "${var.name}"
@@ -38,32 +32,26 @@ resource "aws_instance" "k8s-master" {
 
 
 resource "aws_instance" "k8s-worker" {
-  ami           = var.aws_ami
-  instance_type = var.kube_worker_size
-
-  count         = var.kube_worker_num
-  ebs_optimized = var.kube_worker_ebs_optimized
-
-  availability_zone = var.availability_zone
-
-  subnet_id = var.subnet_id
-
-  vpc_security_group_ids = var.security_group_ids
-
-  iam_instance_profile = var.kubeworker_iam_profile
-
-  #iam_instance_profile = module.aws-iam.kube-worker-profile
-  key_name  = var.ssh_key_name
+  for_each    = {for kube_ec2_config in var.worker_kube_ec2_config : kube_ec2_config.ec2_ref => kube_ec2_config }
+  ami           = each.value.aws_ami
+  instance_type = each.value.ec2_size
+  ebs_optimized = each.value.ebs_optimized
+  availability_zone = each.value.availability_zone
+  subnet_id = each.value.subnet_id
+  vpc_security_group_ids = each.value.security_group_ids
+  iam_instance_profile = each.value.iam_profile
+  key_name = each.value.ssh_key_name
   user_data = file("${path.module}/user-data/nfs-client.sh")
+
   root_block_device {
     volume_type = "gp2"
-    volume_size = var.master_root_volume_size
+    volume_size = each.value.root_volume_size
   }
 
   tags = merge(
     var.default_tags,
     {
-      "Name"                                                            = "${var.environment}-kubernetes-worker${count.index}"
+      "Name"                                                            = "${var.environment}-kubernetes-worker-${each.key}"
       "kubernetes.io/cluster/${var.tenant}-${var.environment}-mojaloop" = "member"
       "Role"                                                            = "worker"
       "k8s-cluster"                                                     = "${var.name}"
@@ -76,90 +64,45 @@ resource "aws_instance" "k8s-worker" {
   }
 }
 
-resource "aws_volume_attachment" "ebs_att" {
-  device_name = var.ebs_device_name
-  count       = var.kube_worker_num
-  volume_id   = aws_ebs_volume.slowfs[count.index].id
-  instance_id = aws_instance.k8s-worker[count.index].id
-}
-
-
-resource "aws_ebs_volume" "slowfs" {
-  count             = var.kube_worker_num
-  availability_zone = var.availability_zone
-  size              = var.ebs_volume_size
-}
-
-resource "aws_instance" "haproxy" {
-  count         = var.haproxy_enabled ? 1 : 0
-  ami           = var.aws_ami
-  instance_type = var.haproxy_size
-
-  availability_zone = var.availability_zone
-
-  subnet_id = var.subnet_id
-
-  vpc_security_group_ids = var.security_group_ids
-
-  key_name = var.ssh_key_name
-  tags = merge(
-    var.default_tags,
-    {
-      Name = "haproxy-${var.name}"
-    }
-  )
-}
-
 resource "local_file" "inventory_file" {
   content = templatefile("${path.module}/templates/inventory.tpl", {
     connection_strings_master = join(
       "\n",
       formatlist(
         "%s ansible_host=%s",
-        aws_instance.k8s-master.*.private_dns,
-        aws_instance.k8s-master.*.private_ip
+        [for master in aws_instance.k8s-master : master.private_dns],
+        [for master in aws_instance.k8s-master : master.private_ip]
       ),
     )
     connection_strings_node = join(
       "\n",
       formatlist(
         "%s ansible_host=%s",
-        aws_instance.k8s-worker.*.private_dns,
-        aws_instance.k8s-worker.*.private_ip,
+        [for worker in aws_instance.k8s-worker : worker.private_dns],
+        [for worker in aws_instance.k8s-worker : worker.private_ip]
       ),
     )
 
-    list_master   = join("\n", aws_instance.k8s-master.*.private_dns)
-    list_node     = join("\n", aws_instance.k8s-worker.*.private_dns)
+    list_master   = join("\n", [for master in aws_instance.k8s-master : master.private_dns])
+    list_node     = join("\n", [for worker in aws_instance.k8s-worker : worker.private_dns])
   })
   filename   = "${path.root}/${var.inventory_file}"
 }
 
 resource "aws_route53_record" "k8-masters" {
-  count   = var.kube_master_num
+  for_each    = {for kube_ec2_config in var.master_kube_ec2_config : kube_ec2_config.ec2_ref => kube_ec2_config }
   zone_id = var.route53_private_zone_id
-  name    = "k8-master-${var.name}-${count.index}.${var.route53_private_zone_name}"
+  name    = "k8-master-${var.name}-${each.key}.${var.route53_private_zone_name}"
   type    = "A"
   ttl     = "300"
-  records = ["${element(aws_instance.k8s-master.*.private_ip, count.index)}"]
+  records = [aws_instance.k8s-master[each.key].private_ip]
 }
 
 resource "aws_route53_record" "k8-workers" {
-  count = var.kube_worker_num
-
+  for_each    = {for kube_ec2_config in var.worker_kube_ec2_config : kube_ec2_config.ec2_ref => kube_ec2_config }
   zone_id = var.route53_private_zone_id
-  name    = "k8-worker-${var.name}-${count.index}.${var.route53_private_zone_name}"
+  name    = "k8-worker-${var.name}-${each.key}.${var.route53_private_zone_name}"
   type    = "A"
   ttl     = "300"
-  records = [element(aws_instance.k8s-worker.*.private_ip, count.index)]
-}
-
-resource "aws_route53_record" "k8-haproxy" {
-  count   = var.haproxy_enabled ? length(var.haproxy_aliases) : 0
-
-  zone_id = var.route53_private_zone_id
-  name    = "${var.haproxy_aliases[count.index]}.${var.route53_private_zone_name}"
-  type    = "A"
-  ttl     = "300"
-  records = aws_instance.haproxy.*.private_ip
+  records = [aws_instance.k8s-worker[each.key].private_ip]
 }

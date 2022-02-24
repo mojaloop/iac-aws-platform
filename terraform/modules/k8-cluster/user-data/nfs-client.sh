@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 apt update
-apt install -y nfs-client
+apt install -y nfs-common

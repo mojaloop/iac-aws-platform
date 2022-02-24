@@ -1,8 +1,0 @@
-letsencrypt:
-  issuer_name: letsencrypt
-  external_dns_iam_access_key: nil
-  region: nil
-  domain: nil
-  letsencrypt_server: nil
-  letsencrypt_email: nil
-  secret_name: certmanager-route53-credentials

@@ -26,37 +26,12 @@ output "pm4ml_onboarding_secret_name" {
 output "fsp_onboarding_secret_name" {
   value = "${var.onboarding_secret_name_prefix}_fsps"
 }
-output "ca_cert_cert_pem" {
-  value     = tls_self_signed_cert.ca_cert.cert_pem
-  sensitive = true
-}
-
 output "vault_root_path" {
   value = vault_mount.root.path
 }
 
-output "vault_pki_int_path" {
-  value = vault_mount.pki_int.path
-}
-
-
-output "root_signed_intermediate_certificate" {
-  value     = vault_pki_secret_backend_root_sign_intermediate.intermediate.certificate
-  sensitive = true
-}
-
 output "vault_role_client_cert_name" {
   value     = vault_pki_secret_backend_role.role-client-cert.name
-  sensitive = true
-}
-
-output "root_signed_intermediate_ca_cert_chain" {
-  value     = "${vault_pki_secret_backend_root_sign_intermediate.intermediate.certificate}\n${tls_self_signed_cert.ca_cert.cert_pem}"
-  sensitive = true
-}
-
-output "intermediate_key" {
-  value     = "${vault_pki_secret_backend_intermediate_cert_request.intermediate.private_key}"
   sensitive = true
 }
 

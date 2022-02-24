@@ -4,6 +4,9 @@ terraform {
     key     = "##environment##/terraform.tfstate"
     encrypt = true
   }
+  required_providers {
+    aws = "~> 3.74"
+  }
 }
 
 provider "aws" {
@@ -26,6 +29,7 @@ resource "local_file" "kubespray_extra_vars" {
   content         = templatefile("${path.module}/templates/extra-vars.json.tpl", {
     nexus_ip = data.terraform_remote_state.tenant.outputs.nexus_fqdn 
     nexus_port = data.terraform_remote_state.tenant.outputs.nexus_docker_repo_listening_port
+    apiserver_loadbalancer_domain_name = aws_lb.internal-lb.dns_name
     })
   filename        = "${path.module}/../kubespray-inventory/extra-vars.json"
 }

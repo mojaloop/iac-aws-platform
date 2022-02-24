@@ -1,27 +1,49 @@
-output "haproxy_id" {
-  value = var.haproxy_enabled ? element(concat(aws_instance.haproxy.*.id, [""]), 0) : "HAPROXY_NOT_USED"
-}
-
-output "haproxy_private_ip" {
-  value = var.haproxy_enabled ? element(concat(aws_instance.haproxy.*.private_ip, [""]),  0) : "HAPROXY_NOT_USED"
-}
-
 output "worker_nodes_id" {
-  value = aws_instance.k8s-worker.*.id
+  value = [
+    for worker in aws_instance.k8s-worker : worker.id
+  ]
 }
 
 output "worker_nodes_private_ip" {
-  value = aws_instance.k8s-worker.*.private_ip
+  value = [
+    for worker in aws_instance.k8s-worker : worker.private_ip
+  ]
 }
 
 output "worker_nodes_private_dns" {
-  value = aws_instance.k8s-worker.*.private_dns
+  value = [
+    for worker in aws_instance.k8s-worker : worker.private_dns
+  ]
+}
+
+output "worker_nodes_availability_zones" {
+  value = [
+    for worker in aws_instance.k8s-worker : worker.availability_zone
+  ]
+}
+
+output "master_nodes_id" {
+  value = [
+    for master in aws_instance.k8s-master : master.id
+  ]
 }
 
 output "master_nodes_private_dns" {
-  value = aws_instance.k8s-master.*.private_dns
+  value = [
+    for master in aws_instance.k8s-master : master.private_dns
+  ]
 }
 
 output "master_nodes_private_ip" {
-  value = aws_instance.k8s-master.*.private_ip
+  value = [
+    for master in aws_instance.k8s-master : master.private_ip
+  ]
+}
+
+output "master_nodes" {
+  value = aws_instance.k8s-master
+}
+
+output "worker_nodes" {
+  value = aws_instance.k8s-worker
 }

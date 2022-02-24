@@ -1,30 +1,3 @@
-terraform {
-  required_version = ">= 1.0"
-  backend "s3" {
-    key     = "##environment##/terraform-vault.tfstate"
-    encrypt = true
-  }
-  required_providers {
-    helm = "~> 2.3"
-    kubernetes = "~> 2.6"
-  }
-}
-
-resource "kubernetes_storage_class" "ebs" {
-  metadata {
-    name = var.ebs_storage_class_name
-  }
-  storage_provisioner = "kubernetes.io/aws-ebs"
-  reclaim_policy      = "Retain"
-  parameters = {
-    type      = "gp2"
-    iopsPerGB = "10"
-    fsType    = "ext4"
-    encrypted = true
-  }
-  provider = kubernetes.k8s-gateway
-}
-
 resource "aws_kms_key" "vault_unseal_key" {
   description             = "KMS Key used to auto-unseal vault"
   deletion_window_in_days = 10
@@ -35,11 +8,12 @@ resource "helm_release" "deploy_consul" {
   repository = "https://helm.releases.hashicorp.com"
   chart      = "consul"
   version    = var.helm_consul_version
-  values     = [templatefile("chart-values/consul.yml", {
-    storage_class_name = kubernetes_storage_class.ebs.metadata[0].name
+  values     = [templatefile("templates/values-consul.yaml.tpl", {
+    storage_class_name = var.storage_class_name
   })]
   timeout    = 300
   provider   = helm.helm-gateway
+  depends_on = [helm_release.longhorn]
 }
 
 resource "helm_release" "deploy_vault" {
@@ -47,7 +21,7 @@ resource "helm_release" "deploy_vault" {
   repository = "https://helm.releases.hashicorp.com"
   chart      = "vault"
   version    = var.helm_vault_version
-  values     = [templatefile("chart-values/vault.yml.tpl", {
+  values     = [templatefile("templates/values-vault.yaml.tpl", {
     aws_region = var.region,
     kms_key_id = aws_kms_key.vault_unseal_key.id,
     kms_access_key = var.aws_access_key,
@@ -59,7 +33,7 @@ resource "helm_release" "deploy_vault" {
   force_update = true
   cleanup_on_fail = true
   timeout    = 300
-  depends_on = [helm_release.deploy_consul, aws_kms_key.vault_unseal_key, time_sleep.wait_90_seconds]
+  depends_on = [helm_release.deploy_consul, aws_kms_key.vault_unseal_key, time_sleep.wait_90_seconds-cert]
   provider   = helm.helm-gateway
 }
 
@@ -137,7 +111,7 @@ resource "helm_release" "external-dns" {
   create_namespace = true
   provider = helm.helm-gateway
   values = [
-    templatefile("${path.module}/chart-values/values-external-dns.yaml.tpl", {
+    templatefile("${path.module}/templates/values-external-dns.yaml.tpl", {
         external_dns_iam_access_key = aws_iam_access_key.route53-external-dns.id
         external_dns_iam_secret_key = aws_iam_access_key.route53-external-dns.secret
         domain = data.terraform_remote_state.infrastructure.outputs.public_subdomain
@@ -159,7 +133,7 @@ resource "helm_release" "external-nginx-ingress-controller" {
 
   provider = helm.helm-gateway
   values = [
-    templatefile("${path.module}/chart-values/values-nginx.yaml.tpl", {
+    templatefile("${path.module}/templates/values-nginx.yaml.tpl", {
         ingress_class_name = "nginx-ext"
         http_nodeport_port = 32080
         https_nodeport_port = 32443
@@ -169,7 +143,7 @@ resource "helm_release" "external-nginx-ingress-controller" {
         tls_sec_name = "default/${var.int_wildcard_cert_sec_name}"
       })
   ]
-  depends_on = [helm_release.common-cert-crds]
+  depends_on = [kubectl_manifest.lets-encrypt-wildcard-cert]
 }
 
 resource "helm_release" "internal-nginx-ingress-controller" {
@@ -183,7 +157,7 @@ resource "helm_release" "internal-nginx-ingress-controller" {
 
   provider = helm.helm-gateway
   values = [
-    templatefile("${path.module}/chart-values/values-nginx.yaml.tpl", {
+    templatefile("${path.module}/templates/values-nginx.yaml.tpl", {
         http_nodeport_port = 31080
         https_nodeport_port = 31443
         ingress_class_name = "nginx"
@@ -193,5 +167,5 @@ resource "helm_release" "internal-nginx-ingress-controller" {
         tls_sec_name = "default/${var.int_wildcard_cert_sec_name}"
       })
   ]
-  depends_on = [helm_release.common-cert-crds]
+  depends_on = [kubectl_manifest.lets-encrypt-wildcard-cert]
 }

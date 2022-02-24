@@ -1,54 +1,5 @@
 // Backend Dependencies
 
-//// Databases
-resource "helm_release" "keto-db" {
-  name       = "keto-db"
-  repository = "https://charts.bitnami.com/bitnami"
-  chart      = "mysql"
-  version    = "8.8.8"
-  namespace  = "mojaloop"
-  timeout    = 300
-
-  values = [
-    templatefile("${path.module}/templates/values-keto-db.yaml.tpl", {
-    })
-  ]
-  provider = helm.helm-gateway
-  depends_on = [helm_release.mojaloop]
-}
-
-resource "helm_release" "kratos-db" {
-  name       = "kratos-db"
-  repository = "https://charts.bitnami.com/bitnami"
-  chart      = "mysql"
-  version    = "8.8.8"
-  namespace  = "mojaloop"
-  timeout    = 300
-
-  values = [
-    templatefile("${path.module}/templates/values-kratos-db.yaml.tpl", {
-    })
-  ]
-  provider = helm.helm-gateway
-  depends_on = [helm_release.mojaloop]
-}
-
-resource "helm_release" "reporting-events-db" {
-  name       = "reporting-events-db"
-  repository = "https://charts.bitnami.com/bitnami"
-  chart      = "mongodb"
-  version    = "10.28.1"
-  namespace  = "mojaloop"
-  timeout    = 300
-
-  values = [
-    templatefile("${path.module}/templates/values-reporting-events-db.yaml.tpl", {
-    })
-  ]
-  provider = helm.helm-gateway
-  depends_on = [helm_release.mojaloop]
-}
-
 //// Ory Services
 resource "helm_release" "keto" {
   name       = "keto"
@@ -60,6 +11,10 @@ resource "helm_release" "keto" {
 
   values = [
     templatefile("${path.module}/templates/values-keto.yaml.tpl", {
+      keto_db_password = data.vault_generic_secret.keto_db_password.data.value
+      keto_db_user = var.stateful_resources[local.keto_resource_index].local_resource.mysql_data.user
+      keto_db_host = "${var.stateful_resources[local.keto_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+      keto_db_database = var.stateful_resources[local.keto_resource_index].local_resource.mysql_data.database_name
     })
   ]
   provider = helm.helm-gateway
@@ -116,6 +71,10 @@ resource "helm_release" "kratos" {
       portal_fqdn = "${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
       wso2_client_id = module.bizops-portal-iskm.consumer-key
       wso2_client_secret = module.bizops-portal-iskm.consumer-secret
+      kratos_db_password = data.vault_generic_secret.kratos_db_password.data.value
+      kratos_db_user = var.stateful_resources[local.kratos_resource_index].local_resource.mysql_data.user
+      kratos_db_host = "${var.stateful_resources[local.kratos_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+      kratos_db_database = var.stateful_resources[local.kratos_resource_index].local_resource.mysql_data.database_name
     })
   ]
   provider = helm.helm-gateway
@@ -131,7 +90,7 @@ resource "helm_release" "bof" {
   version    = var.helm_bof_version
   devel      = true
   namespace  = "mojaloop"
-  timeout    = 500
+  timeout    = 300
   force_update = true
 
   values = [
@@ -145,13 +104,20 @@ resource "helm_release" "bof" {
       positionsui_fqdn = "${var.bofpositionsui_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
       central_admin_host = "moja-centralledger-service"
       central_settlements_host = "moja-centralsettlement-service"
-      kafka_host = "moja-kafka-headless"
-      reporting_db_host = "moja-centralledger-mysql"
+      kafka_host = "${var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+      reporting_db_host = local.oss_values.central_ledger_db_host
       reporting_db_port = "3306"
-      reporting_db_user = "central_ledger"
+      reporting_db_user = local.oss_values.central_ledger_db_user
       reporting_db_database = "central_ledger"
-      reporting_db_secret_name = "moja-centralledger-mysql"
+      reporting_db_secret_name = kubernetes_secret.central-ledger-mysql-secret.metadata[0].name
       reporting_db_secret_key = "mysql-password"
+      reporting_events_mongodb_secret_name = var.stateful_resources[local.rpt_mongodb_resource_index].resource_name
+      reporting_events_mongodb_host = "${var.stateful_resources[local.rpt_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+      reporting_events_mongodb_user = var.stateful_resources[local.rpt_mongodb_resource_index].local_resource.mongodb_data.user
+      reporting_events_mongodb_database = var.stateful_resources[local.rpt_mongodb_resource_index].local_resource.mongodb_data.database_name
+      release_name = "bof"
+      test_user_name = "test1"
+      test_user_password = vault_generic_secret.bizops_portal_user_password["test1"].data.value
     })
   ]
   provider = helm.helm-gateway
@@ -197,4 +163,18 @@ resource "helm_release" "bof-rules" {
     type  = "string"
   }
   depends_on = [helm_release.oathkeeper-maester]
+}
+
+data "vault_generic_secret" "keto_db_password" {
+  path = "${var.stateful_resources[local.keto_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/keto-db"
+}
+data "vault_generic_secret" "kratos_db_password" {
+  path = "${var.stateful_resources[local.kratos_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/kratos-db"
+}
+
+locals {
+  keto_resource_index = index(var.stateful_resources.*.resource_name, "keto-db")
+  kratos_resource_index = index(var.stateful_resources.*.resource_name, "kratos-db")
+  rpt_mongodb_resource_index = index(var.stateful_resources.*.resource_name, "reporting-events-mongodb")
+
 }

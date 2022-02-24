@@ -3,7 +3,7 @@ locals {
     prom-mojaloop-url    = "http://loki-stack-prometheus-server"
     grafana-slack-url    = var.grafana_slack_notifier_url
     grafana_host = "grafana.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
-    storage_class_name = var.ebs_storage_class_name
+    storage_class_name = var.storage_class_name
     dashboard_namespace = "monitoring"
   }
 }

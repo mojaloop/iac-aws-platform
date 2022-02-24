@@ -66,7 +66,6 @@ resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
   provider   = kubernetes.k8s-gateway
   depends_on = [helm_release.mojaloop]
 }
-
 resource "helm_release" "mojaloop" {
   name       = var.helm_mojaloop_release_name
   repository = "http://mojaloop.io/helm/repo"
@@ -85,15 +84,58 @@ resource "helm_release" "mojaloop" {
 
   depends_on = [module.fin-portal-iskm]
 }
-
+data "vault_generic_secret" "mojaloop_als_db_password" {
+  path = "${var.stateful_resources[local.ml_als_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/account-lookup-db"
+}
+data "vault_generic_secret" "mojaloop_cl_db_password" {
+  path = "${var.stateful_resources[local.ml_cl_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/central-ledger-db"
+}
+data "vault_generic_secret" "mojaloop_als_root_db_password" {
+  path = "${var.stateful_resources[local.ml_als_resource_index].vault_credential_paths.pw_data.root_password_path_prefix}/account-lookup-db"
+}
+data "vault_generic_secret" "mojaloop_cl_root_db_password" {
+  path = "${var.stateful_resources[local.ml_cl_resource_index].vault_credential_paths.pw_data.root_password_path_prefix}/central-ledger-db"
+}
+data "vault_generic_secret" "bulk_mongodb_password" {
+  path = "${var.stateful_resources[local.bulk_mongodb_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/bulk-mongodb"
+}
+data "vault_generic_secret" "cep_mongodb_password" {
+  path = "${var.stateful_resources[local.cep_mongodb_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/cep-mongodb"
+}
 locals {
+  ml_als_resource_index = index(var.stateful_resources.*.resource_name, "account-lookup-db")
+  ml_cl_resource_index = index(var.stateful_resources.*.resource_name, "central-ledger-db")
+  bulk_mongodb_resource_index = index(var.stateful_resources.*.resource_name, "bulk-mongodb")
+  cep_mongodb_resource_index = index(var.stateful_resources.*.resource_name, "cep-mongodb")
+  mojaloop_kafka_resource_index = index(var.stateful_resources.*.resource_name, "mojaloop-kafka")
   oss_values = {
     env    = var.environment
     name   = var.client
     domain = data.terraform_remote_state.tenant.outputs.domain
-    kafka  = var.kafka
-    mysql_password = vault_generic_secret.mojaloop_mysql_password.data.value
-    mysql_root_password = vault_generic_secret.mojaloop_mysql_root_password.data.value
+    kafka_host = "${var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    account_lookup_db_password = data.vault_generic_secret.mojaloop_als_db_password.data.value
+    account_lookup_db_user = "account_lookup"
+    account_lookup_db_host = "${var.stateful_resources[local.ml_als_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    central_ledger_db_password = data.vault_generic_secret.mojaloop_cl_db_password.data.value
+    central_ledger_db_user = "central_ledger"
+    central_ledger_db_host = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    central_settlement_db_password = data.vault_generic_secret.mojaloop_cl_db_password.data.value
+    central_settlement_db_user = "central_ledger"
+    central_settlement_db_host = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    quoting_db_password = data.vault_generic_secret.mojaloop_cl_db_password.data.value
+    quoting_db_user = "central_ledger"
+    quoting_db_host = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    finance_portal_db_password = data.vault_generic_secret.mojaloop_cl_db_password.data.value
+    finance_portal_db_user = "central_ledger"
+    finance_portal_db_host = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    cep_mongodb_database = var.stateful_resources[local.cep_mongodb_resource_index].local_resource.mongodb_data.database_name
+    cep_mongodb_user = var.stateful_resources[local.cep_mongodb_resource_index].local_resource.mongodb_data.user
+    cep_mongodb_host = "${var.stateful_resources[local.cep_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    cep_mongodb_pass = data.vault_generic_secret.cep_mongodb_password.data.value
+    cl_mongodb_database = var.stateful_resources[local.bulk_mongodb_resource_index].local_resource.mongodb_data.database_name
+    cl_mongodb_user = var.stateful_resources[local.bulk_mongodb_resource_index].local_resource.mongodb_data.user
+    cl_mongodb_host = "${var.stateful_resources[local.bulk_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    cl_mongodb_pass = data.vault_generic_secret.bulk_mongodb_password.data.value
     elasticsearch_url = "http://localhost" 
     kibana_url = "http://localhost"
     wso2is_host = "https://iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
@@ -101,7 +143,7 @@ locals {
     portal_oauth_app_token = vault_generic_secret.mojaloop_fin_portal_backend_client_secret.data.value
     internal_ttk_enabled = var.internal_ttk_enabled
     internal_sim_enabled = var.internal_sim_enabled
-    storage_class_name = var.ebs_storage_class_name
+    storage_class_name = var.storage_class_name
   }
   portal_users = [
     for user in var.finance_portal_users :
@@ -111,6 +153,36 @@ locals {
       "roles" = user.roles
     }
   ]
+}
+
+resource "kubernetes_secret" "central-ledger-mysql-secret" {
+  metadata {
+    name = "${var.helm_mojaloop_release_name}-centralledger-mysql"
+    namespace = "mojaloop"
+  }
+
+  data = {
+    mysql-root-password = data.vault_generic_secret.mojaloop_cl_root_db_password.data.value
+    mysql-password = data.vault_generic_secret.mojaloop_cl_db_password.data.value
+  }
+
+  type = "opaque"
+  provider = kubernetes.k8s-gateway
+}
+
+resource "kubernetes_secret" "account-lookup-mysql-secret" {
+  metadata {
+    name = "${var.helm_mojaloop_release_name}-account-lookup-mysql"
+    namespace = "mojaloop"
+  }
+
+  data = {
+    mysql-root-password = data.vault_generic_secret.mojaloop_als_root_db_password.data.value
+    mysql-password = data.vault_generic_secret.mojaloop_als_db_password.data.value
+  }
+
+  type = "opaque"
+  provider = kubernetes.k8s-gateway
 }
 
 /* resource "helm_release" "esp-mojaloop" {
@@ -140,31 +212,6 @@ locals {
   depends_on = [helm_release.mojaloop]
 } */
 
-resource "random_password" "mojaloop_mysql_password" {
-  length = 16
-  special = false
-}
-
-resource "vault_generic_secret" "mojaloop_mysql_password" {
-  path = "secret/mojaloop/mysqlpassword"
-
-  data_json = jsonencode({
-    "value" = random_password.mojaloop_mysql_password.result
-  })
-}
-
-resource "random_password" "mojaloop_mysql_root_password" {
-  length = 16
-  special = false
-}
-
-resource "vault_generic_secret" "mojaloop_mysql_root_password" {
-  path = "secret/mojaloop/mysqlrootpassword"
-
-  data_json = jsonencode({
-    "value" = random_password.mojaloop_mysql_root_password.result
-  })
-}
 
 resource "random_password" "mojaloop_fin_portal_backend_client_id" {
   length = 16

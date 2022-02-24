@@ -1,50 +1,3 @@
-resource "helm_release" "mysql" {
-  name       = "mysql-wso2"
-  repository = "https://charts.helm.sh/stable"
-  chart      = "mysql"
-  version    = var.mysql_version
-  namespace  = var.namespace
-  create_namespace = true
-  set {
-    name  = "mysqlRootPassword"
-    value = var.db_root_password
-    type  = "string"
-  }
-
-  set {
-    name  = "mysqlUser"
-    value = var.db_username
-    type  = "string"
-  }
-  set {
-    name  = "mysqlPassword"
-    value = var.db_password
-    type  = "string"
-  }
-
-  set {
-    name  = "mysqlDatabase"
-    value = var.db_name
-    type  = "string"
-  }
-  set {
-    name  = "persistence.storageClass"
-    value = var.mysql_storage_class_name
-    type  = "string"
-  }
-
-  set {
-    name  = "persistence.accessMode"
-    value = "ReadWriteOnce"
-    type  = "string"
-  }
-  set {
-    name  = "persistence.size"
-    value = "8Gi"
-    type  = "string"
-  }
-}
-
 resource "kubernetes_job" "mysql_int" {
   metadata {
     name      = "mysql-init-int"
@@ -63,9 +16,12 @@ resource "kubernetes_job" "mysql_int" {
       }
     }
     #ttl_seconds_after_finished = 60
-    backoff_limit = 4
+    backoff_limit = 4  
   }
-  depends_on = [helm_release.mysql]
+  timeouts {
+    create = "3m"
+    update = "3m"
+  }
 }
 
 resource "kubernetes_job" "mysql_ext" {
@@ -88,5 +44,8 @@ resource "kubernetes_job" "mysql_ext" {
     backoff_limit = 4
     #ttl_seconds_after_finished = 60
   }
-  depends_on = [helm_release.mysql]
+  timeouts {
+    create = "3m"
+    update = "3m"
+  }
 }

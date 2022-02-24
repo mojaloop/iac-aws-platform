@@ -14,6 +14,7 @@ locals {
     api_store_host = "${var.hostname}-mgmt-int.${var.public_domain_name}"
     api_pub_host = "${var.hostname}-mgmt-int.${var.public_domain_name}"
     int_ingress_controller_name = var.int_ingress_controller_name
+    storage_class_name = var.storage_class_name
   }
 }
 
@@ -43,11 +44,6 @@ resource "helm_release" "app" {
   set {
     name  = "binconfigmap.externalConfigMapName"
     value = kubernetes_config_map.binconfigs.metadata[0].name
-    type  = "string"
-  }
-  set {
-    name  = "persistentVolume.storageClass"
-    value = var.efs_storage_class_name
     type  = "string"
   }
 }

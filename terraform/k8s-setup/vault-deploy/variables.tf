@@ -42,6 +42,14 @@ variable "cert_man_namespace" {
 variable "helm_certmanager_version" {
   description = "helm certmanager version"
 }
+variable "longhorn_namespace" {
+  description = "Kubernetes namespace to install longhorn into"
+  type        = string
+  default     = "longhorn-system"
+}
+variable "helm_longhorn_version" {
+  description = "helm longhorn version"
+}
 
 variable "external_dns_namespace" {
   description = "Kubernetes namespace to install external dns into"
@@ -70,10 +78,10 @@ variable "k8s_api_version" {
   default     = "1.19.2"
 }
 
-variable "ebs_storage_class_name" {
+variable "storage_class_name" {
   description = "storage class name"
   type        = string
-  default     = "ebs"
+  default     = "longhorn"
 }
 variable "custom_tags" {
   description = "Hostname to use with apm"
@@ -98,7 +106,7 @@ variable "cert_man_letsencrypt_cluster_issuer_name" {
 variable "cert_man_vault_cluster_issuer_name" {
   description = "cluster issuer name for vault"
   type        = string
-  default     = "vault-issuer-int"
+  default     = "vault-issuer-root"
 }
 variable "int_wildcard_cert_sec_name" {
   description = "letsenc wildcard sec for operations tls endpoints"

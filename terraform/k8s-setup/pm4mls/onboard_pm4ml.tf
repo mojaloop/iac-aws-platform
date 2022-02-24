@@ -29,24 +29,14 @@ locals {
       "mcm_auth_enabled"     = true
       "mcm_auth_user"        = pm4ml_config.DFSP_NAME
       "mcm_auth_pass"        = "${pm4ml_config.DFSP_NAME}123"
-      "private_reg_user"     = "mbx-cicd-deployer"
-      "private_reg_pass"     = var.private_registry_pw
-      "private_reg_url"      = "modusbox-mbx-docker.jfrog.io"
       "dfsp_id"              = pm4ml_config.DFSP_NAME
       "extgw_fqdn"           = "extgw-data.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
       "mcm_host_url"         = "mcm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
-      "p12_pass_phrase"       = "samplepass"
-      "ml_connector_image_tag" = "12.0.4"
       "helm_release_name"    = pm4ml_config.DFSP_NAME
       "ttk_enabled"          = false
       "extgw_client_key"     = module.internal_provision_pm4ml_to_wso2.client-ids[pm4ml_config.DFSP_NAME]
       "extgw_client_secret"  = module.internal_provision_pm4ml_to_wso2.client-secrets[pm4ml_config.DFSP_NAME]
       "OAUTH_TOKEN_ENDPOINT" = "https://extgw-data.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}:443/oauth2/token"
-      "tls_outbound_cacert"  = data.terraform_remote_state.suppsvcs.outputs.root_signed_intermediate_ca_cert_chain
-      "tls_outbound_privkey" = vault_pki_secret_backend_cert.internal-switch-pm4ml-client[pm4ml_config.DFSP_NAME].private_key
-      "tls_outbound_cert"    = vault_pki_secret_backend_cert.internal-switch-pm4ml-client[pm4ml_config.DFSP_NAME].certificate
-      "jws_private_key"      = tls_private_key.pm4mls[pm4ml_config.DFSP_NAME].private_key_pem
-      "jws_public_keys"      = { for pm4ml_config2 in var.internal_pm4ml_configs : pm4ml_config2.DFSP_NAME => tls_private_key.pm4mls[pm4ml_config2.DFSP_NAME].public_key_pem }
     }
   }
   internal_postman_pm4ml_output = [
@@ -68,20 +58,6 @@ locals {
       "DFSP_SUB_ID" = pm4ml_config.DFSP_SUB_ID
     }
   ]
-}
-
-resource "local_file" "pm4ml_personal_client_certificate" {
-  for_each        = {for pm4ml_config in var.internal_pm4ml_configs: pm4ml_config.DFSP_NAME => pm4ml_config}
-  content         = vault_pki_secret_backend_cert.internal-switch-pm4ml-client[each.value.DFSP_NAME].certificate
-  filename        = "${path.root}/secrets_chart/${each.value.DFSP_NAME}/tls/${each.value.DFSP_NAME}_client.crt"
-  file_permission = "0644"
-}
-
-resource "local_file" "pm4ml_personal_client_key" {
-  for_each          = {for pm4ml_config in var.internal_pm4ml_configs: pm4ml_config.DFSP_NAME => pm4ml_config}
-  sensitive_content = vault_pki_secret_backend_cert.internal-switch-pm4ml-client[each.value.DFSP_NAME].private_key
-  filename          = "${path.root}/secrets_chart/${each.value.DFSP_NAME}/tls/${each.value.DFSP_NAME}_client.key"
-  file_permission   = "0644"
 }
 
 module "internal_provision_pm4ml_to_wso2" {
@@ -106,15 +82,3 @@ module "provision_pm4ml_callbacks_to_wso2" {
   user              = "admin"
   password          = local.wso2_admin_pw
 }
-#this should go away once automation via mcm is done.
-resource "vault_pki_secret_backend_cert" "internal-switch-pm4ml-client" {
-  for_each    = {for pm4ml_config in var.internal_pm4ml_configs: pm4ml_config.DFSP_NAME => pm4ml_config}
-  backend     = data.terraform_remote_state.suppsvcs.outputs.vault_pki_int_path
-  name        = data.terraform_remote_state.suppsvcs.outputs.vault_role_client_cert_name
-  common_name = "${each.value.DFSP_NAME}.${trimsuffix(data.terraform_remote_state.infrastructure.outputs.public_subdomain, ".")}"
-}
-
-output "switch_routing_table_ids" {
-  value       = var.helm_mojaloop_version
-  description = "Helm Mojaloop Version"
-} 
