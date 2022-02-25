@@ -50,7 +50,6 @@ module "bizops-portal-iskm" {
   providers = {
     external = external.wso2-automation-iskm-mcm
   }
-  depends_on = [null_resource.wait_for_iskm_readiness]
 }
 
 module "bizops-portal-iskm-user-portaladmin" {
@@ -62,7 +61,6 @@ module "bizops-portal-iskm-user-portaladmin" {
   account_username = "bofportaladmin"
   account_password = vault_generic_secret.bizops_portaladmin_password.data.value
   account_email = "portaladmin@test.com"
-  depends_on = [null_resource.wait_for_iskm_readiness]
 }
 
 module "bizops-portal-iskm-user-portal-users" {
@@ -75,7 +73,6 @@ module "bizops-portal-iskm-user-portal-users" {
   account_username = each.value.username
   account_password = vault_generic_secret.bizops_portal_user_password[each.value.username].data.value
   account_email = each.value.email
-  depends_on = [null_resource.wait_for_iskm_readiness]
 }
 
 resource "kubernetes_job" "assign-admin-role-to-portaladmin" {
