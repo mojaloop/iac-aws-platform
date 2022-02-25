@@ -110,23 +110,6 @@
       "email" : "test2@test.com"
     }
   ],
-  "bizops_mojaloop_roles": [
-    {
-      "rolename" : "ADMIN_ROLE",
-      "permissions" : [
-        "ROLE_API",
-        "REPORTING_API",
-        "TESTPERM_1"
-      ]
-    },
-    {
-      "rolename" : "USER_ROLE",
-      "permissions" : [
-        "REPORTING_API",
-        "TESTPERM_2"
-      ]
-    }
-  ],
   "custom_tags": {
     "mojaloop/cost_center":  "oss-iac-test",
     "mojaloop/owner": "dfry",

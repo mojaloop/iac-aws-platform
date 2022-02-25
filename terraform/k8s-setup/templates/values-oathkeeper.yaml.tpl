@@ -133,6 +133,7 @@ oathkeeper:
         config:
           headers:
             X-User: '{{ print .Subject }}'
+            X-Email: '{{ print .Extra.identity.traits.email }}'
     errors:
       fallback:
         - json
