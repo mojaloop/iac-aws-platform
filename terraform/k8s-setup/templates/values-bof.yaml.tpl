@@ -56,8 +56,8 @@ rbacTests:
     - --
     - --silent=false
   env:
-    ROLE_ASSIGNMENT_SVC_BASE_PATH: http://${release_name}-role-assignment-service
-    ML_INGRESS_BASE_PATH: http://${portal_fqdn}
+    ROLE_ASSIGNMENT_SVC_BASE_PATH: https://${release_name}-role-assignment-service
+    ML_INGRESS_BASE_PATH: https://${portal_fqdn}
     TEST_USER_NAME: ${test_user_name}
     TEST_USER_PASSWORD: ${test_user_password}
 
@@ -127,10 +127,10 @@ reporting-hub-bop-shell:
       LOGOUT_URL: /kratos/self-service/browser/flows/logout
       AUTH_TOKEN_URL: /kratos/sessions/whoami
       AUTH_ENABLED: true
-      REMOTE_1_URL: http://${iamui_fqdn}
-      REMOTE_2_URL: http://${transfersui_fqdn}
-      REMOTE_3_URL: http://${settlementsui_fqdn}
-      REMOTE_4_URL: http://${positionsui_fqdn}
+      REMOTE_1_URL: https://${iamui_fqdn}
+      REMOTE_2_URL: https://${transfersui_fqdn}
+      REMOTE_3_URL: https://${settlementsui_fqdn}
+      REMOTE_4_URL: https://${positionsui_fqdn}
 
 security-hub-bop-kratos-ui:
   enabled: true
@@ -171,7 +171,7 @@ reporting-hub-bop-role-ui:
     tlsManualSecretName: ""
   config:
     env:
-      REACT_APP_API_BASE_URL: http://${portal_fqdn}/proxy/iam
+      REACT_APP_API_BASE_URL: https://${portal_fqdn}/proxy/iam
       REACT_APP_MOCK_API: false
 
 
@@ -190,16 +190,16 @@ reporting-hub-bop-trx-ui:
     tlsManualSecretName: ""
   config:
     env:
-      REACT_APP_API_BASE_URL: http://${portal_fqdn}/proxy/transfers
+      REACT_APP_API_BASE_URL: https://${portal_fqdn}/proxy/transfers
       REACT_APP_MOCK_API: false
 
 reporting-hub-bop-settlements-ui:
   enabled: true
   config:
     env:
-      CENTRAL_LEDGER_ENDPOINT: http://${portal_fqdn}/proxy/central-admin
-      CENTRAL_SETTLEMENTS_ENDPOINT: http://${portal_fqdn}/proxy/central-settlements
-      REPORTING_API_ENDPOINT: http://${portal_fqdn}/proxy/transfers
+      CENTRAL_LEDGER_ENDPOINT: https://${portal_fqdn}/proxy/central-admin
+      CENTRAL_SETTLEMENTS_ENDPOINT: https://${portal_fqdn}/proxy/central-settlements
+      REPORTING_API_ENDPOINT: https://${portal_fqdn}/proxy/transfers
   ingress:
     enabled: true
     pathType: ImplementationSpecific
@@ -216,7 +216,7 @@ reporting-hub-bop-positions-ui:
   enabled: true
   config:
     env:
-      CENTRAL_LEDGER_ENDPOINT: http://${portal_fqdn}/proxy/central-admin
+      CENTRAL_LEDGER_ENDPOINT: https://${portal_fqdn}/proxy/central-admin
   ingress:
     enabled: true
     pathType: ImplementationSpecific
