@@ -152,6 +152,13 @@ resource "helm_release" "bof" {
       reporting_db_database = "central_ledger"
       reporting_db_secret_name = "moja-centralledger-mysql"
       reporting_db_secret_key = "mysql-password"
+      release_name = "bof"
+      test_user_name = "test1"
+      test_user_password = vault_generic_secret.bizops_portal_user_password["test1"].data.value
+      report_tests_payer = "pm4mlsenderfsp"
+      report_tests_payee = "pm4mlreceiverfsp"
+      report_tests_currency = "USD"
+      report_tests_pm4ml_sender_host = "test.pm4mlsenderfsp.${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
     })
   ]
   provider = helm.helm-gateway
@@ -213,15 +220,6 @@ resource "kubernetes_secret" "wso2-is-admin-creds" {
 
   type = "kubernetes.io/basic-auth"
   provider = kubernetes.k8s-gateway
-  depends_on = [helm_release.mojaloop]
-}
-
-resource "helm_release" "bof-crds" {
-  name       = "bof-crds"
-  chart = "./k8s-manifests"
-  namespace  = "mojaloop"
-  timeout    = 300
-  provider = helm.helm-gateway
   depends_on = [helm_release.mojaloop]
 }
 

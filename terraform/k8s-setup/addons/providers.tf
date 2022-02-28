@@ -12,6 +12,7 @@ terraform {
       version = "~> 2.6"
     }
     vault = "~> 2.24"
+    aws = "~> 3.74"
   }
 }
 

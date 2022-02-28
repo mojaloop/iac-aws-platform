@@ -42,6 +42,47 @@ global:
     host: ${kafka_host}
     port: 9092
   mojalooprole: {}
+  rolePermOperator:
+    mojaloopRole: {}
+    mojaloopPermissionExclusion: {}
+    apiSvc: {}
+
+## RBAC Tests
+rbacTests:
+  enabled: true
+  command:
+    - npm
+    - run
+    - test:rbac
+    - --
+    - --silent=false
+  env:
+    ROLE_ASSIGNMENT_SVC_BASE_PATH: http://${release_name}-role-assignment-service
+    ML_INGRESS_BASE_PATH: http://${portal_fqdn}
+    TEST_USER_NAME: ${test_user_name}
+    TEST_USER_PASSWORD: ${test_user_password}
+
+## Report Tests
+reportTests:
+  enabled: true
+  command:
+    - npm
+    - run
+    - test:report
+    - --
+    - --silent=false
+  env:
+    ROLE_ASSIGNMENT_SVC_BASE_PATH: http://${release_name}-role-assignment-service
+    ML_INGRESS_BASE_PATH: http://${portal_fqdn}
+    TEST_USER_NAME: ${test_user_name}
+    TEST_USER_PASSWORD: ${test_user_password}
+    CENTRAL_LEDGER_ADMIN_ENDPOINT: http://${portal_fqdn}/proxy/central-admin
+    CENTRAL_SETTLEMENT_ENDPOINT: http://${portal_fqdn}/proxy/central-settlements
+    REPORT_BASE_PATH: http://${portal_fqdn}/proxy/reports
+    SEND_MONEY_ENDPOINT: http://${report_tests_pm4ml_sender_host}/cc-send/sendmoney
+    TEST_PAYER: ${report_tests_payer}
+    TEST_PAYEE: ${report_tests_payee}
+    TEST_CURRENCY: ${report_tests_currency}
 
 ## Backend API services
 role-assignment-service:
@@ -150,6 +191,7 @@ reporting-hub-bop-settlements-ui:
     env:
       CENTRAL_LEDGER_ENDPOINT: http://${portal_fqdn}/proxy/central-admin
       CENTRAL_SETTLEMENTS_ENDPOINT: http://${portal_fqdn}/proxy/central-settlements
+      REPORTING_API_ENDPOINT: http://${portal_fqdn}/proxy/transfers
   ingress:
     enabled: true
     pathType: ImplementationSpecific
@@ -166,9 +208,40 @@ reporting-hub-bop-positions-ui:
     hostname: ${positionsui_fqdn}
 
 ## Other services
+# Exposing validation API for role permission validation from IaC
+# The request should be as below
+# curl -X POST /validate/role-permissions \
+#  -H 'Content-Type: application/json' \
+#  -H 'Accept: application/json' \
+#  -d \
+#  '{
+#    "rolePermissions": [
+#      {
+#        "rolename": "string",
+#        "permissions": [
+#          "string"
+#        ]
+#      }
+#    ],
+#    "permissionExclusions": [
+#      {
+#        "permissionsA": [
+#          "string"
+#        ],
+#        "permissionsB": [
+#          "string"
+#        ]
+#      }
+#    ]
+#  }'
 security-role-perm-operator-svc:
   enabled: true
-  installCRDs: false
+  ingress:
+    enabled: true
+    hostname: ${api_fqdn}
+    path: /operator(/validate/.*)
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: $1
 
 reporting-events-processor-svc:
   enabled: true
@@ -176,3 +249,6 @@ reporting-events-processor-svc:
     topic: topic-event
     consumerGroup: group
     clientId: client-id
+
+reporting-hub-bop-experience-api-svc:
+  enabled: true

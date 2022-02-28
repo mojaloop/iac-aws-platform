@@ -14,6 +14,7 @@ terraform {
       source  = "vancluever/acme"
       version = "~> 2.0"
     }
+    aws = "~> 3.74"
   }
 }
 
