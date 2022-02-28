@@ -1,4 +1,6 @@
 management-api:
+  env:
+    WS_URL: "{{ item.value.helm_release_name }}-pm4ml-mojaloop-connector"
   config:
     tlsClientCSRParametersData: |-
       {
@@ -63,3 +65,44 @@ pm4ml-mojaloop-connector:
     RESERVE_NOTIFICATION: true
     AUTO_ACCEPT_PARTY: true
     AUTO_ACCEPT_QUOTES: true
+
+prometheus:
+  extraScrapeConfigs: |-
+    - job_name: 'prometheus-blackbox-exporter'
+      static_configs:
+        - targets:
+          - "{{ item.value.helm_release_name }}-pm4ml-mojaloop-connector:4004"
+
+sim-backend:
+  env:
+    OUTBOUND_ENDPOINT: http://{{ item.value.helm_release_name }}-pm4ml-mojaloop-connector:4001
+  rules: |-
+    [
+      {
+        "ruleId": 1,
+        "description": "return hometransactionId",
+        "conditions": {
+          "all": [
+            {
+              "fact": "path",
+              "operator": "equal",
+              "value": "/transfers"
+            },
+            {
+              "fact": "method",
+              "operator": "equal",
+              "value": "POST"
+            }
+          ]
+        },
+        "event": {
+          "type": "FIXED_CALLBACK",
+          "params": {
+            "statusCode": 200,
+            "body": {
+              "homeTransactionId": "123ABC"
+            }
+          }
+        }
+      }
+    ]
