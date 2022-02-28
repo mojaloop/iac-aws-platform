@@ -1,6 +1,6 @@
 default: 
   image: 
-    name: ghcr.io/mojaloop/iac-aws-platform:1.4.0-k8s1.17-beta1
+    name: ghcr.io/mojaloop/iac-aws-platform:1.5.0-k8s1.17-beta1
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
