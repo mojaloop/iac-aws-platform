@@ -135,7 +135,7 @@ Destroy Environment:
 Destroy k3s Cluster:
   stage: "Destroy"  
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.15.2
+    name: ghcr.io/pm4ml/k3sbootstrap:0.15.3
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"')
@@ -174,7 +174,7 @@ Destroy k3s Cluster:
 Undeploy PM4ML Charts:
   stage: "Destroy"  
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.15.2
+    name: ghcr.io/pm4ml/k3sbootstrap:0.15.3
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -227,7 +227,7 @@ Deploy AWS Infrastructure:
 Create k3s Cluster:
   stage: "Run k3s"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.15.2
+    name: ghcr.io/pm4ml/k3sbootstrap:0.15.3
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -330,7 +330,7 @@ Deploy Vault:
 2b. Install Internal PM4MLs:
   stage: "Deploy Platform"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.15.2
+    name: ghcr.io/pm4ml/k3sbootstrap:0.15.3
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
