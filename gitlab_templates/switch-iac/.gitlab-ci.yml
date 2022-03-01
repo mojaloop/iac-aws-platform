@@ -8,7 +8,7 @@ default:
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
     # Define the contents of the workbench-config file as environment variables for use in gitlab and optionally in terraform
-    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r "to_entries[] | \"\(.key)='\(.value)'\n\"" ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - export ENVIRONMENT=$environment
     - test -n "$BUCKET"
