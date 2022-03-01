@@ -8,8 +8,8 @@ default:
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
     # Define the contents of the workbench-config file as environment variables for use in gitlab and optionally in terraform
-    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - export ENVIRONMENT=$environment
     - test -n "$BUCKET"
     - cd $CI_IMAGE_PROJECT_DIR
@@ -142,8 +142,8 @@ Destroy k3s Cluster:
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
-    - IFS=$'\n'; for var in $(jq -r "to_entries[] | \"\(.key)='\(.value)'\n\"" ./workbench-config.json); do export $var; done
-    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
@@ -181,8 +181,8 @@ Undeploy PM4ML Charts:
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
-    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
@@ -234,8 +234,8 @@ Create k3s Cluster:
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
-    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
@@ -337,8 +337,8 @@ Deploy Vault:
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
-    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - IFS=$'\n'; for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
