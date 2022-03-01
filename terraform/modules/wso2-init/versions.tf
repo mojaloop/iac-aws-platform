@@ -4,6 +4,6 @@ terraform {
     helm = "~> 2.3"
     kubernetes = "~> 2.6"
     tls = "~> 2.0"
-    aws = "~> 2.54"
+    aws = "~> 3.74"
   }
 }
