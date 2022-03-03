@@ -118,6 +118,11 @@ resource "helm_release" "bof" {
       release_name = "bof"
       test_user_name = "test1"
       test_user_password = vault_generic_secret.bizops_portal_user_password["test1"].data.value
+      report_tests_payer = "pm4mlsenderfsp"
+      report_tests_payee = "pm4mlreceiverfsp"
+      report_tests_currency = "USD"
+      report_tests_pm4ml_sender_host = "test.pm4mlsenderfsp.${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      report_tests_pm4ml_receiver_host = "test.pm4mlreceiverfsp.${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
     })
   ]
   provider = helm.helm-gateway

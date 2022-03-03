@@ -41,6 +41,7 @@ global:
   kafka:
     host: ${kafka_host}
     port: 9092
+  mojalooprole: {}
   rolePermOperator:
     mojaloopRole: {}
     mojaloopPermissionExclusion: {}
@@ -52,14 +53,39 @@ rbacTests:
   command:
     - npm
     - run
-    - test
+    - test:rbac
     - --
     - --silent=false
   env:
-    ROLE_ASSIGNMENT_SVC_BASE_PATH: https://${release_name}-role-assignment-service
+    ROLE_ASSIGNMENT_SVC_BASE_PATH: http://${release_name}-role-assignment-service
+    ML_INGRESS_BASE_PATH: http://${portal_fqdn}
+    TEST_USER_NAME: ${test_user_name}
+    TEST_USER_PASSWORD: ${test_user_password}
+
+## Report Tests
+reportTests:
+  enabled: true
+  command:
+    - npm
+    - run
+    - test:report
+    - --
+    - --silent=false
+  env:
+    ROLE_ASSIGNMENT_SVC_BASE_PATH: http://${release_name}-role-assignment-service
     ML_INGRESS_BASE_PATH: https://${portal_fqdn}
     TEST_USER_NAME: ${test_user_name}
     TEST_USER_PASSWORD: ${test_user_password}
+    CENTRAL_LEDGER_ADMIN_ENDPOINT: http://${portal_fqdn}/proxy/central-admin
+    CENTRAL_SETTLEMENT_ENDPOINT: http://${portal_fqdn}/proxy/central-settlements
+    REPORT_BASE_PATH: http://${portal_fqdn}/proxy/reports
+    PAYER_SEND_MONEY_ENDPOINT: https://${report_tests_pm4ml_sender_host}/cc-send/sendmoney
+    PAYEE_SEND_MONEY_ENDPOINT: https://${report_tests_pm4ml_receiver_host}/cc-send/sendmoney
+    TEST_PAYER: ${report_tests_payer}
+    TEST_PAYEE: ${report_tests_payee}
+    TEST_CURRENCY: ${report_tests_currency}
+    TEST_PAYER_MSISDN: 25644444444
+    TEST_PAYEE_MSISDN: 25633333333
 
 ## Backend API services
 role-assignment-service:
