@@ -130,6 +130,11 @@ reporting-legacy-api:
       nginx.ingress.kubernetes.io/rewrite-target: /$2
   install-templates: true
   auth: true
+  reporting-k8s-templates:
+    templates:
+    %{ for config_key, config_value in mojaloop_reports_config.defaultReports }
+      ${config_key}: ${config_value}
+    %{ endfor }
 
 ## Front-end UI services
 ### Shell and helper UI services
@@ -178,7 +183,6 @@ security-hub-bop-kratos-ui:
     selfSigned: true
     tlsSetSecretManual: true
     tlsManualSecretName: ""
-### Micro-frontends
 
 ### Micro-frontends
 reporting-hub-bop-role-ui:
