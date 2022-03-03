@@ -58,7 +58,7 @@ rbacTests:
     - --silent=false
   env:
     ROLE_ASSIGNMENT_SVC_BASE_PATH: http://${release_name}-role-assignment-service
-    ML_INGRESS_BASE_PATH: http://${portal_fqdn}
+    ML_INGRESS_BASE_PATH: https://${portal_fqdn}
     TEST_USER_NAME: ${test_user_name}
     TEST_USER_PASSWORD: ${test_user_password}
 
@@ -76,9 +76,9 @@ reportTests:
     ML_INGRESS_BASE_PATH: https://${portal_fqdn}
     TEST_USER_NAME: ${test_user_name}
     TEST_USER_PASSWORD: ${test_user_password}
-    CENTRAL_LEDGER_ADMIN_ENDPOINT: http://${portal_fqdn}/proxy/central-admin
-    CENTRAL_SETTLEMENT_ENDPOINT: http://${portal_fqdn}/proxy/central-settlements
-    REPORT_BASE_PATH: http://${portal_fqdn}/proxy/reports
+    CENTRAL_LEDGER_ADMIN_ENDPOINT: https://${portal_fqdn}/proxy/central-admin
+    CENTRAL_SETTLEMENT_ENDPOINT: https://${portal_fqdn}/proxy/central-settlements
+    REPORT_BASE_PATH: https://${portal_fqdn}/proxy/reports
     PAYER_SEND_MONEY_ENDPOINT: https://${report_tests_pm4ml_sender_host}/cc-send/sendmoney
     PAYEE_SEND_MONEY_ENDPOINT: https://${report_tests_pm4ml_receiver_host}/cc-send/sendmoney
     TEST_PAYER: ${report_tests_payer}
