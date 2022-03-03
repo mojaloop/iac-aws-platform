@@ -159,6 +159,9 @@ resource "helm_release" "bof" {
       report_tests_payee = "pm4mlreceiverfsp"
       report_tests_currency = "USD"
       report_tests_pm4ml_sender_host = "test.pm4mlsenderfsp.${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      report_tests_pm4ml_receiver_host = "test.pm4mlreceiverfsp.${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      report_tests_payer_msisdn = "25644444444"
+      report_tests_payee_msisdn = "25633333333"
     })
   ]
   provider = helm.helm-gateway
