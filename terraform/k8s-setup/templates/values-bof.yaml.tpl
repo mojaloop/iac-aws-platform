@@ -79,10 +79,13 @@ reportTests:
     CENTRAL_LEDGER_ADMIN_ENDPOINT: http://${portal_fqdn}/proxy/central-admin
     CENTRAL_SETTLEMENT_ENDPOINT: http://${portal_fqdn}/proxy/central-settlements
     REPORT_BASE_PATH: http://${portal_fqdn}/proxy/reports
-    SEND_MONEY_ENDPOINT: http://${report_tests_pm4ml_sender_host}/cc-send/sendmoney
+    PAYER_SEND_MONEY_ENDPOINT: http://${report_tests_pm4ml_sender_host}/cc-send/sendmoney
+    PAYEE_SEND_MONEY_ENDPOINT: http://${report_tests_pm4ml_receiver_host}/cc-send/sendmoney
     TEST_PAYER: ${report_tests_payer}
     TEST_PAYEE: ${report_tests_payee}
     TEST_CURRENCY: ${report_tests_currency}
+    TEST_PAYER_MSISDN: ${report_tests_payer_msisdn}
+    TEST_PAYEE_MSISDN: ${report_tests_payee_msisdn}
 
 ## Backend API services
 role-assignment-service:
