@@ -596,13 +596,13 @@ Create Gateway Cluster:
       - ${CI_PROJECT_DIR}/ttk-goldenpath-report.html
   when: manual
 
-6. Run RBAC Tests:
+5. Run RBAC Tests:
   stage: "Run Tests"
   script:
     - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-rbac-tests -n mojaloop --logs
   when: manual
 
-7. Run Report Tests:
+6. Run Report Tests:
   stage: "Run Tests"
   script:
     - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-report-tests -n mojaloop --logs
