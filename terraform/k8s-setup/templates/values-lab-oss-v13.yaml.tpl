@@ -13,6 +13,9 @@ account-lookup-service:
       db_password: "${account_lookup_db_password}"
       db_host: "${account_lookup_db_host}"
       db_user: "${account_lookup_db_user}"
+      endpointSecurity:
+        jwsSigningKey: |-
+          ${indent(10, jws_signing_priv_key)}
     ingress:
       annotations:
         kubernetes.io/ingress.class: nginx
@@ -237,6 +240,9 @@ ml-api-adapter:
     config:
       kafka_host: "${kafka_host}"
       resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
+      endpointSecurity:
+        jwsSigningKey: |-
+          ${indent(10, jws_signing_priv_key)}
     image:
       repository: mojaloop/ml-api-adapter
       tag: v11.2.0
@@ -270,6 +276,9 @@ quoting-service:
     db_password: "${quoting_db_password}"
     db_host: "${quoting_db_host}"
     db_user: "${quoting_db_user}"
+    endpointSecurity:
+      jwsSigningKey: |-
+        ${indent(8, jws_signing_priv_key)}
   ingress:
     annotations:
       kubernetes.io/ingress.class: nginx

@@ -74,10 +74,10 @@ config: {}
 
 ## Additional secrets to mount as volumes
 ## This is expected to be an array of dictionaries specifying the volume name, secret name and mount path
-mountedSecrets: []
-#  - volumeName: ssl-certificate
-#    secretName: star-example-com
-#    mountPath: /usr/local/etc/ssl
+mountedSecrets:
+  - volumeName: ssl-certificate
+    secretName: ${cert_secret_name}
+    mountPath: /usr/local/etc/ssl
 
 ## Additional labels to add to the pod container metadata
 ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/

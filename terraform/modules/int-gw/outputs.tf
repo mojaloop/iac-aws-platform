@@ -17,3 +17,9 @@ output "jws_key" {
   description = "switch JWS key"
   value       = tls_private_key.jws.public_key_pem
 }
+
+output "jws_private_key" {
+  description = "switch JWS priv key"
+  value = tls_private_key.jws.private_key_pem
+  sensitive = true
+}

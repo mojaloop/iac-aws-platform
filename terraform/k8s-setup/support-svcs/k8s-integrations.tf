@@ -223,7 +223,7 @@ resource "vault_pki_secret_backend_role" "role-server-cert" {
   client_flag        = false
   ou                 = ["Infrastructure Team"]
   organization       = ["ModusBox"]
-  key_bits           = 4096
+  key_bits           = 2048
   # 2 years
   max_ttl  = 2592000
   ttl      = 2592000
@@ -245,7 +245,7 @@ resource "vault_pki_secret_backend_role" "role-client-cert" {
   client_flag        = true
   ou                 = ["Infrastructure Team"]
   organization       = ["ModusBox"]
-  key_bits           = 4096
+  key_bits           = 2048
   # 2 years
   max_ttl  = 2592000
   ttl      = 2592000

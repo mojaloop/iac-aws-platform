@@ -9,7 +9,7 @@ spec:
   privateKey:
     algorithm: RSA
     encoding: PKCS1
-    size: 4096
+    size: 2048
   usages:
     - digital signature
     - key encipherment

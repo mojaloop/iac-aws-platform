@@ -39,3 +39,9 @@ output "switch_jws_key" {
   description = "switch JWS key"
   value       = module.intgw.jws_key
 }
+
+output "switch_jws_private_key" {
+  description = "switch JWS priv key"
+  value       = module.intgw.jws_private_key
+  sensitive = true
+}

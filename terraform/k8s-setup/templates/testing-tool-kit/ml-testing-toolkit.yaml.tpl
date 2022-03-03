@@ -144,7 +144,7 @@ ml-testing-toolkit:
           "ADMIN_CLIENT_ID": "admin-cli"
         },
         "SERVER_LOGS": {
-          "ENABLED": false,
+          "ENABLED": true,
           "RESULTS_PAGE_SIZE": 50,
           "ADAPTER": {
             "TYPE": "ELASTICSEARCH",

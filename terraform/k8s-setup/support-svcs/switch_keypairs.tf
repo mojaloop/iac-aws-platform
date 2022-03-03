@@ -1,7 +1,8 @@
 resource "vault_generic_secret" "jws_switch_public" {
-  path = "secret/jws/switch/public"
-
+  path = "secret/mcm/dfsp-jws-certs/0"
   data_json = jsonencode({
-    "key" = replace(module.intgw.jws_key, "\n", "\\n")
+    "dfspId" = "switch"
+    "publicKey" = module.intgw.jws_key
+    "validationState" = "VALID"
   })
 }

@@ -66,7 +66,6 @@ template {
 {{- end }}
   EOH
   destination = "/etc/haproxy/certificates/haproxy-callback.fullchain.crt"
-  #command     = "/vault/secrets/scripts/restarthaproxy.sh"
 }
 
 
@@ -103,7 +102,7 @@ frontend http-in
 
 frontend https-in
     option                  http-keep-alive
-    bind :443 force-tlsv12 ciphers EECDH+CHACHA20:ECDH+AESGCM:DH+AESGCM:EECDH+AES256:DH+AES256:EECDH+AES128:DH+AES:!aNULL:!MD5:!DSS ssl crt /etc/haproxy/certificates/haproxy-callback.fullchain.crt
+    bind :443 force-tlsv12 ciphers EECDH+CHACHA20:ECDH+AESGCM:DH+AESGCM:EECDH+AES256:DH+AES256:EECDH+AES128:DH+AES:!aNULL:!MD5:!DSS ssl crt /usr/local/etc/ssl/tls_cert.pem
     http-request            set-header X-Forwarded-Proto https
     http-request            set-var(txn.txnhost) hdr(host)
     http-request            set-var(txn.txnpath) path

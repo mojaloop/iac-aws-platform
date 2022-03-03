@@ -12,10 +12,25 @@ resource "helm_release" "haproxy-callback" {
       vault_secret_file_name        = "haproxy.conf"
       vault_secret_name             = "secret/onboarding_pm4mls"
       service_account_name          = kubernetes_service_account.vault-auth-gateway.metadata[0].name
+      cert_secret_name              = kubernetes_secret.haproxy-ssl-certificate-secret.metadata[0].name
     })
   ]
   provider = helm.helm-gateway
   depends_on = [kubernetes_config_map.vault-haproxy, helm_release.mcm-connection-manager]
+}
+
+resource "kubernetes_secret" "haproxy-ssl-certificate-secret" {
+  metadata {
+    name = "haproxy-ssl-certificate-secret"
+    namespace = "wso2"
+  }
+
+  data = {
+    "tls_cert.pem" = "${module.wso2_init.root_certificate}\n${module.wso2_init.root_private_key}"
+  }
+
+  type = "opaque"
+  provider = kubernetes.k8s-gateway
 }
 
 resource "kubernetes_config_map" "vault-haproxy" {
