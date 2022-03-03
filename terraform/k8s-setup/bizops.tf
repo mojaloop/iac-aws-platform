@@ -105,6 +105,7 @@ resource "helm_release" "bof" {
       central_admin_host = "moja-centralledger-service"
       central_settlements_host = "moja-centralsettlement-service"
       kafka_host = "${var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+      mojaloop_reports_config = local.mojaloop_reports_config
       reporting_db_host = local.oss_values.central_ledger_db_host
       reporting_db_port = "3306"
       reporting_db_user = local.oss_values.central_ledger_db_user
@@ -118,6 +119,11 @@ resource "helm_release" "bof" {
       release_name = "bof"
       test_user_name = "test1"
       test_user_password = vault_generic_secret.bizops_portal_user_password["test1"].data.value
+      report_tests_payer = "pm4mlsenderfsp"
+      report_tests_payee = "pm4mlreceiverfsp"
+      report_tests_currency = "USD"
+      report_tests_pm4ml_sender_host = "test.pm4mlsenderfsp.${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      report_tests_pm4ml_receiver_host = "test.pm4mlreceiverfsp.${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
     })
   ]
   provider = helm.helm-gateway
@@ -176,5 +182,5 @@ locals {
   keto_resource_index = index(var.stateful_resources.*.resource_name, "keto-db")
   kratos_resource_index = index(var.stateful_resources.*.resource_name, "kratos-db")
   rpt_mongodb_resource_index = index(var.stateful_resources.*.resource_name, "reporting-events-mongodb")
-
+  mojaloop_reports_config = jsondecode(file("${path.module}/mojaloop-custom-reports/config.json"))
 }
