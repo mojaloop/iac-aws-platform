@@ -84,8 +84,9 @@ reportTests:
     TEST_PAYER: ${report_tests_payer}
     TEST_PAYEE: ${report_tests_payee}
     TEST_CURRENCY: ${report_tests_currency}
-    TEST_PAYER_MSISDN: 25644444444
-    TEST_PAYEE_MSISDN: 25633333333
+    TEST_PAYER_MSISDN: "25644444444"
+    TEST_PAYEE_MSISDN: "25633333333"
+    NODE_TLS_REJECT_UNAUTHORIZED: "0"
 
 ## Backend API services
 role-assignment-service:
