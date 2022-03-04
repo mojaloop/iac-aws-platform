@@ -7,8 +7,3 @@ output "root_certificate" {
   description = "Self signed root CA"
   value = tls_self_signed_cert.root_ca_ssc.cert_pem
 }
-
-/* output "efs_helm_release_name" {
-  description = "Name of EFS Helm release"
-  value = helm_release.efs-setup.name
-} */

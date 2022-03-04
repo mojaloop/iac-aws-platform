@@ -33,7 +33,7 @@ resource "helm_release" "deploy_vault" {
   force_update = true
   cleanup_on_fail = true
   timeout    = 300
-  depends_on = [helm_release.deploy_consul, aws_kms_key.vault_unseal_key, time_sleep.wait_90_seconds-cert]
+  depends_on = [helm_release.deploy_consul, aws_kms_key.vault_unseal_key, helm_release.internal-nginx-ingress-controller]
   provider   = helm.helm-gateway
 }
 
@@ -143,7 +143,7 @@ resource "helm_release" "external-nginx-ingress-controller" {
         tls_sec_name = "default/${var.int_wildcard_cert_sec_name}"
       })
   ]
-  depends_on = [kubectl_manifest.lets-encrypt-wildcard-cert]
+  depends_on = [time_sleep.wait_90_seconds-cert]
 }
 
 resource "helm_release" "internal-nginx-ingress-controller" {
@@ -167,5 +167,5 @@ resource "helm_release" "internal-nginx-ingress-controller" {
         tls_sec_name = "default/${var.int_wildcard_cert_sec_name}"
       })
   ]
-  depends_on = [kubectl_manifest.lets-encrypt-wildcard-cert]
+  depends_on = [time_sleep.wait_90_seconds-cert]
 }
