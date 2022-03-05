@@ -30,10 +30,6 @@ module "wso2_init" {
   wso2_mysql_repo_version      = var.wso2_mysql_repo_version
   db_root_password             = data.vault_generic_secret.wso2_root_db_password.data.value
   db_host                      = "${var.stateful_resources[local.wso2_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
-  efs_subnet_ids               = [for az in data.terraform_remote_state.infrastructure.outputs.available_zones : data.terraform_remote_state.tenant.outputs.private_subnet_ids["${var.environment}-${az}"]["id"]]
-  efs_security_groups          = [data.terraform_remote_state.infrastructure.outputs.sg_id]
-  helm_efs_provisioner_version = var.helm_efs_provisioner_version
-  region                       = var.region
 
   providers = {
     helm = helm.helm-gateway
