@@ -79,13 +79,14 @@ reportTests:
     CENTRAL_LEDGER_ADMIN_ENDPOINT: https://${portal_fqdn}/proxy/central-admin
     CENTRAL_SETTLEMENT_ENDPOINT: https://${portal_fqdn}/proxy/central-settlements
     REPORT_BASE_PATH: https://${portal_fqdn}/proxy/reports
-    PAYER_SEND_MONEY_ENDPOINT: https://${report_tests_pm4ml_sender_host}/cc-send/sendmoney
-    PAYEE_SEND_MONEY_ENDPOINT: https://${report_tests_pm4ml_receiver_host}/cc-send/sendmoney
+    ACCOUNT_LOOKUP_SERVICE_BASE_PATH: http://${release_name}-account-lookup-service
+    PAYER_BACKEND_BASE_PATH: http://${release_name}-sim-payerfsp-backend
+    PAYEE_BACKEND_BASE_PATH: http://${release_name}-sim-payeefsp-backend
     TEST_PAYER: ${report_tests_payer}
     TEST_PAYEE: ${report_tests_payee}
     TEST_CURRENCY: ${report_tests_currency}
-    TEST_PAYER_MSISDN: "25644444444"
-    TEST_PAYEE_MSISDN: "25633333333"
+    TEST_PAYER_MSISDN: "17039811901"
+    TEST_PAYEE_MSISDN: "17039811902"
     NODE_TLS_REJECT_UNAUTHORIZED: "0"
 
 ## Backend API services
