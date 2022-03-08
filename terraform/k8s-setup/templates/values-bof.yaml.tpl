@@ -79,9 +79,9 @@ reportTests:
     CENTRAL_LEDGER_ADMIN_ENDPOINT: https://${portal_fqdn}/proxy/central-admin
     CENTRAL_SETTLEMENT_ENDPOINT: https://${portal_fqdn}/proxy/central-settlements
     REPORT_BASE_PATH: https://${portal_fqdn}/proxy/reports
-    ACCOUNT_LOOKUP_SERVICE_BASE_PATH: http://${release_name}-account-lookup-service
-    PAYER_BACKEND_BASE_PATH: http://${release_name}-sim-payerfsp-backend
-    PAYEE_BACKEND_BASE_PATH: http://${release_name}-sim-payeefsp-backend
+    ACCOUNT_LOOKUP_SERVICE_BASE_PATH: http://${account_lookup_service_host}
+    PAYER_BACKEND_BASE_PATH: http://${sim_payer_backend_host}:3003
+    PAYEE_BACKEND_BASE_PATH: http://${sim_payee_backend_host}:3003
     TEST_PAYER: ${report_tests_payer}
     TEST_PAYEE: ${report_tests_payee}
     TEST_CURRENCY: ${report_tests_currency}

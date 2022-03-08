@@ -104,6 +104,9 @@ resource "helm_release" "bof" {
       positionsui_fqdn = "${var.bofpositionsui_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
       central_admin_host = "moja-centralledger-service"
       central_settlements_host = "moja-centralsettlement-service"
+      account_lookup_service_host = "moja-account-lookup-service"
+      sim_payer_backend_host = "moja-sim-payerfsp-backend"
+      sim_payee_backend_host = "moja-sim-payeefsp-backend"
       kafka_host = "${var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
       mojaloop_reports_config = local.mojaloop_reports_config
       reporting_db_host = local.oss_values.central_ledger_db_host
