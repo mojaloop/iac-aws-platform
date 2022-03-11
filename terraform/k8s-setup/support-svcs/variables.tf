@@ -137,6 +137,12 @@ variable "vault-certman-secretname" {
   default = "tokenextgw-tls-ext"
 }
 
+variable "grafana_nginx_class_name" {
+  description = "which nginx class name to use, int or ext"
+  type = string
+  default = "nginx"
+}
+
 variable "stateful_resources" {
   description = "stateful resource config data"
   type = list(object({

@@ -19,6 +19,7 @@ terraform {
 provider "external" {
   alias = "wso2-automation-iskm-mcm"
 }
+
 locals {
   vault_addr = "https://vault.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   kube_master_url = "https://${data.terraform_remote_state.infrastructure.outputs.internal_load_balancer_dns}:6443"

@@ -1,5 +1,23 @@
 grafana:
   enabled: true
+  image:
+    repository: grafana/grafana
+    tag: 8.4.2
+  grafana.ini:
+    server:
+      domain: ${grafana_domain}
+      root_url: https://${grafana_host}
+    auth.gitlab:
+      enabled: true
+      allow_sign_up: true
+      scopes: read_api
+      auth_url: https://${gitlab_fqdn}/oauth/authorize
+      token_url: https://${gitlab_fqdn}/oauth/token
+      api_url: https://${gitlab_fqdn}/api/v4
+      allowed_groups: ${groups}
+      client_id: ${client_id}
+      client_secret: ${client_secret}
+      role_attribute_path: "is_admin && 'Admin' || 'Viewer'"
   datasources:
     datasources.yaml:
       apiVersion: 1
@@ -28,7 +46,7 @@ grafana:
     enabled: true
     annotations:
       #cert-manager.io/cluster-issuer: letsencrypt
-      kubernetes.io/ingress.class: nginx
+      kubernetes.io/ingress.class: ${ingress_class}
     hosts: 
       - ${grafana_host}
     tls:

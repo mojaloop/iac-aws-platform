@@ -10,6 +10,6 @@ domainFilters:
 txtOwnerId: ${txt_owner_id}
 policy: sync
 dryRun: false
-interval: 30m
+interval: 1m
 triggerLoopOnEvent: true
 txtPrefix: extdns

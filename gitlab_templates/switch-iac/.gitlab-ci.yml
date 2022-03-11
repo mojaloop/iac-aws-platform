@@ -58,6 +58,7 @@ Destroy AWS:
   stage: Destroy
   script:
     - cd terraform
+    - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform validate
     - terraform destroy -auto-approve
@@ -123,6 +124,7 @@ Destroy Base Services:
   stage: Destroy
   script:
     - cd terraform/k8s-setup/support-svcs
+    - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform validate
     - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
@@ -152,7 +154,7 @@ Destroy Environment:
 Destroy k3s Cluster:
   stage: "Destroy"  
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.16.0-beta2
+    name: ghcr.io/pm4ml/k3sbootstrap:0.16.0
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"')
@@ -191,7 +193,7 @@ Destroy k3s Cluster:
 Undeploy PM4ML Charts:
   stage: "Destroy"  
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.16.0-beta2
+    name: ghcr.io/pm4ml/k3sbootstrap:0.16.0
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -235,16 +237,18 @@ Deploy AWS Infrastructure:
   stage: "Deploy AWS infrastructure"
   script:
     - cd terraform
+    - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform apply -auto-approve
     - aws s3 sync $CI_IMAGE_PROJECT_DIR/kubespray-inventory s3://${BUCKET}/${environment}/kubespray-inventory/ --sse
     - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/ssh_provisioner_key s3://${BUCKET}/${environment}/terraform/ --sse
+    - aws s3 sync ./oauth-apps s3://${BUCKET}/${environment}/terraform/oauth-apps/ --sse
   when: manual
 
 Create k3s Cluster:
   stage: "Run k3s"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.16.0-beta2
+    name: ghcr.io/pm4ml/k3sbootstrap:0.16.0
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -315,9 +319,11 @@ Create Gateway Cluster:
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
     - cd ../support-svcs
+    - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
     - kubectl --kubeconfig=../../../admin-gateway.conf -n default wait --for=condition=ready certificate/wildcard-cert-internal --timeout=180s
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - aws s3 sync ./oauth-apps s3://${BUCKET}/${environment}/terraform/oauth-apps/ --sse
   when: manual
 
 1. Initial Install Base Apps:
@@ -352,7 +358,7 @@ Create Gateway Cluster:
 2b. Install Internal PM4MLs:
   stage: "Deploy Platform"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.16.0-beta2
+    name: ghcr.io/pm4ml/k3sbootstrap:0.16.0
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -599,17 +605,13 @@ Create Gateway Cluster:
 5. Run RBAC Tests:
   stage: "Run Tests"
   script:
-    - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-rbac-tests -n mojaloop || true
-    - kubectl --kubeconfig=admin-gateway.conf -n mojaloop logs bof-rbac-tests
-    - exit `kubectl --kubeconfig=admin-gateway.conf -n mojaloop get pod bof-rbac-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+    - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-rbac-tests -n mojaloop --logs
   when: manual
 
 6. Run Report Tests:
   stage: "Run Tests"
   script:
-    - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-report-tests -n mojaloop || true
-    - kubectl --kubeconfig=admin-gateway.conf -n mojaloop logs bof-report-tests
-    - exit `kubectl --kubeconfig=admin-gateway.conf -n mojaloop get pod bof-report-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+    - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-report-tests -n mojaloop --logs
   when: manual
 
 1. Run External PM4ML Onboarding:
@@ -682,3 +684,24 @@ Create Gateway Cluster:
   artifacts:
     paths:
       - add-ons-cluster-report.csv
+
+14. Automated Env Report :
+  stage: "Run Tests"
+  script:
+#    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+    - cd /tmp && git clone https://github.com/ashokalinux/Env-template.git
+    - cd /tmp/Env-template
+    - export
+    - terraform init
+    - terraform plan -out=plan.env
+    - terraform apply "plan.env"
+    - pwd
+    - ls -R
+    - cp ./Auto/Env/Lab.auto_environment.html $CI_IMAGE_PROJECT_DIR
+    - ls -l $CI_IMAGE_PROJECT_DIR
+#    - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/Auto s3://${BUCKET}/${environment}/Auto --sse
+    - aws s3 cp $CI_IMAGE_PROJECT_DIR/Lab.auto_environment.html s3://${BUCKET}/${environment}/Auto/Env/Lab.auto_environment.html --sse
+  when: manual
+  artifacts:
+    paths:
+      - Lab.auto_environment.html

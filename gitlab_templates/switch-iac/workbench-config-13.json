@@ -5,7 +5,7 @@
   "AWS_DEFAULT_REGION": "eu-west-1",
   "wso2_mysql_repo_version": "v1.0.0",
   "helm_esp_version": "11.0.1",
-  "helm_mcm_connection_manager_version": "0.5.8",
+  "helm_mcm_connection_manager_version": "0.5.19",
   "helm_nginx_version": "3.40.0",
   "helm_mojaloop_version": "13.0.2",
   "helm_mojaloop_simulator_version": "12.0.0",
@@ -21,7 +21,7 @@
   "helm_oathkeeper_version": "0.19.6",
   "helm_keto_version": "0.19.6",
   "helm_kratos_version": "0.14.1",
-  "helm_bof_version": "2.2.5",
+  "helm_bof_version": "2.2.4",
   "hub_currency_code": "USD",
   "iac_post_init_version": "v1.0.0",
   "storage_class_name": "longhorn",
@@ -50,6 +50,7 @@
   "internal_sim_enabled": "true",
   "cert_man_vault_cluster_issuer_name": "vault-issuer-int",
   "cert_man_letsencrypt_cluster_issuer_name": "letsencrypt",
+  "grafana_nginx_class_name": "nginx-ext",
   "internal_pm4ml_configs": [
     {
       "DFSP_NAME": "pm4mlreceiverfsp",
@@ -75,6 +76,19 @@
       "PARTY_LAST_NAME": "PM4MLSenderLast",
       "PARTY_FIRST_NAME": "PM4MLSenderFirst",
       "PARTY_MIDDLE_NAME": "PM4MLSenderMiddle",
+      "PARTY_DOB": "2010-10-10"
+    },
+    {
+      "DFSP_NAME": "pm4mltestfsp",
+      "DFSP_CURRENCY": "USD",
+      "DFSP_PREFIX": "144",
+      "DFSP_MSISDN": "25655555555",
+      "DFSP_ACCOUNT_ID": "36733333333",
+      "DFSP_SUB_ID": "",
+      "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com",
+      "PARTY_LAST_NAME": "PM4MLTestLast",
+      "PARTY_FIRST_NAME": "PM4MLTestFirst",
+      "PARTY_MIDDLE_NAME": "PM4MLTestMiddle",
       "PARTY_DOB": "2010-10-10"
     }
   ],
