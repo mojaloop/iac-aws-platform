@@ -132,6 +132,10 @@ reporting-legacy-api:
       nginx.ingress.kubernetes.io/rewrite-target: /$2
   install-templates: true
   auth: true
+  config:
+    env:
+      VALIDATION_RETRY_COUNT: "10"
+      VALIDATION_RETRY_INTERVAL_MS: "5000"
   reporting-k8s-templates:
     templates:
     %{ for config_key, config_value in mojaloop_reports_config.defaultReports }
