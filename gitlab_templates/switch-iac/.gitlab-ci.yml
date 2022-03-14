@@ -605,13 +605,17 @@ Create Gateway Cluster:
 5. Run RBAC Tests:
   stage: "Run Tests"
   script:
-    - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-rbac-tests -n mojaloop --logs
+    - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-rbac-tests -n mojaloop || true
+    - kubectl --kubeconfig=admin-gateway.conf -n mojaloop logs bof-rbac-tests
+    - exit `kubectl --kubeconfig=admin-gateway.conf -n mojaloop get pod bof-rbac-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
 6. Run Report Tests:
   stage: "Run Tests"
   script:
-    - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-report-tests -n mojaloop --logs
+    - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-report-tests -n mojaloop || true
+    - kubectl --kubeconfig=admin-gateway.conf -n mojaloop logs bof-report-tests
+    - exit `kubectl --kubeconfig=admin-gateway.conf -n mojaloop get pod bof-report-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
 1. Run External PM4ML Onboarding:
