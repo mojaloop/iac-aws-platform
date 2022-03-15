@@ -123,7 +123,7 @@ oathkeeper:
         "id": "account-oracle-prefixes",
         "upstream": {
           "url": "${account_oracle_admin_api_endpoint}/",
-          "stripPath": "/account-oracle"
+          "strip_path": "/account-oracle"
         },
         "match": {
           "url": "http://<[^/]+>/account-oracle/prefixes<.*>",
