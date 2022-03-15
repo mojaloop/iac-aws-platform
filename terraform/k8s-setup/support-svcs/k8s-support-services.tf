@@ -10,7 +10,9 @@ locals {
     client_secret = local.grafana_oauth_app_client_secret
     groups = local.gitlab_admin_group_name
     gitlab_fqdn = data.terraform_remote_state.tenant.outputs.gitlab_hostname
-    ingress_class = var.grafana_nginx_class_name
+    ingress_class = var.grafana_external_access ? "nginx-ext" : "nginx"
+    external_ingress = var.grafana_external_access
+    ingress_whitelist = var.grafana_external_whitelist
   }
 }
 

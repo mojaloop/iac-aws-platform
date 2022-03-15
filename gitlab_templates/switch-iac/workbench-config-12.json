@@ -52,6 +52,7 @@
   "internal_sim_enabled": "true",
   "cert_man_vault_cluster_issuer_name": "vault-issuer-int",
   "cert_man_letsencrypt_cluster_issuer_name": "letsencrypt",
+  "grafana_external_access": "true",
   "internal_pm4ml_configs": [
     {
       "DFSP_NAME": "pm4mlreceiverfsp",
