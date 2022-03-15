@@ -1,3 +1,6 @@
+global:
+  storageClass: ${storage_class_name}
+
 ingress:
   enabled: true
   annotations:
