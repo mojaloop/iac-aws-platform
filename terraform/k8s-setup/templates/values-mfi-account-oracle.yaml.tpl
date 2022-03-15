@@ -5,3 +5,5 @@ ingress:
   hosts:
     - host: ${ingress_host}
       paths: ['/']
+global:
+  storageClass: ${storage_class}
