@@ -9,8 +9,8 @@ resource "helm_release" "mfi-account-oracle" {
 
   values = [
     templatefile("${path.module}/templates/values-mfi-account-oracle.yaml.tpl", {
-      ingress_host = "${var.mfi_account_oracle_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}"
-      storage_class_name = var.storage_class_name
+      ingress_host = "${var.mfi_account_oracle_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      storage_class = var.storage_class_name
     })
   ]
   provider = helm.helm-gateway
@@ -19,5 +19,5 @@ resource "helm_release" "mfi-account-oracle" {
 
 output "mfi-account-oracle-fqdn" {
   description = "FQDN for the private hostname of the Internal GW service."
-  value = var.use_mfi_account_oracle_endpoint == "yes" ? "${var.mfi_account_oracle_name}.${data.terraform_remote_state.infrastructure.outputs.private_subdomain}" : "not used"
+  value = var.use_mfi_account_oracle_endpoint == "yes" ? "${var.mfi_account_oracle_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}" : "not used"
 }

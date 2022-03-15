@@ -1,6 +1,3 @@
-global:
-  storageClass: ${storage_class_name}
-
 ingress:
   enabled: true
   annotations:
@@ -8,3 +5,5 @@ ingress:
   hosts:
     - host: ${ingress_host}
       paths: ['/']
+global:
+  storageClass: ${storage_class}
