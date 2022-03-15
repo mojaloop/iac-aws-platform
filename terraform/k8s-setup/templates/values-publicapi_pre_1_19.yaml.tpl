@@ -47,7 +47,7 @@ ingress:
     enabled: true
     className: ""
     annotations:
-      nginx.ingress.kubernetes.io/rewrite-target: /$2
+      # nginx.ingress.kubernetes.io/rewrite-target: /$2
       kubernetes.io/ingress.class: nginx-ext
       cert-manager.io/cluster-issuer: letsencrypt
       nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
@@ -55,7 +55,7 @@ ingress:
     hosts:
       - host: ${publicapi_fqdn}
         paths: 
-          - path: /proxy(/|$)(.*)
+          - path: /
               
     tls:
       - secretName: publicapi-proxy
@@ -122,12 +122,13 @@ oathkeeper:
   accessRules: |- 
     [
       {
-        "id": "rule-1",
+        "id": "account-oracle-prefixes",
         "upstream": {
-          "url": "https://httpbin.org/anything"
+          "url": "${account_oracle_admin_api_endpoint}/",
+          "stripPath": "/account-oracle"
         },
         "match": {
-          "url": "http://<[^/]+>/als",
+          "url": "http://<[^/]+>/account-oracle/prefixes<.*>",
           "methods": [
             "GET"
           ]
