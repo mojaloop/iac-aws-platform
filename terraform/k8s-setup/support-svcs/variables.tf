@@ -137,10 +137,16 @@ variable "vault-certman-secretname" {
   default = "tokenextgw-tls-ext"
 }
 
-variable "grafana_nginx_class_name" {
-  description = "which nginx class name to use, int or ext"
+variable "grafana_external_access" {
+  description = "grafana is external (true) or internal (false)"
+  type = bool
+  default = false
+}
+
+variable "grafana_external_whitelist" {
+  description = "whitelist for grafana when exposed externally"
   type = string
-  default = "nginx"
+  default = "0.0.0.0/0"
 }
 
 variable "stateful_resources" {

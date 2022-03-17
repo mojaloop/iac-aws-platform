@@ -47,6 +47,7 @@ grafana:
     annotations:
       #cert-manager.io/cluster-issuer: letsencrypt
       kubernetes.io/ingress.class: ${ingress_class}
+      %{ if external_ingress ~}nginx.ingress.kubernetes.io/whitelist-source-range: ${ingress_whitelist}%{ endif }      
     hosts: 
       - ${grafana_host}
     tls:

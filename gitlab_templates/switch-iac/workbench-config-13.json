@@ -36,7 +36,7 @@
   "helm_loki_stack_version": "2.5.0",
   "helm_alias_oracle_version": "1.4.2",
   "use_alias_oracle_endpoint": "no",
-  "helm_mfi_account_oracle_version": "1.1.3",
+  "helm_mfi_account_oracle_version": "1.2.0",
   "use_mfi_account_oracle_endpoint": "no",
   "helm_mojaloop_reporting_service_version": "10.5.0",
   "grafana_slack_notifier_url": "https://hooks.slack.com/services/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",
@@ -50,7 +50,7 @@
   "internal_sim_enabled": "true",
   "cert_man_vault_cluster_issuer_name": "vault-issuer-int",
   "cert_man_letsencrypt_cluster_issuer_name": "letsencrypt",
-  "grafana_nginx_class_name": "nginx-ext",
+  "grafana_external_access": "true",
   "internal_pm4ml_configs": [
     {
       "DFSP_NAME": "pm4mlreceiverfsp",
