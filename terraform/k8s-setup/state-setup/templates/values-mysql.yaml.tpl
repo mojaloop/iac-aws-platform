@@ -185,14 +185,14 @@ secondary:
     requests: {}
 
   persistence:
-    ## @param primary.persistence.enabled Enable persistence on MySQL primary replicas using a `PersistentVolumeClaim`. If false, use emptyDir
+    ## @param secondary.persistence.enabled Enable persistence on MySQL secondary replicas using a `PersistentVolumeClaim`. If false, use emptyDir
     ##
     enabled: true
-    ## @param primary.persistence.existingClaim Name of an existing `PersistentVolumeClaim` for MySQL primary replicas
+    ## @param secondary.persistence.existingClaim Name of an existing `PersistentVolumeClaim` for MySQL primary replicas
     ## NOTE: When it's set the rest of persistence parameters are ignored
     ##
     existingClaim: ""
-    ## @param primary.persistence.storageClass MySQL primary persistent volume storage Class
+    ## @param secondary.persistence.storageClass MySQL secondary persistent volume storage Class
     ## If defined, storageClassName: <storageClass>
     ## If set to "-", storageClassName: "", which disables dynamic provisioning
     ## If undefined (the default) or set to null, no storageClassName spec is
@@ -200,17 +200,17 @@ secondary:
     ##   GKE, AWS & OpenStack)
     ##
     storageClass: ${storage_class_name}
-    ## @param primary.persistence.annotations [object] MySQL primary persistent volume claim annotations
+    ## @param secondary.persistence.annotations [object] MySQL secondary persistent volume claim annotations
     ##
     annotations: {}
-    ## @param primary.persistence.accessModes MySQL primary persistent volume access Modes
+    ## @param secondary.persistence.accessModes MySQL secondary persistent volume access Modes
     ##
     accessModes:
       - ReadWriteOnce
-    ## @param primary.persistence.size MySQL primary persistent volume size
+    ## @param secondary.persistence.size MySQL secondary persistent volume size
     ##
     size: ${storage_size}
-    ## @param primary.persistence.selector [object] Selector to match an existing Persistent Volume
+    ## @param secondary.persistence.selector [object] Selector to match an existing Persistent Volume
     ## selector:
     ##   matchLabels:
     ##     app: my-app
