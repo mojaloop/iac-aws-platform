@@ -238,12 +238,12 @@
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": {
-          "architecture": "replication",
           "root_password": null,
           "user": "central_ledger",
           "user_password": null,
           "database_name": "central_ledger",
           "storage_size": "8Gi",
+          "architecture": "replication",
           "replica_count": 2
         },
         "mongodb_data": null,
