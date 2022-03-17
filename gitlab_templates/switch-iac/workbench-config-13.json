@@ -207,12 +207,12 @@
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": {
-          "architecture": "replication",
           "root_password": null,
           "user": "account_lookup",
           "user_password": null,
           "database_name": "account_lookup",
           "storage_size": "8Gi",
+          "architecture": "replication",
           "replica_count": 2
         },
         "mongodb_data": null,

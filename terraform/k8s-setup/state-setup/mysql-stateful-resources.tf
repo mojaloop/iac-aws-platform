@@ -15,6 +15,8 @@ resource "helm_release" "mysql" {
       storage_size = each.value.local_resource.mysql_data.storage_size
       storage_class_name = var.storage_class_name
       name_override = each.value.resource_name
+      architecture      = each.value.local_resource.mysql_data.architecture
+      replica_count = each.value.local_resource.mysql_data.replica_count
     })
   ]
   provider = helm.helm-gateway
