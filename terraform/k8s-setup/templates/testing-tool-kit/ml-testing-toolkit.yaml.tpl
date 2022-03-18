@@ -3,7 +3,7 @@ ml-testing-toolkit:
   ml-testing-toolkit-backend:
     image:
       repository: mojaloop/ml-testing-toolkit
-      tag: v14.0.4
+      tag: v14.0.5
     ingress:
       hosts:
         specApi:
@@ -237,6 +237,16 @@ ml-testing-toolkit:
       simNameNoResponsePayeefsp: 'noresponsepayeefsp'
     extraEnvironments:
       hub-k8s-cgs-environment.json: null
+      hub-k8s-default-environment.json: {
+        "inputValues": {
+          "SIMPAYER_CURRENCY": "XXX",
+          "SIMPAYEE_CURRENCY": "XXX",
+          "currency": "XXX",
+          "currency2": "XTS",
+          "SIMPLE_ROUTING_MODE_ENABLED": true,
+          "ON_US_TRANSFERS_ENABLED": false
+        }
+      }
 
   ml-testing-toolkit-frontend:
     image:
