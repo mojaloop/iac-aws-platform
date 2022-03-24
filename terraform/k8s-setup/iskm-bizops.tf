@@ -53,7 +53,7 @@ module "bizops-portal-iskm" {
 }
 
 module "bizops-portal-iskm-user-portaladmin" {
-  source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-create-user?ref=v1.0.42"
+  source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-create-user?ref=v2.1.15"
   iskm_fqdn = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   iskm_admin_port = "443"
   admin_user      = "admin"
@@ -65,7 +65,7 @@ module "bizops-portal-iskm-user-portaladmin" {
 
 module "bizops-portal-iskm-user-portal-users" {
   for_each = {for user in var.bizops_portal_users: user.username => user}
-  source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-create-user?ref=v1.0.42"
+  source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-create-user?ref=v2.1.15"
   iskm_fqdn = "iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   iskm_admin_port = "443"
   admin_user      = "admin"
