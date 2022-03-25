@@ -143,6 +143,7 @@ locals {
     portal_oauth_app_token = vault_generic_secret.mojaloop_fin_portal_backend_client_secret.data.value
     internal_ttk_enabled = var.internal_ttk_enabled
     internal_sim_enabled = var.internal_sim_enabled
+    mojaloop_thirdparty_support_enabled = "false"
     storage_class_name = var.storage_class_name
     jws_signing_priv_key = data.terraform_remote_state.support-svcs.outputs.switch_jws_private_key
   }
