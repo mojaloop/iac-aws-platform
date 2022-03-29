@@ -241,6 +241,13 @@ variable "bizops_mojaloop_roles" {
   }))
   default = []
 }
+
+variable "publicapi_external_whitelist" {
+  description = "Whitelist for publicapi. The value is a comma separated list of CIDRs, e.g. 10.0.0.0/24,172.10.0.1."
+  type = string
+  default = "0.0.0.0/0"
+}
+
 variable "kubernetes_auth_path" {
   description = "vault kube auth engine path"
   type        = string

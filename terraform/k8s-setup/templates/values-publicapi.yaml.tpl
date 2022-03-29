@@ -48,7 +48,7 @@ ingress:
       # nginx.ingress.kubernetes.io/rewrite-target: /$2
       kubernetes.io/ingress.class: nginx-ext
       cert-manager.io/cluster-issuer: letsencrypt
-      nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+      nginx.ingress.kubernetes.io/whitelist-source-range: ${ingress_whitelist}
       # nginx.ingress.kubernetes.io/ssl-redirect: "false"
     hosts:
       - host: ${publicapi_fqdn}
