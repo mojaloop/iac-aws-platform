@@ -113,6 +113,7 @@
       "email" : "test2@test.com"
     }
   ],
+  "publicapi_external_whitelist": "0.0.0.0/0",
   "custom_tags": {
     "mojaloop/cost_center":  "oss-iac-test", 
     "mojaloop/owner": "dfry",
