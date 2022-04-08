@@ -78,19 +78,17 @@ promtail:
     repository: grafana/promtail
     tag: 2.4.2
     pullPolicy: IfNotPresent
-  config:
-    snippets:
-      extraScrapeConfigs: |
-        - job_name: kafka
-          kafka:
-            brokers:
-            - ${kafka_host}
-            topics:
-            - topic-event
-            labels:
-              job: mojaloop-kafka-messages
-          relabel_configs:
-              - action: replace
-                source_labels:
-                  - __meta_kafka_topic
-                target_label: mojaloop_kafka_topic
+  extraScrapeConfigs: |
+    - job_name: kafka
+      kafka:
+        brokers:
+        - ${kafka_host}
+        topics:
+        - topic-event
+        labels:
+          job: mojaloop-kafka-messages
+      relabel_configs:
+          - action: replace
+            source_labels:
+              - __meta_kafka_topic
+            target_label: mojaloop_kafka_topic
