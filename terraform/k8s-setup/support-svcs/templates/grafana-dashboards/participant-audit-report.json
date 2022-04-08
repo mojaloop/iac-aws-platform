@@ -1,170 +1,204 @@
 {
   "annotations": {
-  "list": [
-    {
-      "builtIn": 1,
-      "datasource": "-- Grafana --",
-      "enable": true,
-      "hide": true,
-      "iconColor": "rgba(0, 211, 255, 1)",
-      "name": "Annotations & Alerts",
-      "target": {
-        "limit": 100,
-        "matchAny": false,
-        "tags": [],
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
-      },
-      "type": "dashboard"
-    }
+      }
     ]
   },
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 16,
+  "id": 1,
   "links": [],
   "panels": [
-  {
-    "datasource": "Loki",
-    "fieldConfig": {
-      "defaults": {
-        "color": {
-          "mode": "thresholds"
+    {
+      "datasource": "Loki",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
         },
-        "custom": {
-          "align": "auto",
-          "displayMode": "auto"
-        },
-        "mappings": [],
-        "thresholds": {
-          "mode": "absolute",
-          "steps": [
-            {
-              "color": "green",
-              "value": null
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "isActive"
             },
-            {
-              "color": "red",
-              "value": 80
-            }
-          ]
-        }
-      },
-      "overrides": [
-        {
-          "matcher": {
-            "id": "byName",
-            "options": "isActive"
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 118
+              }
+            ]
           },
-          "properties": [
-            {
-              "id": "custom.width",
-              "value": 118
-            }
-          ]
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NDC"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 108
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "currency"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 117
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ActivationStatus"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "false": {
+                        "color": "red",
+                        "index": 1,
+                        "text": "Deactivated"
+                      },
+                      "true": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "Activated"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "8.1.6",
+      "targets": [
+        {
+          "expr": "{job=\"mojaloop-kafka-messages\",mojaloop_kafka_topic=\"topic-event\"} |~ \"UpdateParticipantDetails|UpdateParticipantAccountDetails|AdjustParticipantLimits\"  | json messageType=\"content.messageType\", requestId=\"content.headers[\\\"x-request-id\\\"]\", dfsp=\"content.params.participant\", accountId=\"content.params.account\", user=\"content.headers[\\\"x-email\\\"]\", date=\"content.response.headers.date\", process=\"content.actionType\", currency=\"content.payload.currency\", ndc=\"content.payload.limit.value\", isActive=\"content.payload.isActive\", status=\"content.response.statusMessage\" | messageType=\"response\" | line_format \"{ \\\"messageType\\\": \\\"{{ .messageType}}\\\", \\\"requestId\\\": \\\"{{ .requestId}}\\\", \\\"Process\\\": \\\"{{ .process}}\\\",\\\"DFSP\\\": \\\"{{ .dfsp}}\\\",\\\"AccountID\\\": \\\"{{ .accountId}}\\\",{{ if hasPrefix `AdjustParticipantLimits` .process}} \\\"Currency\\\": \\\"{{ .currency}}\\\", \\\"NDC\\\": \\\"{{ .ndc}}\\\"{{else}} \\\"Currency\\\": \\\"\\\", \\\"ActivationStatus\\\": {{ .isActive}}{{end}}, \\\"User\\\": \\\"{{ .user}}\\\", \\\"Date\\\": \\\"{{ .date}}\\\", \\\"RequestStatus\\\": \\\"{{ .status}}\\\"}\" | json",
+          "refId": "A"
+        }
+      ],
+      "title": "Participant Audit Report",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {}
         },
         {
-          "matcher": {
-            "id": "byName",
-            "options": "NDC"
-          },
-          "properties": [
-            {
-              "id": "custom.width",
-              "value": 108
-            }
-          ]
-        },
-        {
-          "matcher": {
-            "id": "byName",
-            "options": "currency"
-          },
-          "properties": [
-            {
-              "id": "custom.width",
-              "value": 117
-            }
-          ]
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "accountId": true,
+              "currency": true,
+              "date": true,
+              "dfsp": true,
+              "id": true,
+              "isActive": true,
+              "job": true,
+              "line": true,
+              "messageType": true,
+              "mojaloop_kafka_topic": true,
+              "ndc": true,
+              "process": true,
+              "requestId": true,
+              "status": true,
+              "ts": true,
+              "tsNs": true,
+              "user": true
+            },
+            "indexByName": {
+              "AccountID": 2,
+              "ActivationStatus": 8,
+              "Currency": 5,
+              "DFSP": 1,
+              "Date": 11,
+              "NDC": 6,
+              "Process": 0,
+              "RequestStatus": 9,
+              "User": 10,
+              "accountId": 3,
+              "currency": 25,
+              "date": 13,
+              "dfsp": 24,
+              "id": 22,
+              "isActive": 7,
+              "job": 15,
+              "line": 21,
+              "messageType": 19,
+              "mojaloop_kafka_topic": 20,
+              "ndc": 16,
+              "process": 4,
+              "requestId": 17,
+              "status": 18,
+              "ts": 14,
+              "tsNs": 23,
+              "user": 12
+            },
+            "renameByName": {}
+          }
         }
-      ]
-    },
-    "gridPos": {
-      "h": 8,
-      "w": 18,
-      "x": 0,
-      "y": 0
-    },
-    "id": 2,
-    "options": {
-      "showHeader": true,
-      "sortBy": []
-    },
-    "pluginVersion": "8.1.6",
-    "targets": [
-      {
-        "expr": "{job=\"mojaloop-kafka-messages\",mojaloop_kafka_topic=\"topic-event\"} |~ \"UpdateParticipantDetails|AdjustParticipantLimits\"  | json messageType=\"content.messageType\", requestId=\"content.headers[\\\"x-request-id\\\"]\", dfsp=\"content.params.participant\", user=\"content.headers[\\\"x-email\\\"]\", date=\"content.response.headers.date\", process=\"content.actionType\", currency=\"content.payload.currency\", ndc=\"content.payload.limit.value\", isActive=\"content.payload.isActive\", status=\"content.response.statusMessage\" | messageType=\"response\" | line_format \"{ \\\"messageType\\\": \\\"{{ .messageType}}\\\", \\\"requestId\\\": \\\"{{ .requestId}}\\\", \\\"Process\\\": \\\"{{ .process}}\\\",\\\"DFSP\\\": \\\"{{ .dfsp}}\\\",{{ if hasPrefix `AdjustParticipantLimits` .process}} \\\"Currency\\\": \\\"{{ .currency}}\\\", \\\"NDC\\\": \\\"{{ .ndc}}\\\"{{else}} \\\"Currency\\\": \\\"NA\\\", \\\"isActive\\\": {{ .isActive}}{{end}}, \\\"User\\\": \\\"{{ .user}}\\\", \\\"Date\\\": \\\"{{ .date}}\\\", \\\"RequestStatus\\\": \\\"{{ .status}}\\\"}\" | json\n",
-        "refId": "A"
-      }
-    ],
-    "title": "Participant Audit Report",
-    "transformations": [
-      {
-        "id": "labelsToFields",
-        "options": {}
-      },
-      {
-        "id": "organize",
-        "options": {
-          "excludeByName": {
-            "currency": true,
-            "date": true,
-            "dfsp": true,
-            "id": true,
-            "job": true,
-            "line": true,
-            "messageType": true,
-            "mojaloop_kafka_topic": true,
-            "ndc": true,
-            "process": true,
-            "requestId": true,
-            "status": true,
-            "ts": true,
-            "tsNs": true,
-            "user": true
-          },
-          "indexByName": {
-            "Currency": 3,
-            "DFSP": 1,
-            "Date": 8,
-            "NDC": 4,
-            "Process": 0,
-            "RequestStatus": 6,
-            "User": 7,
-            "currency": 22,
-            "date": 10,
-            "dfsp": 21,
-            "id": 19,
-            "isActive": 5,
-            "job": 12,
-            "line": 18,
-            "messageType": 16,
-            "mojaloop_kafka_topic": 17,
-            "ndc": 13,
-            "process": 2,
-            "requestId": 14,
-            "status": 15,
-            "ts": 11,
-            "tsNs": 20,
-            "user": 9
-          },
-          "renameByName": {}
-        }
-      }
-    ],
-    "type": "table"
-  }
+      ],
+      "type": "table"
+    }
   ],
+  "refresh": "",
   "schemaVersion": 30,
   "style": "dark",
   "tags": [],
