@@ -1,4 +1,5 @@
 locals {
+  mojaloop_kafka_resource_index = index(var.stateful_resources.*.resource_name, "mojaloop-kafka")
   env_values = {
     prom-mojaloop-url    = "http://loki-stack-prometheus-server"
     grafana-slack-url    = var.grafana_slack_notifier_url
@@ -13,6 +14,7 @@ locals {
     ingress_class = var.grafana_external_access ? "nginx-ext" : "nginx"
     external_ingress = var.grafana_external_access
     ingress_whitelist = var.grafana_external_whitelist
+    kafka_host = "${var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_name}.stateful-services.svc.cluster.local:9092"
   }
 }
 
