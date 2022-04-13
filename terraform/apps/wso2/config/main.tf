@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.0"
+  required_version = ">= 1.1"
   backend "s3" {
     key     = "##environment##/wso2/extgw/terraform.tfstate"
     encrypt = true
