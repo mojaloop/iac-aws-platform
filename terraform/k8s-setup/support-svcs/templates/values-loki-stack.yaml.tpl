@@ -4,6 +4,10 @@ grafana:
     repository: grafana/grafana
     tag: 8.4.2
   grafana.ini:
+    unified_alerting:
+      enabled: false
+    alerting:
+      enabled: true
     server:
       domain: ${grafana_domain}
       root_url: https://${grafana_host}
