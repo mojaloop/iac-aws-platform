@@ -64,3 +64,38 @@ resource "local_file" "gp_postman_environment_file" {
   filename   = "${path.root}/sim_tests/Lab.postman_environment.json"
   depends_on = [module.provision_sims_to_wso2, module.provision_accounts_to_wso2]
 }
+
+#aws data source
+data "aws_caller_identity" "current" {}
+
+output "account_id" {
+  value = data.aws_caller_identity.current.account_id
+}
+
+
+#template variables
+resource "local_file" "environment_page_file" {
+  content = templatefile("${path.module}/templates/environment_page.html.tpl", {
+    LAB_DOMAIN                         = trimsuffix(data.terraform_remote_state.infrastructure.outputs.public_subdomain, "."),
+    TENANT_DOMAIN                      = trimprefix(data.terraform_remote_state.infrastructure.outputs.public_subdomain, "${var.environment}"),
+    WIREGUARD                          = (data.terraform_remote_state.tenant.outputs.wireguard_vpn_hostname),
+    WIREGUARD_PRI                      = (data.terraform_remote_state.tenant.outputs.wireguard_private_ip),
+    WIREGUARD_PUB                      = (data.terraform_remote_state.tenant.outputs.wireguard_public_ip),
+    AWS_ACCOUNT_ID                     = (data.aws_caller_identity.current.account_id),
+    REGION                             = "${var.region}",
+    ENVIRONMENT                        = "${upper(var.environment)}",
+    TENANT                             = "${upper(var.client)}",
+    BUCKET			                   = "${var.client}-mojaloop-state",
+    tenant                             = "${var.client}",
+    environment                        = "${var.environment}",
+    ALIAS_ORACLE                       = (data.terraform_remote_state.k8s-base.outputs.alias-oracle-fqdn),
+    ACCOUNT_ORACLE                     = (data.terraform_remote_state.k8s-base.outputs.mfi-account-oracle-fqdn),
+    PM4ML_DOMAIN                       = "${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}",
+    MOJALOOP_RELEASE                   = (data.terraform_remote_state.k8s-base.outputs.helm_mojaloop_version),
+    FINANCE_PORTAL_VERSION             = "${var.helm_finance_portal_version}",
+    BOF_VERSION                        = "${var.helm_bof_version}",
+    MCM_CONNECTION_MANAGER_VERSION     = "${var.helm_mcm_connection_manager_version}"
+  })
+  filename   = "${path.root}/Auto/Env/environment_page.html"
+  depends_on = [module.provision_sims_to_wso2, module.provision_accounts_to_wso2]
+}

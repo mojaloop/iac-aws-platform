@@ -110,3 +110,15 @@ variable "pm4ml_nat_ips" {
   type = list(string)
   default = ["192.168.0.1", "192.168.0.2", "192.168.0.3"]
 }
+
+variable "helm_finance_portal_version" {
+  default = ""
+}
+
+variable "helm_bof_version" {
+  default = ""
+}
+
+variable "helm_mcm_connection_manager_version" {
+  default = ""
+}
