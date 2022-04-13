@@ -270,6 +270,7 @@ quoting-service:
   sidecar:
     enabled: true
   config:
+    kafka_host: "${kafka_host}"
     simple_routing_mode_enabled: false
     log_transport: "console"
     log_level: "debug"
