@@ -58,6 +58,11 @@
 			"enabled": true
 		},
 		{
+			"key": "P2P_ORACLE_ENDPOINT",
+			"value": "${P2P_ORACLE_ENDPOINT}",
+			"enabled": true
+		},
+		{
 			"key": "ALIAS_ORACLE_ENDPOINT",
 			"value": "${ALIAS_ORACLE_ENDPOINT}",
 			"enabled": true
@@ -65,6 +70,11 @@
 		{
 			"key": "ACCOUNT_ORACLE_ADMIN_API_ENDPOINT",
 			"value": "${ACCOUNT_ORACLE_ADMIN_API_ENDPOINT}",
+			"enabled": true
+		},
+		{
+			"key": "P2P_ORACLE_ADMIN_API_ENDPOINT",
+			"value": "${P2P_ORACLE_ADMIN_API_ENDPOINT}",
 			"enabled": true
 		},
 		{

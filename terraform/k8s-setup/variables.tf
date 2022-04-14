@@ -178,6 +178,23 @@ variable "use_mfi_account_oracle_endpoint" {
   default     = "no"
 }
 
+variable "mfi_p2p_oracle_name" {
+  description = "host name for MFI p2p oracle"
+  type        = string
+  default     = "mfi-p2p-oracle"
+}
+
+variable "helm_mfi_p2p_oracle_version" {
+  description = "helm version for MFI p2p oracle"
+  type        = string
+}
+
+variable "use_mfi_p2p_oracle_endpoint" {
+  description = "use MFI p2p oracle instead of internal"
+  type        = string
+  default     = "no"
+}
+
 variable "internal_ttk_enabled" {
   description = "whether internal ttk instance is enabled or not"
   default = true
