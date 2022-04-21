@@ -332,7 +332,9 @@ finance-portal-settlement-management:
     db_host: "${finance_portal_db_host}"
     db_user: "${finance_portal_db_user}"
 mojaloop-bulk:
-  enabled: true  
+  enabled: true
+  mongodb:
+    enabled: false
   bulk-centralledger:
     cl-handler-bulk-transfer-get:
       config:
@@ -366,6 +368,7 @@ mojaloop-bulk:
     bulk-api-adapter-handler-notification:
       config:
         kafka_host: "${kafka_host}"
+        objstore_uri: 'mongodb://${cl_mongodb_user}:${cl_mongodb_pass}@${cl_mongodb_host}:27017/${cl_mongodb_database}'
     bulk-api-adapter-service:
       config:
         kafka_host: "${kafka_host}"

@@ -378,6 +378,8 @@ finance-portal-settlement-management:
   enabled: false
 mojaloop-bulk:
   enabled: true
+  mongodb:
+    enabled: false
   bulk-centralledger:
     cl-handler-bulk-transfer-get:
       config:
