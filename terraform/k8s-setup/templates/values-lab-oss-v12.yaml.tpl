@@ -1,5 +1,6 @@
 global:
   config:
+    db_password: "${mysql_password}"
     forensicloggingsidecar_disabled: true
 
 account-lookup-service:
@@ -10,17 +11,16 @@ account-lookup-service:
           repository: mojaloop/account-lookup-service
           tag: v11.8.0
     config:
-      db_password: "${account_lookup_db_password}"
-      db_host: "${account_lookup_db_host}"
-      db_user: "${account_lookup_db_user}"
-      endpointSecurity:
-        jwsSigningKey: |-
-          ${indent(10, jws_signing_priv_key)}
+      db_password: "${mysql_password}"
     ingress:
       annotations:
         kubernetes.io/ingress.class: nginx
       hosts:
         - account-lookup-service.${env}.${name}.${domain}.internal
+    mysql:
+      enabled: true
+      mysqlPassword: "${mysql_password}"
+      mysqlRootPassword: ${mysql_root_password}
   account-lookup-service-admin:
     containers:
       admin:
@@ -28,28 +28,24 @@ account-lookup-service:
           repository: mojaloop/account-lookup-service
           tag: v11.8.0
     config:
-      db_password: "${account_lookup_db_password}"
-      db_host: "${account_lookup_db_host}"
-      db_user: "${account_lookup_db_user}"
+      db_password: "${mysql_password}"
     ingress:
       annotations:
         kubernetes.io/ingress.class: nginx
       hosts:
         - account-lookup-service-admin.${env}.${name}.${domain}.internal
   mysql:
-    enabled: false
-  als-oracle-pathfinder:
-    enabled: false
+    mysqlPassword: "${mysql_password}"
+als-oracle-pathfinder:
+  enabled: false
+  config:
+    db:
+      account_lookup:
+        password: "${mysql_password}"
+      central_ledger:
+        password: "${mysql_password}"
 central:
   centraleventprocessor:
-    mongodb:
-      enabled: false
-    config:
-      kafka_host: "${kafka_host}"
-      mongo_host: ${cep_mongodb_host}
-      mongo_user: ${cep_mongodb_user}
-      mongo_password: ${cep_mongodb_pass}
-      mongo_database: ${cep_mongodb_database}
     ingress:
       annotations:
         kubernetes.io/ingress.class: nginx
@@ -57,15 +53,8 @@ central:
         api: central-event-processor.${env}.${name}.${domain}.internal
   centralledger:
     centralledger-handler-admin-transfer:
-      containers:
-        api:
-          image:
-            repository: mojaloop/central-ledger
-            tag: v13.14.3
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_ledger_db_password}"
-        db_host: "${central_ledger_db_host}"
+        db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         annotations:
@@ -73,16 +62,8 @@ central:
         hosts:
           api: central-ledger-admin-transfer.${env}.${name}.${domain}.internal
     centralledger-handler-timeout:
-      containers:
-        api:
-          image:
-            repository: mojaloop/central-ledger
-            tag: v13.14.3
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_ledger_db_password}"
-        db_host: "${central_ledger_db_host}"
-        db_user: "${central_ledger_db_user}"
+        db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         annotations:
@@ -96,10 +77,7 @@ central:
             repository: mojaloop/central-ledger
             tag: v13.14.3
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_ledger_db_password}"
-        db_host: "${central_ledger_db_host}"
-        db_user: "${central_ledger_db_user}"
+        db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         annotations:
@@ -107,16 +85,8 @@ central:
         hosts:
           api: central-ledger-transfer-fulfil.${env}.${name}.${domain}.internal
     centralledger-handler-transfer-get:
-      containers:
-        api:
-          image:
-            repository: mojaloop/central-ledger
-            tag: v13.14.3
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_ledger_db_password}"
-        db_host: "${central_ledger_db_host}"
-        db_user: "${central_ledger_db_user}"
+        db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         annotations:
@@ -124,16 +94,8 @@ central:
         hosts:
           api: central-ledger-transfer-get.${env}.${name}.${domain}.internal
     centralledger-handler-transfer-position:
-      containers:
-        api:
-          image:
-            repository: mojaloop/central-ledger
-            tag: v13.14.3
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_ledger_db_password}"
-        db_host: "${central_ledger_db_host}"
-        db_user: "${central_ledger_db_user}"
+        db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         annotations:
@@ -141,16 +103,8 @@ central:
         hosts:
           api: central-ledger-transfer-position.${env}.${name}.${domain}.internal
     centralledger-handler-transfer-prepare:
-      containers:
-        api:
-          image:
-            repository: mojaloop/central-ledger
-            tag: v13.14.3
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_ledger_db_password}"
-        db_host: "${central_ledger_db_host}"
-        db_user: "${central_ledger_db_user}"
+        db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         annotations:
@@ -164,15 +118,12 @@ central:
             repository: mojaloop/central-ledger
             tag: v13.14.3
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_ledger_db_password}"
-        db_host: "${central_ledger_db_host}"
-        db_user: "${central_ledger_db_user}"
+        db_password: "${mysql_password}"
         resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
       ingress:
         annotations:
-          nginx.ingress.kubernetes.io/rewrite-target: /$2
           kubernetes.io/ingress.class: nginx
+          nginx.ingress.kubernetes.io/rewrite-target: /$2
         externalPath:
             api: /admin(/|$)(.*)
         hosts:
@@ -180,9 +131,25 @@ central:
           admin: interop-switch.${env}.${name}.${domain}.internal
         mysql:
     mysql:
-      enabled: false
+      mysqlPassword: "${mysql_password}"
+      mysqlRootPassword: ${mysql_root_password}
+      persistence:
+        enabled: true
+        accessMode: ReadWriteOnce
+        size: 8Gi
+        storageClass: ${storage_class_name}
+      configFiles:
+        mysql_custom.cnf: |
+          [mysqld]
+          skip-name-resolve
     kafka:
-      enabled: false
+      configurationOverrides:
+        log.retention.hours: ${kafka.retention_hours}
+      persistence:
+        enabled: true
+        size: ${kafka.storage_size}
+        mountPath: ${kafka.mountPath}
+        storageClass: ${storage_class_name}
   centralsettlement:
     centralsettlement-service:
       ingress:
@@ -194,55 +161,24 @@ central:
         hosts:
           api: interop-switch.${env}.${name}.${domain}.internal
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_settlement_db_password}"
-        db_host: "${central_settlement_db_host}"
-        db_user: "${central_settlement_db_user}"
-    centralsettlement-handler-deferredsettlement:
-      config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_settlement_db_password}"
-        db_host: "${central_settlement_db_host}"
-        db_user: "${central_settlement_db_user}"
-    centralsettlement-handler-grosssettlement:
-      config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_settlement_db_password}"
-        db_host: "${central_settlement_db_host}"
-        db_user: "${central_settlement_db_user}"
-    centralsettlement-handler-rules:
-      config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_settlement_db_password}"
-        db_host: "${central_settlement_db_host}"
-        db_user: "${central_settlement_db_user}"
+        db_password: "${mysql_password}"
     centralsettlement-handler-settlementwindow:
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_settlement_db_password}"
-        db_host: "${central_settlement_db_host}"
-        db_user: "${central_settlement_db_user}"
+        db_password: "${mysql_password}"
     centralsettlement-handler-transfersettlement:
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_settlement_db_password}"
-        db_host: "${central_settlement_db_host}"
-        db_user: "${central_settlement_db_user}"
-
+        db_password: "${mysql_password}"
+    
 emailnotifier:
   ingress:
     annotations:
       kubernetes.io/ingress.class: nginx
     hosts:
-      api: emailnotifier.${env}.${name}.${domain}.internal
+      api: emailnotifier.${env}.${name}.${domain}.internal   
 ml-api-adapter:
   ml-api-adapter-handler-notification:
     config:
-      kafka_host: "${kafka_host}"
       resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
-      endpointSecurity:
-        jwsSigningKey: |-
-          ${indent(10, jws_signing_priv_key)}
     image:
       repository: mojaloop/ml-api-adapter
       tag: v11.2.0
@@ -253,7 +189,6 @@ ml-api-adapter:
         api: ml-api-adapter-handler-notification.${env}.${name}.${domain}.internal
   ml-api-adapter-service:
     config:
-      kafka_host: "${kafka_host}"
       resource_versions: 'transfers=1.1,participants=1.0,quotes=1.0'
     image:
       repository: mojaloop/ml-api-adapter
@@ -267,19 +202,16 @@ ml-api-adapter:
       hosts:
         api: ml-api-adapter.${env}.${name}.${domain}.internal
 quoting-service:
+  image:
+    repository: mojaloop/quoting-service
+    tag: v12.0.7
   sidecar:
     enabled: true
   config:
-    kafka_host: "${kafka_host}"
     simple_routing_mode_enabled: false
     log_transport: "console"
     log_level: "debug"
-    db_password: "${quoting_db_password}"
-    db_host: "${quoting_db_host}"
-    db_user: "${quoting_db_user}"
-    endpointSecurity:
-      jwsSigningKey: |-
-        ${indent(8, jws_signing_priv_key)}
+    db_password: "${mysql_password}"
   ingress:
     annotations:
       kubernetes.io/ingress.class: nginx
@@ -295,9 +227,7 @@ simulator:
 
 finance-portal:
   config:
-    db_password: "${finance_portal_db_password}"
-    db_host: "${finance_portal_db_host}"
-    db_user: "${finance_portal_db_user}"
+    db_password: "${mysql_password}"
     centralSettlementsEndpoint: '$release_name-centralsettlement-service/v2'
     oauthServer: ${wso2is_host}
     oauthClientKey: ${portal_oauth_app_id}
@@ -328,48 +258,25 @@ finance-portal:
 finance-portal-settlement-management:
   enabled: false
   config:
-    db_password: "${finance_portal_db_password}"
-    db_host: "${finance_portal_db_host}"
-    db_user: "${finance_portal_db_user}"
+    db_password: "${mysql_password}"
+
 mojaloop-bulk:
   enabled: true  
   bulk-centralledger:
     cl-handler-bulk-transfer-get:
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_ledger_db_password}"
-        db_host: "${central_ledger_db_host}"
-        db_user: "${central_ledger_db_user}"
-        objstore_uri: 'mongodb://${cl_mongodb_user}:${cl_mongodb_pass}@${cl_mongodb_host}:27017/${cl_mongodb_database}'
+        db_password: "${mysql_password}"
     cl-handler-bulk-transfer-prepare:
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_ledger_db_password}"
-        db_host: "${central_ledger_db_host}"
-        db_user: "${central_ledger_db_user}"
-        objstore_uri: 'mongodb://${cl_mongodb_user}:${cl_mongodb_pass}@${cl_mongodb_host}:27017/${cl_mongodb_database}'
+        db_password: "${mysql_password}"
     cl-handler-bulk-transfer-fulfil:
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_ledger_db_password}"
-        db_host: "${central_ledger_db_host}"
-        db_user: "${central_ledger_db_user}"
-        objstore_uri: 'mongodb://${cl_mongodb_user}:${cl_mongodb_pass}@${cl_mongodb_host}:27017/${cl_mongodb_database}'
+        db_password: "${mysql_password}"
     cl-handler-bulk-transfer-processing:
       config:
-        kafka_host: "${kafka_host}"
-        db_password: "${central_ledger_db_password}"
-        db_host: "${central_ledger_db_host}"
-        db_user: "${central_ledger_db_user}"
-        objstore_uri: 'mongodb://${cl_mongodb_user}:${cl_mongodb_pass}@${cl_mongodb_host}:27017/${cl_mongodb_database}'
+        db_password: "${mysql_password}"
   bulk-api-adapter:
-    bulk-api-adapter-handler-notification:
-      config:
-        kafka_host: "${kafka_host}"
     bulk-api-adapter-service:
-      config:
-        kafka_host: "${kafka_host}"
-        objstore_uri: 'mongodb://${cl_mongodb_user}:${cl_mongodb_pass}@${cl_mongodb_host}:27017/${cl_mongodb_database}'
       ingress:
         annotations:
           kubernetes.io/ingress.class: nginx

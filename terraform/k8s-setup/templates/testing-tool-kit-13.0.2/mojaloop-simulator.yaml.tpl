@@ -23,13 +23,6 @@ mojaloop-simulator:
   #       cache:
   #         enabled: false
   #   payeefsp: {}
-  #
-  # If you want to disable any of the default simulators, you can define the values to null in this file.
-  #
-  # simlators:
-  #   payerfsp: null
-  #   payeefsp: null
-  #
 
   # TODO & notes:
   # * do the port _numbers_ matter at all? Can we get rid of them?
@@ -453,11 +446,6 @@ mojaloop-simulator:
     # Changes to this object in the parent chart, for example 'mojaloop-simulator.defaults' will be
     # applied to all simulators deployed by this child chart.
     config:
-      # Config for init containers
-      initContainers:
-        waitForCache:
-          enabled: true
-
       imagePullSecretName: dock-casa-secret
 
       cache:
@@ -569,6 +557,21 @@ mojaloop-simulator:
           # Path to JWS signing key (private key of THIS DFSP)
           # JWS_SIGNING_KEY_PATH: "/jwsSigningKey.key" # TODO: do not configure- will break the chart
           JWS_VERIFICATION_KEYS_DIRECTORY: "/jwsVerificationKeys"
+
+          # Location of certs and key required for TLS. It is possible to configure these- however,
+          # at the time of writing, it's not supported by this chart.
+          # IN_CA_CERT_PATH: ./secrets/inbound-cacert.pem
+          # IN_SERVER_CERT_PATH: ./secrets/inbound-cert.pem
+          # IN_SERVER_KEY_PATH: ./secrets/inbound-key.pem
+
+          # OUT_CA_CERT_PATH: ./secrets/outbound-cacert.pem
+          # OUT_CLIENT_CERT_PATH: ./secrets/outbound-cert.pem
+          # OUT_CLIENT_KEY_PATH: ./secrets/outbound-key.pem
+
+          # TEST_CA_CERT_PATH: ./secrets/test-cacert.pem
+          # TEST_CLIENT_CERT_PATH: ./secrets/test-cert.pem
+          # TEST_CLIENT_KEY_PATH: ./secrets/test-key.pem
+
           # The number of space characters by which to indent pretty-printed logs. If set to zero, log events
           # will each be printed on a single line.
           LOG_INDENT: "0"
@@ -658,15 +661,15 @@ mojaloop-simulator:
           # To allow transfer without a previous quote request, set this value to true.
           # The incoming transfer request should consist of an ILP packet and a matching condition in this case.
           # The fulfilment will be generated from the provided ILP packet, and must hash to the provided condition.
-          ALLOW_TRANSFER_WITHOUT_QUOTE: true
+          ALLOW_TRANSFER_WITHOUT_QUOTE: false
           RESERVE_NOTIFICATION: false
-          RESOURCE_VERSIONS: transfers=1.1,quotes=1.1,participants=1.1,parties=1.1,transactionRequests=1.1
+          RESOURCE_VERSIONS: transfers=1.0,quotes=1.0
 
 
       backend:
         image:
           repository: mojaloop/mojaloop-simulator
-          tag: v11.6.2
+          tag: v11.4.3
           pullPolicy: IfNotPresent
         <<: *defaultProbes
 
@@ -744,8 +747,6 @@ mojaloop-simulator:
           REPORT_API_LISTEN_PORT: 3002
           TEST_API_LISTEN_PORT: 3003
 
-      thirdpartysdk:
-        enabled: ${mojaloop_thirdparty_support_enabled}
     ingress:
       enabled: true
       path: /
