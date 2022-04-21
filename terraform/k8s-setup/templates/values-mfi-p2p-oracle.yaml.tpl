@@ -16,5 +16,7 @@ nameOverride: ${service_name}
 fullnameOverride: ${service_name}
 
 env:
+  oracleType: ALIAS
+  prefixLength: 3
   database:
     dbHost: ${service_name}-db
