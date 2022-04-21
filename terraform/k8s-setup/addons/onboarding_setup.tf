@@ -45,6 +45,8 @@ resource "local_file" "gp_postman_environment_file" {
     ALIAS_ORACLE_ADMIN_API_ENDPOINT    = "http://${data.terraform_remote_state.k8s-base.outputs.alias-oracle-fqdn}/admin-api",
     ACCOUNT_ORACLE_ENDPOINT            = "http://${data.terraform_remote_state.k8s-base.outputs.mfi-account-oracle-fqdn}/als-api",
     ACCOUNT_ORACLE_ADMIN_API_ENDPOINT  = "http://${data.terraform_remote_state.k8s-base.outputs.mfi-account-oracle-fqdn}/admin-api",
+    P2P_ORACLE_ENDPOINT                = "http://${data.terraform_remote_state.k8s-base.outputs.mfi-p2p-oracle-fqdn}/als-api",
+    P2P_ORACLE_ADMIN_API_ENDPOINT      = "http://${data.terraform_remote_state.k8s-base.outputs.mfi-p2p-oracle-fqdn}/admin-api",
     PM4ML_DOMAIN                       = "${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}",
     MOJALOOP_RELEASE                   = var.helm_mojaloop_release_name
     MCM_NAME                           = var.mcm_name
