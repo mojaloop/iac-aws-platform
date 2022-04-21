@@ -21,7 +21,7 @@
   "helm_oathkeeper_version": "0.19.6",
   "helm_keto_version": "0.19.6",
   "helm_kratos_version": "0.14.1",
-  "helm_bof_version": "2.3.0",
+  "helm_bof_version": "2.4.1",
   "hub_currency_code": "USD",
   "iac_post_init_version": "v1.0.0",
   "storage_class_name": "longhorn",
