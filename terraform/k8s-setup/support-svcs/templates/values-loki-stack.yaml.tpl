@@ -4,6 +4,10 @@ grafana:
     repository: grafana/grafana
     tag: 8.4.2
   grafana.ini:
+    unified_alerting:
+      enabled: false
+    alerting:
+      enabled: true
     server:
       domain: ${grafana_domain}
       root_url: https://${grafana_host}
@@ -71,3 +75,24 @@ loki:
     table_manager:
       retention_deletes_enabled: true
       retention_period: 72h     
+
+promtail:
+  image:
+    registry: docker.io
+    repository: grafana/promtail
+    tag: 2.4.2
+    pullPolicy: IfNotPresent
+  extraScrapeConfigs:
+  - job_name: kafka
+    kafka:
+      brokers:
+      - ${kafka_host}
+      topics:
+      - topic-event
+      labels:
+        job: mojaloop-kafka-messages
+    relabel_configs:
+        - action: replace
+          source_labels:
+            - __meta_kafka_topic
+          target_label: mojaloop_kafka_topic

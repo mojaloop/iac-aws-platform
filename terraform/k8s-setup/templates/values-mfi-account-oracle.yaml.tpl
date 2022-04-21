@@ -7,3 +7,7 @@ ingress:
       paths: ['/']
 global:
   storageClass: ${storage_class}
+
+env:
+  oracleType: ACCOUNT_ID
+  prefixLength: 3

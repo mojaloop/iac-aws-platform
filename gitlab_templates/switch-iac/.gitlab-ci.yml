@@ -631,16 +631,16 @@ Create Gateway Cluster:
 2. Update oathkeeper rules:
   stage: "Maintain Platform"
   script:
-    - export private_subdomain=$(terraform output -state=terraform.tfstate private_subdomain | tr -d '"')
-    - helm -n mojaloop -i --kubeconfig=admin-gateway.conf --set-string base_domain=${private_subdomain} --set-string bof_release_name=bof --set-string moja_release_name=moja upgrade bof-oathkeeper-rules $CI_IMAGE_PROJECT_DIR/bof-custom-resources/oathkeeper-rules
+    - export public_subdomain=$(terraform output -state=terraform.tfstate public_subdomain | tr -d '"')
+    - helm -n mojaloop -i --kubeconfig=admin-gateway.conf --set-string base_domain=${public_subdomain} --set-string bof_release_name=bof --set-string moja_release_name=moja upgrade bof-oathkeeper-rules $CI_IMAGE_PROJECT_DIR/bof-custom-resources/oathkeeper-rules
   when: manual
 
 3. Update mojaloop roles:
   stage: "Maintain Platform"
   script:
     - |
-      private_subdomain=$(terraform output -state=terraform.tfstate private_subdomain | tr -d '"');
-      validation_api_url=http://bofapi.${private_subdomain}/operator/validate/role-permissions;
+      public_subdomain=$(terraform output -state=terraform.tfstate public_subdomain | tr -d '"');
+      validation_api_url=https://bofapi.${public_subdomain}/operator/validate/role-permissions;
       echo ${validation_api_url};
       mojaloop_roles=`cat ./bof-custom-resources/role-permissions/mojaloop-roles.json`;
       permission_exclusions=`cat ./bof-custom-resources/role-permissions/permission-exclusions.json`;

@@ -178,6 +178,23 @@ variable "use_mfi_account_oracle_endpoint" {
   default     = "no"
 }
 
+variable "mfi_p2p_oracle_name" {
+  description = "host name for MFI p2p oracle"
+  type        = string
+  default     = "mfi-p2p-oracle"
+}
+
+variable "helm_mfi_p2p_oracle_version" {
+  description = "helm version for MFI p2p oracle"
+  type        = string
+}
+
+variable "use_mfi_p2p_oracle_endpoint" {
+  description = "use MFI p2p oracle instead of internal"
+  type        = string
+  default     = "no"
+}
+
 variable "internal_ttk_enabled" {
   description = "whether internal ttk instance is enabled or not"
   default = true
@@ -241,6 +258,13 @@ variable "bizops_mojaloop_roles" {
   }))
   default = []
 }
+
+variable "publicapi_external_whitelist" {
+  description = "Whitelist for publicapi. The value is a comma separated list of CIDRs, e.g. 10.0.0.0/24,172.10.0.1."
+  type = string
+  default = "0.0.0.0/0"
+}
+
 variable "kubernetes_auth_path" {
   description = "vault kube auth engine path"
   type        = string
