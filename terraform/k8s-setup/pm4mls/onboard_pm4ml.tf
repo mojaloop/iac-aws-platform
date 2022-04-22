@@ -48,6 +48,7 @@ locals {
       "GENERIC_DFSP_CALLBACK_URL" = "https://intgw-data-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}:443/${pm4ml_config.DFSP_NAME}/1.0"
       "GENERIC_DFSP_BACKEND_TESTAPI_URL" = "http://test.${pm4ml_config.DFSP_NAME}.${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}/sim-backend-test"
       "DFSP_ACCOUNT_ID" = pm4ml_config.DFSP_ACCOUNT_ID
+      "DFSP_ALIAS_ID" = pm4ml_config.DFSP_ALIAS_ID
       "DFSP_NOTIFICATION_EMAIL" = pm4ml_config.DFSP_NOTIFICATION_EMAIL
       "PARTY_FULL_NAME" = "${pm4ml_config.PARTY_FIRST_NAME} ${pm4ml_config.PARTY_LAST_NAME}"
       "PARTY_LAST_NAME" = pm4ml_config.PARTY_LAST_NAME
@@ -55,6 +56,7 @@ locals {
       "PARTY_MIDDLE_NAME" = pm4ml_config.PARTY_MIDDLE_NAME
       "PARTY_DOB" = pm4ml_config.PARTY_DOB
       "DFSP_PREFIX" = pm4ml_config.DFSP_PREFIX
+      "DFSP_P2P_PREFIX" = pm4ml_config.DFSP_P2P_PREFIX
       "DFSP_SUB_ID" = pm4ml_config.DFSP_SUB_ID
     }
   ]
