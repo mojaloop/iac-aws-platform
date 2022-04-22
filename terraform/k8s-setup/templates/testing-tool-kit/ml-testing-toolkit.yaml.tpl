@@ -24,11 +24,11 @@ ml-testing-toolkit:
       hub-k8s-cgs-environment.json: null
       hub-k8s-default-environment.json: &ttkInputValues {
         "inputValues": {
-          "SIMPAYER_CURRENCY": "EUR",
-          "SIMPAYEE_CURRENCY": "EUR",
-          "currency": "EUR",
-          "currency2": "GBP",
-          "cgscurrency": "CAD",
+          "SIMPAYER_CURRENCY": "${ttk_test_currency1}",
+          "SIMPAYEE_CURRENCY": "${ttk_test_currency1}",
+          "currency": "${ttk_test_currency1}",
+          "currency2": "${ttk_test_currency2}",
+          "cgscurrency": "${ttk_test_currency3}",
           "SIMPLE_ROUTING_MODE_ENABLED": true,
           "ON_US_TRANSFERS_ENABLED": false,
           "accept": "application/vnd.interoperability.parties+json;version=1.1",

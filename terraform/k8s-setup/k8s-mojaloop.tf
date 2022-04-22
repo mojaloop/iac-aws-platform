@@ -142,6 +142,9 @@ locals {
     portal_oauth_app_id = vault_generic_secret.mojaloop_fin_portal_backend_client_id.data.value
     portal_oauth_app_token = vault_generic_secret.mojaloop_fin_portal_backend_client_secret.data.value
     internal_ttk_enabled = var.internal_ttk_enabled
+    ttk_test_currency1 = var.ttk_test_currency1
+    ttk_test_currency2 = var.ttk_test_currency2
+    ttk_test_currency3 = var.ttk_test_currency3
     internal_sim_enabled = var.internal_sim_enabled
     mojaloop_thirdparty_support_enabled = "false"
     storage_class_name = var.storage_class_name

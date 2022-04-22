@@ -200,6 +200,24 @@ variable "internal_ttk_enabled" {
   default = true
 }
 
+variable "ttk_test_currency1" {
+  description = "Test currency for TTK GP tests"
+  type        = string
+  default     = "EUR"
+}
+
+variable "ttk_test_currency2" {
+  description = "Test currency2 for TTK GP tests"
+  type        = string
+  default     = "GBP"
+}
+
+variable "ttk_test_currency3" {
+  description = "Test cgs currency for TTK GP tests"
+  type        = string
+  default     = "CAD"
+}
+
 variable "internal_sim_enabled" {
   description = "whether internal mojaloop simulators ar enabled or not"
   default = true
