@@ -113,3 +113,8 @@ variable "int_wildcard_cert_sec_name" {
   type        = string
   default     = "int-ops-wildcard-tls"
 }
+variable "longhorn_backup_s3_destroy" {
+  description = "destroy s3 backup on destroy of env"
+  type        = bool
+  default     = false
+}

@@ -63,5 +63,5 @@ output "perm2" {
 
 output "available_zones" {
   description = "available azs at time of infra build"
-  value       = data.aws_availability_zones.available.names
+  value       = local.tenancy_azs
 }

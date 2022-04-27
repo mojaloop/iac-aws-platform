@@ -53,15 +53,15 @@ variable "region" {
 }
 
 variable "kube_master_num" {
-  description = "Number of Kubernetes Master Nodes for mojaloop k8 per az"
+  description = "Number of Kubernetes Master Nodes for mojaloop k8"
   type        = number
-  default     = 1
+  default     = 3
 }
 
 variable "kube_worker_num" {
-  description = "Number of Kubernetes Worker Nodes for mojaloop k8 per az"
+  description = "Number of Kubernetes Worker Nodes for mojaloop k8"
   type        = number
-  default     = 2
+  default     = 6
 }
 variable "kube_worker_size" {
   description = "Instance size of Kubernetes Worker Nodes for mojaloop k8"
@@ -98,4 +98,9 @@ variable "custom_tags" {
   description = "Hostname to use with apm"
   type        = map(string)
   default     = {}
+}
+variable "route53_zone_force_destroy" {
+  description = "destroy public zone on destroy of env"
+  type        = bool
+  default     = false
 }
