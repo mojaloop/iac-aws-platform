@@ -2518,6 +2518,11 @@
 			"enabled": true
 		},
 		{
+			"key": "DEMO_WALLET_ALIAS_ID",
+			"value": "33325611111111",
+			"enabled": true
+		},
+		{
 			"key": "DEMO_WALLET_ACCOUNT_ID",
 			"value": "36711111111",
 			"enabled": true
@@ -2550,6 +2555,11 @@
 		{
 			"key": "DEMO_MFI_MSISDN",
 			"value": "25622222222",
+			"enabled": true
+		},
+		{
+			"key": "DEMO_MFI_ALIAS_ID",
+			"value": "44425622222222",
 			"enabled": true
 		},
 		{
