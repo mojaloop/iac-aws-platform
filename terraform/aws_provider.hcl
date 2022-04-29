@@ -5,7 +5,7 @@ generate "provider" {
  
   contents = <<EOF
 provider "aws" {
-  region = ${get_env("region")}
+  region = "${get_env("region")}"
 }
  
 EOF

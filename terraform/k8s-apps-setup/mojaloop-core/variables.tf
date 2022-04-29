@@ -1,7 +1,3 @@
-variable "region" {
-  description = "AWS region"
-}
-
 variable "client" {
   description = "Name of client"
   type        = string

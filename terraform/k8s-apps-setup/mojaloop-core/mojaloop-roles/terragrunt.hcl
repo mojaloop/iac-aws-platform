@@ -7,12 +7,7 @@ generate "versions" {
 terraform { 
   required_version = "${local.common_vars.tf_version}"
  
-  required_providers {
-    aws = "${local.common_vars.aws_provider_version}"
-    local = {
-      source = "hashicorp/local"
-      version = "${local.common_vars.local_provider_version}"
-    }
+  required_providers {  
     helm = "${local.common_vars.helm_provider_version}"
     kubernetes = "${local.common_vars.kubernetes_provider_version}"
     kubectl = {
@@ -29,15 +24,8 @@ EOF
 include "state" {
   path = find_in_parent_folders("remote_state.hcl")
 }
-include "aws_provider" {
-  path = find_in_parent_folders("aws_provider.hcl")
-}
 include "k8s_providers" {
   path = find_in_parent_folders("k8s_providers.hcl")
-}
-
-dependency "baseinfra" {
-  config_path = "../base-infra-aws"
 }
 
 locals {

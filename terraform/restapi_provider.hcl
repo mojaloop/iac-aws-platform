@@ -3,7 +3,7 @@ generate "provider" {
  
   if_exists = "overwrite_terragrunt"
  
-  contents = < < EOF
+  contents = <<EOF
 provider "restapi" {
   alias                = "restapi_mcm"
   uri                  = "https://${var.mcm_name}.${dependency.baseinfra.outputs.public_subdomain}"

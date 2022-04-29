@@ -3,26 +3,25 @@ generate "versions" {
  
   if_exists = "overwrite_terragrunt"
  
-  contents = < < EOF
+  contents = <<EOF
 terraform { 
-  required_version = get_env("tf_version")
+  required_version = "${local.common_vars.tf_version}"
  
   required_providers {
     local = {
       source = "hashicorp/local"
-      version = get_env("local_provider_version")
+      version = "${local.common_vars.local_provider_version}"
     }
-    external = get_env("external_provider_version")
-    vault = get_env("vault_provider_version")
+    external = "${local.common_vars.external_provider_version}"
+    vault = "${local.common_vars.vault_provider_version}"    
     restapi = {
       source = "Mastercard/restapi"
-      version = get_env("restapi_provider_version")
+      version = "${local.common_vars.restapi_provider_version}"
     }
   }
 
   backend "s3" {}
 }
-
 EOF
 }
 
@@ -41,4 +40,12 @@ dependency "baseinfra" {
 dependency "supportsvcs" {
   config_path = "../support-svcs"
 }
-inputs = merge(yamldecode(file(${find_in_parent_folders("provider_versions.yaml"}))), yamldecode(file(${find_in_parent_folders("common_vars.yaml"}))))
+dependency "mojaloopcore" {
+  config_path = "../mojaloop-core"
+}
+locals {
+  common_vars = yamldecode(file(find_in_parent_folders("common_vars.yaml")))
+}
+inputs = {
+  vault_token_location = ${local.common_vars.vault_token_location}
+}

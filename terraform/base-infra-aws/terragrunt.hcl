@@ -5,13 +5,13 @@ generate "versions" {
  
   contents = <<EOF
 terraform { 
-  required_version = ${get_env("tf_version")}
+  required_version = "${local.common_vars.tf_version}"
  
   required_providers {
-    aws = ${get_env("aws_provider_version")}
+    aws = "${local.common_vars.aws_provider_version}"
     local = {
       source = "hashicorp/local"
-      version = ${get_env("local_provider_version")}
+      version = "${local.common_vars.local_provider_version}"
     }
   }
 
@@ -30,7 +30,7 @@ generate "data_tenancy" {
 data "terraform_remote_state" "tenant" {
   backend = "s3"
   config = {
-    region = ${get_env("region")}
+    region = "${get_env("region")}"
     bucket = "${get_env("client")}-mojaloop-state"
     key    = "bootstrap/terraform.tfstate"
   }
@@ -45,5 +45,6 @@ include "state" {
 include "aws_provider" {
   path = find_in_parent_folders("aws_provider.hcl")
 }
-
-inputs = yamldecode(file(find_in_parent_folders("provider_versions.yaml")))
+locals {
+  common_vars = yamldecode(file(find_in_parent_folders("common_vars.yaml")))
+}
