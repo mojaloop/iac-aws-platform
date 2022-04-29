@@ -14,8 +14,6 @@ terraform {
       version = "${local.common_vars.local_provider_version}"
     }
   }
-
-  backend "s3" {}
 }
 
 EOF

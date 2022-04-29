@@ -1,9 +1,6 @@
 variable "region" {
   description = "AWS region"
 }
-variable "project_root_path" {
-  description = "Root folder for the infrastructure code"
-}
 variable "environment" {
   description = "Environment name"
   type        = string

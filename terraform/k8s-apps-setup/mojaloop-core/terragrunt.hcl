@@ -21,8 +21,6 @@ terraform {
     vault = "${local.common_vars.vault_provider_version}"
     external = "${local.common_vars.external_provider_version}"
   }
-
-  backend "s3" {}
 }
 EOF
 }

@@ -13,10 +13,6 @@ variable "client" {
   type        = string
 }
 
-variable "project_root_path" {
-  description = "Root path for IaC project"
-}
-
 variable "hub_account_names" {
   description = "other non sim account names. this will create accounts and whitelist entries"
   type        = list(string)
