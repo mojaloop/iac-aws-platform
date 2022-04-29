@@ -3,10 +3,10 @@ generate "provider" {
  
   if_exists = "overwrite_terragrunt"
  
-  contents = < < EOF
+  contents = <<EOF
 provider "vault" {
   address = "https://vault.${dependency.baseinfra.outputs.public_subdomain}"
-  token   = jsondecode(file("get_env("project_root_path")/vault_seal_key"))["root_token"]
+  token   = jsondecode(file("${get_env("vault_token_location")}/vault_seal_key"))["root_token"]
 }
  
 EOF

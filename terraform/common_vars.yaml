@@ -1,2 +1,3 @@
 kubeconfig_location: "/iac-run-dir/envs3/k8s/admin.conf"
 shared_state_location: "/iac-run-dir/envs3"
+vault_token_location: "/iac-run-dir/envs3/vault/vault_seal_key"

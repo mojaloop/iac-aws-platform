@@ -3,15 +3,15 @@ generate "versions" {
  
   if_exists = "overwrite_terragrunt"
  
-  contents = < < EOF
+  contents = <<EOF
 terraform { 
-  required_version = get_env("tf_version")
+  required_version = ${get_env("tf_version")}
  
   required_providers {
-    aws = get_env("aws_provider_version")
+    aws = ${get_env("aws_provider_version")}
     local = {
       source = "hashicorp/local"
-      version = get_env("local_provider_version")
+      version = ${get_env("local_provider_version")}
     }
   }
 
@@ -26,11 +26,11 @@ generate "data_tenancy" {
  
   if_exists = "overwrite_terragrunt"
  
-  contents = < < EOF
+  contents = <<EOF
 data "terraform_remote_state" "tenant" {
   backend = "s3"
   config = {
-    region = var.region
+    region = ${get_env("region")}
     bucket = "${get_env("client")}-mojaloop-state"
     key    = "bootstrap/terraform.tfstate"
   }
@@ -46,4 +46,4 @@ include "aws_provider" {
   path = find_in_parent_folders("aws_provider.hcl")
 }
 
-inputs = yamldecode(file(${find_in_parent_folders("provider_versions.yaml"})))
+inputs = yamldecode(file(find_in_parent_folders("provider_versions.yaml")))
