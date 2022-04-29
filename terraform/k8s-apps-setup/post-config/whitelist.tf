@@ -4,6 +4,6 @@ locals {
 }
 
 resource "vault_generic_secret" "tenant_whitelist" {
-  path      = data.terraform_remote_state.k8s-base.outputs.sim_whitelist_secret_name
+  path      = dependency.supportsvcs.outputs.sim_whitelist_secret_name
   data_json = jsonencode(zipmap(var.hub_account_names, local.hub_ips))
 }

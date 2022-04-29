@@ -66,12 +66,8 @@ resource "local_file" "kubespray_extra_vars" {
   filename        = "${path.module}/extra-vars.json"
 }
 
-
 data "aws_vpc" "selected" {
   id = data.terraform_remote_state.tenant.outputs.vpc_id
-}
-data "aws_nat_gateway" "default" {
-  vpc_id = data.terraform_remote_state.tenant.outputs.vpc_id
 }
 
 resource "aws_security_group" "internet" {
