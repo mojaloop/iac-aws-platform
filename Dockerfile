@@ -5,6 +5,7 @@ ARG HELM_VERSION=v3.8.1
 ARG HELM_FILENAME=helm-${HELM_VERSION}-linux-amd64.tar.gz
 ARG KUBESPRAY_VERSION=2.17.1
 ARG NEWMAN_VERSION=5.0.0
+ARG TERRAGRUNT_VERSION=0.36.7
 
 # Update apt and Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -28,6 +29,9 @@ RUN apt-get update && apt-get install -y \
 RUN wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
     && unzip /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /bin/ \
     && rm /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+
+RUN wget -q https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64 -O /bin/terragrunt \
+    && chmod +x /bin/terragrunt
 
 RUN wget -q https://github.com/kubernetes-sigs/kubespray/archive/v${KUBESPRAY_VERSION}.tar.gz \
     && tar zxvf v${KUBESPRAY_VERSION}.tar.gz \

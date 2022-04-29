@@ -1,5 +1,0 @@
-gitlab_url: https://gitlab.mojaloop-lab.modusbox.io/
-users:
-  - name: Test User
-    username: test.user
-    email: test@modusbox.com

@@ -6,14 +6,15 @@ default:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
+    - aws s3 sync s3://${BUCKET}/${environment}/ ./envs3/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
+    - export ENV_S3_DIR=$CI_IMAGE_PROJECT_DIR/envs3
     # Define the contents of the workbench-config file as environment variables for use in gitlab and optionally in terraform
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - export ENVIRONMENT=$environment
     - test -n "$BUCKET"
     - cd $CI_IMAGE_PROJECT_DIR
-    - aws s3 sync s3://${BUCKET}/${environment}/ . --sse || true
     - eval `ssh-agent`
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
@@ -22,7 +23,6 @@ default:
     - if [ -d ${CI_PROJECT_DIR}/iac-sync-dir ]; then cp -r ${CI_PROJECT_DIR}/iac-sync-dir/. .; else echo "no local files to copy"; fi 
     - cp $CI_PROJECT_DIR/workbench-config.json .
     - ./searchandreplace.sh
-    
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
     - export ANSIBLE_FEATURE_TOGGLES="-e kube_version=v${k8s_api_version} -e dashboard_enabled=True -e kube_proxy_mode=iptables -e artifacts_dir=inventory/artifacts/cluster -e cloud_provider=aws -e ansible_user=ubuntu -b --become-user=root --flush-cache -e kubeconfig_localhost=true"
 
@@ -44,11 +44,11 @@ stages:
 Validate and Plan:
   stage: Validate
   script:
-    - cd terraform
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform validate
-    - terraform plan -out=plan.cache
-    - terraform show -json plan.cache | jq -r '([.resource_changes[]?.change.actions?]|flatten)|{"create":(map(select(.=="create"))|length),"update":(map(select(.=="update"))|length),"delete":(map(select(.=="delete"))|length)}' > ${CI_PROJECT_DIR}/plan.json
+    - cd terraform/base-infra-aws
+    - terragrunt init
+    - terragrunt validate
+    - terragrunt plan -out=plan.cache
+    - terragrunt show -json plan.cache | jq -r '([.resource_changes[]?.change.actions?]|flatten)|{"create":(map(select(.=="create"))|length),"update":(map(select(.=="update"))|length),"delete":(map(select(.=="delete"))|length)}' > ${CI_PROJECT_DIR}/plan.json
   artifacts:
     reports:
       terraform: plan.json
@@ -79,7 +79,6 @@ Destroy Mojaloop K8s Stack:
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform validate
     - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
-    #- kubectl --kubeconfig=../../admin-gateway.conf delete namespace mojaloop || true
 
   when: manual
 
@@ -129,11 +128,11 @@ Destroy Support Services:
     - terraform validate
     - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
     ##kill force kill efs provsioner
-    - kubectl --kubeconfig=../../../admin-gateway.conf delete pods --all -n wso2 --grace-period=0 --force
-    - kubectl --kubeconfig=../../../admin-gateway.conf delete namespace wso2 || true
+    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf delete pods --all -n wso2 --grace-period=0 --force
+    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf delete namespace wso2 || true
     ##kill force wso2-bizops
-    - kubectl --kubeconfig=../../../admin-gateway.conf delete pods --all -n wso2-bizops --grace-period=0 --force
-    - kubectl --kubeconfig=../../../admin-gateway.conf delete namespace wso2-bizops || true
+    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf delete pods --all -n wso2-bizops --grace-period=0 --force
+    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf delete namespace wso2-bizops || true
   when: manual
 
 Destroy Stateful Services:
@@ -242,13 +241,13 @@ Undeploy PM4ML Charts:
 Deploy AWS Infrastructure:
   stage: "Deploy AWS infrastructure"
   script:
-    - cd terraform
-    - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve || true
-    - aws s3 sync $CI_IMAGE_PROJECT_DIR/kubespray-inventory s3://${BUCKET}/${environment}/kubespray-inventory/ --sse || true
-    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/ssh_provisioner_key s3://${BUCKET}/${environment}/terraform/ --sse || true
-    - aws s3 sync ./oauth-apps s3://${BUCKET}/${environment}/terraform/oauth-apps/ --sse || true
+    - cd terraform/base-infra-aws
+    - cp $ENV_S3_DIR/oauth-apps/ ./oauth-apps/ || true
+    - terragrunt init
+    - terragrunt apply -auto-approve || true
+    - aws s3 sync inventory s3://${BUCKET}/${environment}/ansible/ --sse || true
+    - aws s3 cp ssh_provisioner_key s3://${BUCKET}/${environment}/ansible/ --sse || true
+    - aws s3 sync ./oauth-apps s3://${BUCKET}/${environment}/oauth-apps/ --sse || true
   when: manual
 
 Create k3s Cluster:
@@ -300,28 +299,29 @@ Create k3s Cluster:
     - make monitoring 
   when: manual
 
-Create Gateway Cluster:
+Create k8s Cluster:
   stage: "Run Kubespray"
   script:
     - cd /kubespray
-    - ansible-playbook -i $CI_IMAGE_PROJECT_DIR/kubespray-inventory/hosts-gateway -e @$CI_IMAGE_PROJECT_DIR/kubespray-inventory/extra-vars.json ./cluster.yml $ANSIBLE_FEATURE_TOGGLES
-    - aws s3 cp inventory/artifacts/cluster/admin.conf s3://$BUCKET/$environment/admin-gateway.conf --sse
+    - ansible-playbook -i $ENV_S3_DIR/ansible/inventory -e @$ENV_S3_DIR/ansible/extra-vars.json ./cluster.yml $ANSIBLE_FEATURE_TOGGLES
+    - aws s3 cp inventory/artifacts/cluster/admin.conf s3://$BUCKET/$environment/k8s/admin.conf --sse
   when: manual
 
 1. Deploy Vault:
   stage: "Deploy Base Platform"
   script:
-    - cd terraform/k8s-setup/vault-deploy
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-    - aws s3 cp $CI_IMAGE_PROJECT_DIR/vault_seal_key s3://${BUCKET}/${environment}/ --sse
+    - cd terraform/base-k8s-setup
+    - cp $ENV_S3_DIR/vault/vault_seal_key ./templates || true
+    - terragrunt init
+    - terragrunt apply -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID"
+    - aws s3 cp templates/vault_seal_key s3://${BUCKET}/${environment}/vault/ --sse
   when: manual
 
 2a. Deploy Stateful Services:
   stage: "Deploy Base Platform"
   script:
     - cd terraform/k8s-setup/state-setup
-    - kubectl --kubeconfig=../../../admin-gateway.conf -n default wait --for=condition=ready certificate/wildcard-cert-internal --timeout=180s
+    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf -n default wait --for=condition=ready certificate/wildcard-cert-internal --timeout=180s
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   when: manual
@@ -616,17 +616,17 @@ Create Gateway Cluster:
 5. Run RBAC Tests:
   stage: "Run Tests"
   script:
-    - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-rbac-tests -n mojaloop || true
-    - kubectl --kubeconfig=admin-gateway.conf -n mojaloop logs bof-rbac-tests
-    - exit `kubectl --kubeconfig=admin-gateway.conf -n mojaloop get pod bof-rbac-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+    - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf test bof --filter name=bof-rbac-tests -n mojaloop || true
+    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf -n mojaloop logs bof-rbac-tests
+    - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf -n mojaloop get pod bof-rbac-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
 6. Run Report Tests:
   stage: "Run Tests"
   script:
-    - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-report-tests -n mojaloop || true
-    - kubectl --kubeconfig=admin-gateway.conf -n mojaloop logs bof-report-tests
-    - exit `kubectl --kubeconfig=admin-gateway.conf -n mojaloop get pod bof-report-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+    - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf test bof --filter name=bof-report-tests -n mojaloop || true
+    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf -n mojaloop logs bof-report-tests
+    - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf -n mojaloop get pod bof-report-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
 1. Run External PM4ML Onboarding:
@@ -643,7 +643,7 @@ Create Gateway Cluster:
   stage: "Maintain Platform"
   script:
     - export private_subdomain=$(terraform output -state=terraform.tfstate private_subdomain | tr -d '"')
-    - helm -n mojaloop -i --kubeconfig=admin-gateway.conf --set-string base_domain=${private_subdomain} --set-string bof_release_name=bof --set-string moja_release_name=moja upgrade bof-oathkeeper-rules $CI_IMAGE_PROJECT_DIR/bof-custom-resources/oathkeeper-rules
+    - helm -n mojaloop -i --kubeconfig=$ENV_S3_DIR/k8s/admin.conf --set-string base_domain=${private_subdomain} --set-string bof_release_name=bof --set-string moja_release_name=moja upgrade bof-oathkeeper-rules $CI_IMAGE_PROJECT_DIR/bof-custom-resources/oathkeeper-rules
   when: manual
 
 3. Update mojaloop roles:
@@ -671,12 +671,11 @@ Create Gateway Cluster:
     - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   when: manual
 
-11. Gateway K8S Cluste Deployments:
+11. K8S Cluster Deployments:
   stage: "Run Tests"
   script:
-    - aws s3 cp s3://${BUCKET}/${environment}/admin-gateway.conf ${CI_IMAGE_PROJECT_DIR}/reports/admin-gateway.conf
     - cd ${CI_IMAGE_PROJECT_DIR}/reports
-    - export KUBECONFIG=admin-gateway.conf
+    - export KUBECONFIG=$ENV_S3_DIR/k8s/admin.conf
     - export REPORT_NAME=GW_K8S_CLUSTER_$(date +"%Y-%m-%d-%M").csv
     - echo "Namespace,Helm Chart,Deployment Name,Docker image,Creation Timestamp,Number of Available Replicas,Available Status Change Timestamp,Is Available?" > ${CI_PROJECT_DIR}/gw-cluster-report.csv
     - kubectl get deployments --all-namespaces -o=jsonpath="{range .items[*]}{.metadata.namespace}{','}{.metadata.labels.chart}{','}{.metadata.name}{','}{.spec.template.spec.containers..image}{','}{.metadata.creationTimestamp}{','}{.status.availableReplicas}{','}{.status.conditions[?(@.type=='Available')].lastUpdateTime}{','}{.status.conditions[?(@.type=='Available')].status}{'\n'}{end}" >> ${CI_PROJECT_DIR}/gw-cluster-report.csv
