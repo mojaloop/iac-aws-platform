@@ -16,8 +16,6 @@ terraform {
       version = "${local.common_vars.kubectl_provider_version}"
     }
   }
-
-  backend "s3" {}
 }
 
 EOF

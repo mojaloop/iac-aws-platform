@@ -24,7 +24,7 @@ locals {
 module "wso2_init" {
   source = "../../modules/wso2-init"
 
-  kubeconfig                   = "${var.project_root_path}/admin-gateway.conf"
+  kubeconfig                   = var.kubeconfig_location
   namespace                    = kubernetes_namespace.wso2.metadata[0].name
   environment                  = var.environment
   wso2_mysql_repo_version      = var.wso2_mysql_repo_version
@@ -41,7 +41,7 @@ module "wso2_init" {
 module "iskm" {
   source = "../../modules/iskm"
 
-  kubeconfig       = "${var.project_root_path}/admin-gateway.conf"
+  kubeconfig       = var.kubeconfig_location
   namespace        = kubernetes_namespace.wso2.metadata[0].name
   root_certificate = module.wso2_init.root_certificate
   root_private_key = module.wso2_init.root_private_key
@@ -69,7 +69,7 @@ module "iskm" {
 module "intgw" {
   source = "../../modules/int-gw"
 
-  kubeconfig              = "${var.project_root_path}/admin-gateway.conf"
+  kubeconfig              = var.kubeconfig_location
   namespace               = kubernetes_namespace.wso2.metadata[0].name
   root_certificate        = module.wso2_init.root_certificate
   root_private_key        = module.wso2_init.root_private_key
@@ -98,7 +98,7 @@ module "intgw" {
 module "extgw" {
   source = "../../modules/ext-gw"
 
-  kubeconfig       = "${var.project_root_path}/admin-gateway.conf"
+  kubeconfig       = var.kubeconfig_location
   namespace        = kubernetes_namespace.wso2.metadata[0].name
   root_certificate = module.wso2_init.root_certificate
   root_private_key = module.wso2_init.root_private_key

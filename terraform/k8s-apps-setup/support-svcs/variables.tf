@@ -1,6 +1,3 @@
-variable "project_root_path" {
-  description = "Root folder for the infrastructure code"
-}
 variable "kubernetes_auth_path" {
   description = "vault kube auth engine path"
   type        = string
@@ -144,6 +141,11 @@ variable "grafana_external_whitelist" {
   description = "whitelist for grafana when exposed externally"
   type = string
   default = "0.0.0.0/0"
+}
+
+variable "kubeconfig_location" {
+  description = "file location of kubeconfig"
+  type = string
 }
 
 variable "stateful_resources" {
