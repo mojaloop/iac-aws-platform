@@ -65,3 +65,6 @@ output "available_zones" {
   description = "available azs at time of infra build"
   value       = local.tenancy_azs
 }
+output "inventory_file_location" {
+  value = module.k8s-cluster-main.inventory_file_location
+}
