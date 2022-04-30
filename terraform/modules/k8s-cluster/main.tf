@@ -86,7 +86,7 @@ resource "local_file" "inventory_file" {
     list_master   = join("\n", [for master in aws_instance.k8s-master : master.private_dns])
     list_node     = join("\n", [for worker in aws_instance.k8s-worker : worker.private_dns])
   })
-  filename   = "${var.inventory_file}"
+  filename   = "${path.module}/${var.inventory_file}"
 }
 
 resource "aws_route53_record" "k8-masters" {

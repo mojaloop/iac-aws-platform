@@ -47,3 +47,7 @@ output "master_nodes" {
 output "worker_nodes" {
   value = aws_instance.k8s-worker
 }
+
+output "inventory_file_location" {
+  value = "${path.module}/${var.inventory_file}"
+}

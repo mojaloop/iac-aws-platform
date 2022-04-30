@@ -4,7 +4,7 @@ module "k8s-cluster-main" {
   environment               = var.environment
   default_tags              = local.default_tags
   tenant                    = var.client
-  inventory_file            = "${path.module}/${var.inventory_file}"
+  inventory_file            = var.inventory_file
   route53_private_zone_id   = aws_route53_zone.main_private.zone_id
   route53_public_zone_id    = aws_route53_zone.main_private.zone_id
   route53_private_zone_name = aws_route53_zone.main_private.name
