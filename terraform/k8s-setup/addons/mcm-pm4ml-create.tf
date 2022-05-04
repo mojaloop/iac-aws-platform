@@ -22,8 +22,6 @@ resource "restapi_object" "pm4ml_account" {
 
   read_path = "/api/dfsps"
   read_search = {
-    id = "${each.key}"
-    id_attribute = "id"
     search_path = "/api/dfsps"
     search_key = "id"
     search_value = "${each.key}"
