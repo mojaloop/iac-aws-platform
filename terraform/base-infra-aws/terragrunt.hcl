@@ -33,6 +33,20 @@ data "terraform_remote_state" "tenant" {
     key    = "bootstrap/terraform.tfstate"
   }
 }
+locals {
+  public_zone_id = data.terraform_remote_state.tenant.outputs.public_zone_id
+  private_zone_id = data.terraform_remote_state.tenant.outputs.private_zone_id
+  public_subdomain = data.terraform_remote_state.tenant.outputs.public_zone_name
+  private_subdomain = data.terraform_remote_state.tenant.outputs.private_zone_name
+  gitlab_hostname = data.terraform_remote_state.tenant.outputs.gitlab_hostname
+  gitlab_root_token = data.terraform_remote_state.tenant.outputs.gitlab_root_token
+  nexus_fqdn = data.terraform_remote_state.tenant.outputs.nexus_fqdn
+  nexus_docker_repo_listening_port = data.terraform_remote_state.tenant.outputs.nexus_docker_repo_listening_port
+  vpc_id = data.terraform_remote_state.tenant.outputs.vpc_id
+  availability_zones = data.terraform_remote_state.tenant.outputs.availability_zones
+  private_subnet_ids = data.terraform_remote_state.tenant.outputs.private_subnet_ids
+  public_subnet_ids = data.terraform_remote_state.tenant.outputs.public_subnet_ids
+}
 
 EOF
 }

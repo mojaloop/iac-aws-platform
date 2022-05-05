@@ -24,13 +24,13 @@ module "ubuntu-focal-ami" {
 }
 
 locals {
-  master_node_permutations = {for pair in setproduct(local.tenancy_azs, range(var.kube_master_num / length(local.tenancy_azs))) : "${pair[0]}-${pair[1]}" => pair[0]}
-  worker_node_permutations = {for pair in setproduct(local.tenancy_azs, range(var.kube_worker_num / length(local.tenancy_azs))) : "${pair[0]}-${pair[1]}" => pair[0]}  
+  master_node_permutations = {for pair in setproduct(local.availability_zones, range(var.kube_master_num / length(local.availability_zones))) : "${pair[0]}-${pair[1]}" => pair[0]}
+  worker_node_permutations = {for pair in setproduct(local.availability_zones, range(var.kube_worker_num / length(local.availability_zones))) : "${pair[0]}-${pair[1]}" => pair[0]}  
   
   master_kube_ec2_config = [
     for cluster_ref, az in local.master_node_permutations : 
     {
-      "subnet_id" = data.terraform_remote_state.tenant.outputs.private_subnet_ids["${var.environment}-${az}"]["id"]
+      "subnet_id" = local.private_subnet_ids["${var.environment}-${az}"]["id"]
       "availability_zone" = az
       "ec2_ref" = cluster_ref
       "aws_ami" = var.use_focal_ubuntu ? module.ubuntu-focal-ami.id : module.ubuntu-bionic-ami.id
@@ -45,7 +45,7 @@ locals {
   worker_kube_ec2_config = [
     for cluster_ref, az in local.worker_node_permutations : 
     {
-      "subnet_id" = data.terraform_remote_state.tenant.outputs.private_subnet_ids["${var.environment}-${az}"]["id"]
+      "subnet_id" = local.private_subnet_ids["${var.environment}-${az}"]["id"]
       "availability_zone" = az
       "ec2_ref" = cluster_ref
       "aws_ami" = var.use_focal_ubuntu ? module.ubuntu-focal-ami.id : module.ubuntu-bionic-ami.id

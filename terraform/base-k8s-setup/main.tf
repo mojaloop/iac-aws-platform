@@ -28,7 +28,7 @@ resource "helm_release" "deploy_vault" {
     kms_secret_key = var.aws_secret_key,
     kube_engine_path = var.kubernetes_auth_path
     host_name = "vault"
-    domain_name = dependency.baseinfra.outputs.public_subdomain
+    domain_name = var.public_subdomain
   })]
   force_update = true
   cleanup_on_fail = true
@@ -55,7 +55,7 @@ export POD=$(kubectl get pod -l app.kubernetes.io/instance=vault -o jsonpath={.i
 if kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 vault status'; then
   echo "vault already initialized"
 else 
-kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 vault operator init --key-shares=5 --key-threshold=3 -format json' > ${path.module}/templates/vault_seal_key
+kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 vault operator init --key-shares=5 --key-threshold=3 -format json' > ${var.static_files_path_location}/vault_seal_key
 fi
 EOT
     environment = {
@@ -66,7 +66,7 @@ EOT
 }
 
 data "template_file" "vault_key" {
-  template = file("${path.module}/templates/vault_seal_key")
+  template = file("${var.static_files_path_location}/vault_seal_key")
 
   depends_on = [null_resource.initialize-vault]
 }
@@ -75,8 +75,8 @@ resource "null_resource" "tune-secret-engine" {
   provisioner "local-exec" {
     command = <<EOT
 POD=$(kubectl get pod -l app.kubernetes.io/instance=vault -o jsonpath={.items[0].metadata.name})
-kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=${jsondecode(file("${path.module}/templates/vault_seal_key"))["root_token"]} vault secrets enable --path=secret kv' 
-kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=${jsondecode(file("${path.module}/templates/vault_seal_key"))["root_token"]} vault secrets tune -default-lease-ttl=2m secret/' 
+kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=${jsondecode(file("${var.static_files_path_location}/vault_seal_key"))["root_token"]} vault secrets enable --path=secret kv' 
+kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=${jsondecode(file("${var.static_files_path_location}/vault_seal_key"))["root_token"]} vault secrets tune -default-lease-ttl=2m secret/' 
 EOT
     environment = {
       KUBECONFIG = var.kubeconfig_location
@@ -116,7 +116,7 @@ resource "helm_release" "external-nginx-ingress-controller" {
         ingress_class_name = "nginx-ext"
         http_nodeport_port = 32080
         https_nodeport_port = 32443
-        lb_name            = dependency.baseinfra.outputs.external_load_balancer_dns
+        lb_name            = var.external_load_balancer_dns
         use_proxy_protocol = true
         enable_real_ip     = true
         tls_sec_name = "default/${var.int_wildcard_cert_sec_name}"
@@ -140,7 +140,7 @@ resource "helm_release" "internal-nginx-ingress-controller" {
         http_nodeport_port = 31080
         https_nodeport_port = 31443
         ingress_class_name = "nginx"
-        lb_name            = dependency.baseinfra.outputs.internal_load_balancer_dns
+        lb_name            = var.internal_load_balancer_dns
         use_proxy_protocol = false
         enable_real_ip     = false
         tls_sec_name = "default/${var.int_wildcard_cert_sec_name}"

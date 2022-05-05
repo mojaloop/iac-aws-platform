@@ -1,13 +1,7 @@
 resource "null_resource" "oauth-app" {
   provisioner "local-exec" {
-    on_failure = continue
-    command = <<EOT
-      curl -s -X POST https://${data.terraform_remote_state.tenant.outputs.gitlab_hostname}/api/v4/applications \
-            -H 'Content-Type: application/json' \
-            -H 'PRIVATE-TOKEN: ${data.terraform_remote_state.tenant.outputs.gitlab_root_token}' \
-            -d '{"name": "oauth-app-kubernetes-${var.environment}", "redirect_uri": "http://localhost:8000", "scopes": "read_api openid" }' \
-            > ${path.module}/oauth-apps/oauth-app-kubernetes-${var.environment}.json
-    EOT
+    interpreter = ["/bin/bash", "-c"]
+    command = "curl -v -X POST https://${local.gitlab_hostname}/api/v4/applications -H 'Content-Type: application/json' -H 'PRIVATE-TOKEN: ${local.gitlab_root_token}' -d '{\"name\": \"oauth-app-kubernetes-${var.environment}\", \"redirect_uri\": \"https://grafana.${aws_route53_zone.public_subdomain.name}/login/gitlab\", \"scopes\": \"read_api openid\" }' > ${path.module}/oauth-apps/oauth-app-kubernetes-${var.environment}.json"
   }
 }
 
@@ -18,14 +12,8 @@ data "local_file" "kubernetes-oauth-app" {
 
 resource "null_resource" "grafana-oauth-app" {
   provisioner "local-exec" {
-    on_failure = continue
-    command = <<EOT
-      curl -s -X POST https://${data.terraform_remote_state.tenant.outputs.gitlab_hostname}/api/v4/applications \
-            -H 'Content-Type: application/json' \
-            -H 'PRIVATE-TOKEN: ${data.terraform_remote_state.tenant.outputs.gitlab_root_token}' \
-            -d '{"name": "oauth-app-grafana-${var.environment}", "redirect_uri": "https://grafana.${aws_route53_zone.public_subdomain.name}/login/gitlab", "scopes": "read_api" }' \
-            > ${path.module}/oauth-apps/oauth-app-grafana-${var.environment}.json
-    EOT
+    interpreter = ["/bin/bash", "-c"]
+    command = "curl -v -X POST https://${local.gitlab_hostname}/api/v4/applications -H 'Content-Type: application/json' -H 'PRIVATE-TOKEN: ${local.gitlab_root_token}' -d '{\"name\": \"oauth-app-grafana-${local.environment}\", \"redirect_uri\": \"https://grafana.${aws_route53_zone.public_subdomain.name}/login/gitlab\", \"scopes\": \"read_api\" }' > ${path.module}/oauth-apps/oauth-app-grafana-${var.environment}.json"
   }
 }
 
@@ -36,14 +24,8 @@ data "local_file" "grafana-oauth-app" {
 
 resource "null_resource" "vault-oauth-app" {
   provisioner "local-exec" {
-    on_failure = continue
-    command = <<EOT
-      curl -s -X POST https://${data.terraform_remote_state.tenant.outputs.gitlab_hostname}/api/v4/applications \
-            -H 'Content-Type: application/json' \
-            -H 'PRIVATE-TOKEN: ${data.terraform_remote_state.tenant.outputs.gitlab_root_token}' \
-            -d '{"name": "oauth-app-vault-${var.environment}", "redirect_uri": "https://vault.${aws_route53_zone.public_subdomain.name}/ui/vault/auth/oidc/oidc/callback", "scopes": "openid" }' \
-            > ${path.module}/oauth-apps/oauth-app-vault-${var.environment}.json
-    EOT
+    interpreter = ["/bin/bash", "-c"]
+    command = "curl -v -X POST https://${local.gitlab_hostname}/api/v4/applications -H 'Content-Type: application/json' -H 'PRIVATE-TOKEN: ${local.gitlab_root_token}' -d '{\"name\": \"oauth-app-vault-${var.environment}\", \"redirect_uri\": \"https://vault.${aws_route53_zone.public_subdomain.name}/ui/vault/auth/oidc/oidc/callback\", \"scopes\": \"openid\" }' > ${path.module}/oauth-apps/oauth-app-vault-${var.environment}.json"
   }
 }
 
@@ -55,19 +37,19 @@ data "local_file" "vault-oauth-app" {
 #creating nexus entries json file for kubespray execution (requires bootstrap version >= v0.5.3)
 resource "local_file" "kubespray_extra_vars" {
   content         = templatefile("${path.module}/templates/extra-vars.json.tpl", {
-    nexus_ip = data.terraform_remote_state.tenant.outputs.nexus_fqdn 
-    nexus_port = data.terraform_remote_state.tenant.outputs.nexus_docker_repo_listening_port
+    nexus_ip = local.nexus_fqdn 
+    nexus_port = local.nexus_docker_repo_listening_port
     apiserver_loadbalancer_domain_name = aws_lb.internal-lb.dns_name
     kube_oidc_enabled = "true"
     kube_oidc_client_id = local.oauth_app_id
-    kube_oidc_url = "https://${data.terraform_remote_state.tenant.outputs.gitlab_hostname}"
+    kube_oidc_url = "https://${local.gitlab_hostname}"
     groups_name = "groups_direct"
   })
   filename        = "${path.module}/extra-vars.json"
 }
 
 data "aws_vpc" "selected" {
-  id = data.terraform_remote_state.tenant.outputs.vpc_id
+  id = local.vpc_id
 }
 
 resource "aws_security_group" "internet" {
@@ -104,36 +86,36 @@ module "aws-iam" {
 }
 
 resource "aws_route53_zone" "main_private" {
-  name = "${var.environment}.${data.terraform_remote_state.tenant.outputs.private_zone_name}"
+  name = "${var.environment}.${local.private_subdomain}"
 
   vpc {
     vpc_id = data.aws_vpc.selected.id
   }
 
-  comment = "Private zone for ${data.terraform_remote_state.tenant.outputs.private_zone_name}"
+  comment = "Private zone for ${local.private_subdomain}"
 
   tags = {
-    "ProductDomain" = data.terraform_remote_state.tenant.outputs.private_zone_name
+    "ProductDomain" = local.private_subdomain
     "Environment"   = var.environment
-    "Description"   = "Private zone for ${data.terraform_remote_state.tenant.outputs.private_zone_name}"
+    "Description"   = "Private zone for ${local.private_subdomain}"
     "ManagedBy"     = "Terraform"
   }
 }
 
 resource "aws_route53_zone" "public_subdomain" {
-  name = "${var.environment}.${data.terraform_remote_state.tenant.outputs.public_zone_name}"
+  name = "${var.environment}.${local.public_subdomain}"
   force_destroy = var.route53_zone_force_destroy
   tags = {
-    "ProductDomain" = data.terraform_remote_state.tenant.outputs.public_zone_name
+    "ProductDomain" = local.public_subdomain
     "Environment"   = var.environment
-    "Description"   = "Public Zone for subdomain ${data.terraform_remote_state.tenant.outputs.public_zone_name}"
+    "Description"   = "Public Zone for subdomain ${local.public_subdomain}"
     "ManagedBy"     = "Terraform"
   }
 }
 
 resource "aws_route53_record" "subdomain-ns" {
   allow_overwrite = true
-  zone_id         = data.terraform_remote_state.tenant.outputs.public_zone_id
+  zone_id         = local.public_zone_id
   name            = aws_route53_zone.public_subdomain.name
   type            = "NS"
   ttl             = "30"
@@ -160,5 +142,4 @@ locals {
   }
   default_tags = merge(local.dynamic_tags, var.custom_tags)
   oauth_app_id = jsondecode(data.local_file.kubernetes-oauth-app.content)["application_id"]
-  tenancy_azs = data.terraform_remote_state.tenant.outputs.availability_zones
 }

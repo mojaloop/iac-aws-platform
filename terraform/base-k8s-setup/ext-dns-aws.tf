@@ -12,8 +12,8 @@ resource "helm_release" "external-dns" {
     templatefile("${path.module}/templates/values-external-dns.yaml.tpl", {
         external_dns_iam_access_key = aws_iam_access_key.route53-external-dns.id
         external_dns_iam_secret_key = aws_iam_access_key.route53-external-dns.secret
-        domain = dependency.baseinfra.outputs.public_subdomain
-        internal_domain = dependency.baseinfra.outputs.private_subdomain
+        domain = var.public_subdomain
+        internal_domain = var.private_subdomain
         txt_owner_id = "${var.environment}-${var.client}"
         region = var.region
       })
@@ -57,8 +57,8 @@ resource "aws_iam_user_policy" "route53-external-dns" {
         "route53:ChangeResourceRecordSets"
       ],
       "Resource": [
-        "arn:aws:route53:::hostedzone/${dependency.baseinfra.outputs.public_subdomain_zone_id}",    
-        "arn:aws:route53:::hostedzone/${dependency.baseinfra.outputs.private_zone_id}"
+        "arn:aws:route53:::hostedzone/${var.public_subdomain_zone_id}",    
+        "arn:aws:route53:::hostedzone/${var.private_subdomain_zone_id}"
       ]
     },
     {

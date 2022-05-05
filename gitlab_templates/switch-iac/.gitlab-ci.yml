@@ -1,27 +1,28 @@
 default: 
   image: 
-    name: ghcr.io/mojaloop/iac-aws-platform:2.1.2
+    name: ghcr.io/mojaloop/iac-aws-platform:2.2.0-beta4
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
-    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
-    - aws s3 sync s3://${BUCKET}/${environment}/ ./envs3/ --sse || true
-    - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
-    - export ENV_S3_DIR=$CI_IMAGE_PROJECT_DIR/envs3
-    # Define the contents of the workbench-config file as environment variables for use in gitlab and optionally in terraform
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
+    - export ENV_S3_DIR=$CI_IMAGE_PROJECT_DIR/envs3
+    - aws s3 sync s3://$bucket/bootstrap ./k8ss3bootstrap/ --sse || true
+    - aws s3 sync s3://${bucket}/${environment}/ $ENV_S3_DIR/ --sse || true
+    - ls -la $ENV_S3_DIR/
+    # Define the contents of the workbench-config file as environment variables for use in gitlab and optionally in terraform
     - export ENVIRONMENT=$environment
-    - test -n "$BUCKET"
+    - test -n "$bucket"
     - cd $CI_IMAGE_PROJECT_DIR
     - eval `ssh-agent`
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-    - test -f terraform/ssh_provisioner_key &&  chmod 0600 terraform/ssh_provisioner_key &&  ssh-add terraform/ssh_provisioner_key
+    - test -f $ENV_S3_DIR/ansible/ssh_provisioner_key && chmod 0400 $ENV_S3_DIR/ansible/ssh_provisioner_key && ssh-add $ENV_S3_DIR/ansible/ssh_provisioner_key
+    - test -f $ENV_S3_DIR/k8s/admin.conf && export KUBECONFIG=$ENV_S3_DIR/k8s/admin.conf
     - chmod +x ./searchandreplace.sh
     - if [ -d ${CI_PROJECT_DIR}/iac-sync-dir ]; then cp -r ${CI_PROJECT_DIR}/iac-sync-dir/. .; else echo "no local files to copy"; fi 
     - cp $CI_PROJECT_DIR/workbench-config.json .
+    - cp $CI_PROJECT_DIR/searchandreplace . || true
     - ./searchandreplace.sh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
     - export ANSIBLE_FEATURE_TOGGLES="-e kube_version=v${k8s_api_version} -e dashboard_enabled=True -e kube_proxy_mode=iptables -e artifacts_dir=inventory/artifacts/cluster -e cloud_provider=aws -e ansible_user=ubuntu -b --become-user=root --flush-cache -e kubeconfig_localhost=true"
@@ -45,7 +46,9 @@ Validate and Plan:
   stage: Validate
   script:
     - cd terraform/base-infra-aws
-    - terragrunt init
+    - terragrunt init || true
+    - cat versions.tf
+    - cat *.tf
     - terragrunt validate
     - terragrunt plan -out=plan.cache
     - terragrunt show -json plan.cache | jq -r '([.resource_changes[]?.change.actions?]|flatten)|{"create":(map(select(.=="create"))|length),"update":(map(select(.=="update"))|length),"delete":(map(select(.=="delete"))|length)}' > ${CI_PROJECT_DIR}/plan.json
@@ -57,99 +60,99 @@ Validate and Plan:
 Destroy AWS:
   stage: Destroy
   script:
-    - cd terraform
-    - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform validate
-    - terraform destroy -auto-approve -refresh=false
+    - cd terraform/base-infra-aws
+    - aws s3 sync s3://${bucket}/${environment}/oauth-apps/ ./oauth-apps/ || true
+    - terragrunt init
+    - terragrunt validate
+    - terragrunt destroy -auto-approve -refresh=false
   when: manual
 
 Destroy Mojaloop K8s Stack:
   stage: Destroy
   script:
     - cd terraform/apps/wso2/config
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform validate
-    - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+    - terragrunt init
+    - terragrunt validate
+    - terragrunt destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
     - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-roles
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform validate
-    - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+    - terragrunt init
+    - terragrunt validate
+    - terragrunt destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
     - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform validate
-    - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+    - terragrunt init
+    - terragrunt validate
+    - terragrunt destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
 
   when: manual
 
 Destroy Add-On Apps:
   stage: Destroy
   script:
-    - aws s3 sync s3://${BUCKET}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
+    - aws s3 sync s3://${bucket}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
     - aws s3 sync s3://${client}${environment}k3s-pm4mladdons-state/k3s ./k3sstate --sse || true
     - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/addons || true
     - for var in $(jq -r '.internal_pm4ml_configs | to_entries[] .value.DFSP_NAME' ./workbench-config.json); do touch terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-key.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-ca-cert.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-cert.pem; done
     - cd terraform/k8s-setup/addons
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform validate
-    - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-    - aws s3 rm --recursive s3://$BUCKET/$environment/k8s-cluster
-    - aws s3 rm s3://$BUCKET/$environment/k3saddons/onboarding_pm4ml_output.json
-    - aws s3 rm s3://$BUCKET/$environment/k3saddons/ansible_pm4ml_output.yaml
+    - terragrunt init
+    - terragrunt validate
+    - terragrunt destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - aws s3 rm --recursive s3://$bucket/$environment/k8s-cluster
+    - aws s3 rm s3://$bucket/$environment/k3saddons/onboarding_pm4ml_output.json
+    - aws s3 rm s3://$bucket/$environment/k3saddons/ansible_pm4ml_output.yaml
   when: manual
 
 Destroy of Internal PM4MLs Setup:
   stage: Destroy
   script:
     - cd terraform/k8s-setup/pm4mls
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform validate
-    - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-    - aws s3 rm s3://$BUCKET/$environment/k3saddons/ansible_internal_pm4ml_output.json
-    - aws s3 rm s3://$BUCKET/$environment/k3saddons/onboarding_internal_pm4ml_output.json
-    - aws s3 rm s3://$BUCKET/$environment/k3saddons/ansible_external_pm4ml_output.yaml
+    - terragrunt init
+    - terragrunt validate
+    - terragrunt destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - aws s3 rm s3://$bucket/$environment/k3saddons/ansible_internal_pm4ml_output.json
+    - aws s3 rm s3://$bucket/$environment/k3saddons/onboarding_internal_pm4ml_output.json
+    - aws s3 rm s3://$bucket/$environment/k3saddons/ansible_external_pm4ml_output.yaml
   when: manual
 
 Destroy Vault:
   stage: Destroy
   script:
     - cd terraform/k8s-setup/vault-deploy
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform validate
-    - terraform destroy -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - terragrunt init
+    - terragrunt validate
+    - terragrunt destroy -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   when: manual
 
 Destroy Support Services:
   stage: Destroy
   script:
     - cd terraform/k8s-setup/support-svcs
-    - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform validate
-    - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - aws s3 sync s3://${bucket}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
+    - terragrunt init
+    - terragrunt validate
+    - terragrunt destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
     ##kill force kill efs provsioner
-    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf delete pods --all -n wso2 --grace-period=0 --force
-    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf delete namespace wso2 || true
+    - kubectl delete pods --all -n wso2 --grace-period=0 --force
+    - kubectl delete namespace wso2 || true
     ##kill force wso2-bizops
-    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf delete pods --all -n wso2-bizops --grace-period=0 --force
-    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf delete namespace wso2-bizops || true
+    - kubectl delete pods --all -n wso2-bizops --grace-period=0 --force
+    - kubectl delete namespace wso2-bizops || true
   when: manual
 
 Destroy Stateful Services:
   stage: Destroy
   script:
     - cd terraform/k8s-setup/state-setup
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform validate
-    - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+    - terragrunt init
+    - terragrunt validate
+    - terragrunt destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
   when: manual
 
 Destroy Environment:
   stage: Destroy
   script:
-    - aws s3 sync s3://${BUCKET}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
+    - aws s3 sync s3://${bucket}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
     - aws s3 sync s3://${client}${environment}k3s-pm4mladdons-state/k3s ./k3sstate --sse || true
-    - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
+    - aws s3 sync s3://${bucket}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
     - for var in $(jq -r '.internal_pm4ml_configs | to_entries[] .value.DFSP_NAME' ./workbench-config.json); do touch terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-key.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-ca-cert.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-cert.pem; done
     - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/addons || true
     - cp $CI_PROJECT_DIR/teardown.sh $CI_IMAGE_PROJECT_DIR/teardown.sh || true
@@ -161,13 +164,11 @@ Destroy k3s Cluster:
   image: 
     name: ghcr.io/pm4ml/k3sbootstrap:0.16.0
   before_script:
-    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"')
-    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
-    - export CI_IMAGE_PROJECT_DIR=/k3s-boot
-    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - aws s3 sync s3://$bucket/bootstrap ./k8ss3bootstrap/ --sse || true
+    - export CI_IMAGE_PROJECT_DIR=/k3s-boot
+    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
@@ -178,7 +179,7 @@ Destroy k3s Cluster:
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
     - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
-    - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
+    - aws s3 sync s3://$bucket/$environment ./k8ss3/ --sse || true
     - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
 
   script:
@@ -190,7 +191,7 @@ Destroy k3s Cluster:
     - sed -i "s/##region##/${region}/g" .env
     - make backend -- -auto-approve || true
     - make destroy -- -auto-approve || true 
-    - aws s3 rm --recursive s3://$BUCKET/$environment/k3saddons || true 
+    - aws s3 rm --recursive s3://$bucket/$environment/k3saddons || true 
     - aws s3 rm --recursive s3://${client}${environment}k3s-pm4mladdons-state/k3s || true
     - $CI_IMAGE_PROJECT_DIR/delete_int_k3s_db_row.sh ${client}${environment}k3s-pm4mladdons-lock ${client}${environment}k3s-pm4mladdons-state/k3s $region
   when: manual
@@ -200,13 +201,11 @@ Undeploy PM4ML Charts:
   image: 
     name: ghcr.io/pm4ml/k3sbootstrap:0.16.0
   before_script:
-    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
-    - export CI_IMAGE_PROJECT_DIR=/k3s-boot
-    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - aws s3 sync s3://$bucket/bootstrap ./k8ss3bootstrap/ --sse || true
+    - export CI_IMAGE_PROJECT_DIR=/k3s-boot
+    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
@@ -217,11 +216,11 @@ Undeploy PM4ML Charts:
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
     - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
-    - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
+    - aws s3 sync s3://$bucket/$environment ./k8ss3/ --sse || true
     - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
 
   script:
-    - aws s3 cp s3://$BUCKET/$environment/k3saddons/ssh-key /k3s-boot/ssh-key --sse
+    - aws s3 cp s3://$bucket/$environment/k3saddons/ssh-key /k3s-boot/ssh-key --sse
     - chmod 400 /k3s-boot/ssh-key
     - cd /k3s-boot
     - sed -i "s/##client##/${client}/g" .env
@@ -231,23 +230,27 @@ Undeploy PM4ML Charts:
     - sed -i "s/##peer_vpc_id##/${peer_vpc_id}/g" .env
     #TODO: static value needs addressing
     - sed -i "s/##pm4ml_client_cert_local_dir##/\/k3s-boot\/pm4ml-certoutput\//g" .env
-    - aws s3 cp s3://$BUCKET/$environment/k3saddons/ansible_internal_pm4ml_output.yaml ./ansible_pm4ml_output.yaml --sse
+    - aws s3 cp s3://$bucket/$environment/k3saddons/ansible_internal_pm4ml_output.yaml ./ansible_pm4ml_output.yaml --sse
     - make backend -- -auto-approve || true
     - make apply -- -auto-approve || true
     - make uninstall-pm4ml
-    #- aws s3 rm --recursive s3://$BUCKET/$PM4ML_ENVIRONMENT/pm4ml-certoutput
+    #- aws s3 rm --recursive s3://$bucket/$PM4ML_ENVIRONMENT/pm4ml-certoutput
   when: manual
 
 Deploy AWS Infrastructure:
   stage: "Deploy AWS infrastructure"
   script:
     - cd terraform/base-infra-aws
-    - cp $ENV_S3_DIR/oauth-apps/ ./oauth-apps/ || true
+    - mkdir -p ./oauth-apps
+    - touch ./oauth-apps/.test
+    - cp $ENV_S3_DIR/oauth-apps/* ./oauth-apps/ || true
     - terragrunt init
     - terragrunt apply -auto-approve || true
-    - aws s3 sync inventory s3://${BUCKET}/${environment}/ansible/ --sse || true
-    - aws s3 cp ssh_provisioner_key s3://${BUCKET}/${environment}/ansible/ --sse || true
-    - aws s3 sync ./oauth-apps s3://${BUCKET}/${environment}/oauth-apps/ --sse || true
+    - export inventory_location=$(terragrunt output inventory_file_location | tr -d '"')
+    - aws s3 cp ${inventory_location} s3://${bucket}/${environment}/ansible/ --sse || true
+    - aws s3 cp ssh_provisioner_key s3://${bucket}/${environment}/ansible/ --sse || true
+    - aws s3 cp extra-vars.json s3://${bucket}/${environment}/ansible/ --sse || true
+    - aws s3 sync ./oauth-apps s3://${bucket}/${environment}/oauth-apps/ --sse || true
   when: manual
 
 Create k3s Cluster:
@@ -255,13 +258,11 @@ Create k3s Cluster:
   image: 
     name: ghcr.io/pm4ml/k3sbootstrap:0.16.0
   before_script:
-    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
-    - export CI_IMAGE_PROJECT_DIR=/k3s-boot
-    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - aws s3 sync s3://$bucket/bootstrap ./k8ss3bootstrap/ --sse || true
+    - export CI_IMAGE_PROJECT_DIR=/k3s-boot
+    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
@@ -272,8 +273,8 @@ Create k3s Cluster:
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
     - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
-    - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
-    - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
+    - aws s3 sync s3://$bucket/$environment ./k8ss3/ --sse || true
+    - export domain=$(terraform output -state=k8ss3/base-infra-aws/terraform.tfstate public_subdomain | tr -d '"')
       
   script:
     - export
@@ -287,15 +288,15 @@ Create k3s Cluster:
     - make apply -- -auto-approve
     - make k3s
     - make kubeconfig
-    - aws s3 cp /k3s-boot/kubeconfig s3://$BUCKET/$environment/k3saddons/ --sse
-    - aws s3 cp /k3s-boot/ssh-key s3://${BUCKET}/$environment/k3saddons/ --sse
-    - aws s3 sync s3://$BUCKET/$environment/k3saddons /k3s-boot/k3saddons --sse
+    - aws s3 cp /k3s-boot/kubeconfig s3://$bucket/$environment/k3saddons/ --sse
+    - aws s3 cp /k3s-boot/ssh-key s3://${bucket}/$environment/k3saddons/ --sse
+    - aws s3 sync s3://$bucket/$environment/k3saddons /k3s-boot/k3saddons --sse
     - cp -r /k3s-boot/k3saddons/* /k3s-boot/
     - if [ ! -f /k3s-boot/vault-keys.json ]; then make vault; else echo "found vault, skipping make vault"; fi 
-    - aws s3 cp /k3s-boot/vault-keys.json s3://$BUCKET/$environment/k3saddons/ --sse   
+    - aws s3 cp /k3s-boot/vault-keys.json s3://$bucket/$environment/k3saddons/ --sse   
     - make wireguard
-    - aws s3 cp /k3s-boot/wireguard.private.key s3://$BUCKET/$environment/k3saddons/ --sse
-    - aws s3 cp /k3s-boot/wireguard.public.key s3://$BUCKET/$environment/k3saddons/ --sse
+    - aws s3 cp /k3s-boot/wireguard.private.key s3://$bucket/$environment/k3saddons/ --sse
+    - aws s3 cp /k3s-boot/wireguard.public.key s3://$bucket/$environment/k3saddons/ --sse
     - make monitoring 
   when: manual
 
@@ -304,64 +305,64 @@ Create k8s Cluster:
   script:
     - cd /kubespray
     - ansible-playbook -i $ENV_S3_DIR/ansible/inventory -e @$ENV_S3_DIR/ansible/extra-vars.json ./cluster.yml $ANSIBLE_FEATURE_TOGGLES
-    - aws s3 cp inventory/artifacts/cluster/admin.conf s3://$BUCKET/$environment/k8s/admin.conf --sse
+    - aws s3 cp inventory/artifacts/cluster/admin.conf s3://$bucket/$environment/k8s/admin.conf --sse
   when: manual
 
 1. Deploy Vault:
   stage: "Deploy Base Platform"
   script:
     - cd terraform/base-k8s-setup
-    - cp $ENV_S3_DIR/vault/vault_seal_key ./templates || true
+    - cp $ENV_S3_DIR/vault/vault_seal_key $CI_IMAGE_PROJECT_DIR/static_files/ || true
     - terragrunt init
-    - terragrunt apply -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID"
-    - aws s3 cp templates/vault_seal_key s3://${BUCKET}/${environment}/vault/ --sse
+    - terragrunt apply -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" || true
+    - aws s3 cp $CI_IMAGE_PROJECT_DIR/static_files/vault_seal_key s3://${bucket}/${environment}/vault/ --sse
   when: manual
 
 2a. Deploy Stateful Services:
   stage: "Deploy Base Platform"
   script:
-    - cd terraform/k8s-setup/state-setup
-    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf -n default wait --for=condition=ready certificate/wildcard-cert-internal --timeout=180s
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - cd terraform/k8s-apps-setup/state-setup
+    - kubectl -n default wait --for=condition=ready certificate/wildcard-cert-internal --timeout=180s
+    - terragrunt init
+    - terragrunt apply -auto-approve
   when: manual
 
 2b. Deploy Support Services:
   stage: "Deploy Base Platform"
   script:
-    - cd terraform/k8s-setup/support-svcs
-    - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - cd terraform/k8s-apps-setup/support-svcs
+    - aws s3 sync s3://${bucket}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
+    - terragrunt init
+    - terragrunt apply -auto-approve
   when: manual
 
 1. Initial Install Base Apps:
   stage: "Deploy Platform"
   script:
-    - cd terraform/k8s-setup
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-roles
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-    - chmod o-w $CI_IMAGE_PROJECT_DIR/terraform/apps/wso2/config/
-    - cd $CI_IMAGE_PROJECT_DIR/terraform/apps/wso2/config/
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - cd terraform/k8s-apps-setup/mojaloop-core
+    - terragrunt init
+    - terragrunt apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/mojaloop-core/mojaloop-roles
+    - terragrunt init
+    - terragrunt apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - chmod o-w $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/apps/wso2/config/
+    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/apps/wso2/config/
+    - terragrunt init
+    - terragrunt apply -auto-approve
     - ansible-playbook publish.yaml
   when: manual
 
 2a. Setup PM4MLs:
   stage: "Deploy Platform"
   script:
-    - cd terraform/k8s-setup/pm4mls
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/pm4mls/ansible_internal_pm4ml_output.yaml s3://${BUCKET}/${environment}/k3saddons/ --sse
-    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/pm4mls/onboarding_internal_pm4ml_output.json s3://${BUCKET}/${environment}/k3saddons/ --sse
-    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/pm4mls/ansible_external_pm4ml_output.yaml s3://${BUCKET}/${environment}/k3saddons/ --sse
-    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/pm4mls/onboarding_external_pm4ml_output.json s3://${BUCKET}/${environment}/k3saddons/ --sse
-    #- aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/pm4mls/secrets_chart/ s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ --sse
+    - cd terraform/k8s-apps-setup/pm4mls
+    - terragrunt init
+    - terragrunt apply -auto-approve
+    - aws s3 cp ./ansible_internal_pm4ml_output.yaml s3://${bucket}/${environment}/k3saddons/ --sse
+    - aws s3 cp ./onboarding_internal_pm4ml_output.json s3://${bucket}/${environment}/k3saddons/ --sse
+    - aws s3 cp ./ansible_external_pm4ml_output.yaml s3://${bucket}/${environment}/k3saddons/ --sse
+    - aws s3 cp ./onboarding_external_pm4ml_output.json s3://${bucket}/${environment}/k3saddons/ --sse
+    #- aws s3 sync ./secrets_chart/ s3://${bucket}/${environment}/k8s-cluster/secrets_chart/ --sse
   when: manual
 
 2b. Install Internal PM4MLs:
@@ -369,13 +370,11 @@ Create k8s Cluster:
   image: 
     name: ghcr.io/pm4ml/k3sbootstrap:0.16.0
   before_script:
-    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
-    - export CI_IMAGE_PROJECT_DIR=/k3s-boot
-    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - aws s3 sync s3://$bucket/bootstrap ./k8ss3bootstrap/ --sse || true
+    - export CI_IMAGE_PROJECT_DIR=/k3s-boot
+    - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
     - sed -i "s/##accesskeyid##/${AWS_ACCESS_KEY_ID}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s|##accesssecret##|${AWS_SECRET_ACCESS_KEY}|g" $CI_IMAGE_PROJECT_DIR/aws_conf
     - sed -i "s/##region##/${region}/g" $CI_IMAGE_PROJECT_DIR/aws_conf
@@ -386,10 +385,10 @@ Create k8s Cluster:
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
     - if [ -d ./k3s-sync-dir ]; then cp -r ./k3s-sync-dir/. /k3s-boot; else echo "not local files to copy"; fi 
-    - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
-    - export domain=$(terraform output -state=k8ss3/terraform.tfstate public_subdomain | tr -d '"')
+    - aws s3 sync s3://$bucket/$environment ./k8ss3/ --sse || true
+    - export domain=$(terraform output -state=k8ss3/base-infra-aws/terraform.tfstate public_subdomain | tr -d '"')
   script:
-    - aws s3 cp s3://$BUCKET/$environment/k3saddons/ssh-key /k3s-boot/ssh-key --sse
+    - aws s3 cp s3://$bucket/$environment/k3saddons/ssh-key /k3s-boot/ssh-key --sse
     - chmod 400 /k3s-boot/ssh-key
     - cd /k3s-boot
     - sed -i "s/##client##/${client}/g" .env
@@ -399,30 +398,30 @@ Create k8s Cluster:
     - sed -i "s/##peer_vpc_id##/${peer_vpc_id}/g" .env
     #TODO: static value needs addressing
     - sed -i "s/##pm4ml_client_cert_local_dir##/\/k3s-boot\/pm4ml-certoutput\//g" .env
-    - aws s3 cp s3://$BUCKET/$environment/k3saddons/ansible_internal_pm4ml_output.yaml ./ansible_pm4ml_output.yaml --sse
+    - aws s3 cp s3://$bucket/$environment/k3saddons/ansible_internal_pm4ml_output.yaml ./ansible_pm4ml_output.yaml --sse
     - make backend -- -auto-approve
     - make apply -- -auto-approve
     - make pm4ml
-    #- aws s3 sync /k3s-boot/pm4ml-certoutput s3://$BUCKET/$environment/k3saddons/pm4ml-certoutput --sse
+    #- aws s3 sync /k3s-boot/pm4ml-certoutput s3://$bucket/$environment/k3saddons/pm4ml-certoutput --sse
   when: manual
 
 2c. Install Post Deployment:
   stage: "Deploy Platform"
   script:
   #todo remove hardcoded values here
-    - aws s3 sync s3://${BUCKET}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
+    - aws s3 sync s3://${bucket}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
     - aws s3 sync s3://${client}${environment}k3s-pm4mladdons-state/k3s ./k3sstate --sse || true
     - if [ -f k3sstate/terraform.tfstate ]; then export pm4ml_nat_ips_tmp=$(terraform output -state=k3sstate/terraform.tfstate nat_public_ips); else ls -la ./k3sstate; fi 
     - echo $pm4ml_nat_ips_tmp
     - if [ $(echo $pm4ml_nat_ips_tmp | grep --quiet Warning) ]; then echo "nats not found"; else export TF_VAR_pm4ml_nat_ips=$pm4ml_nat_ips_tmp; fi
     - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/addons || true
-    - cd terraform/k8s-setup/addons
+    - cd terraform/k8s-apps-setup/addons
     #- wget -q https://releases.hashicorp.com/terraform/1.1.8/terraform_1.1.8_linux_amd64.zip -O /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
     #- export TF_CLI_CONFIG_FILE=./restapi.tfrc
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-    #- aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/secrets_chart s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart --sse
-    - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/sim_tests s3://${BUCKET}/${environment}/k8s-cluster/sim_tests --sse
+    - terragrunt init
+    - terragrunt apply -auto-approve
+    #- aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/secrets_chart s3://${bucket}/${environment}/k8s-cluster/secrets_chart --sse
+    - aws s3 sync ./sim_tests s3://${bucket}/${environment}/k8s-cluster/sim_tests --sse
     #- find . -type f -iname '*_results' -exec cat '{}' \;
   when: manual
 
@@ -430,9 +429,9 @@ Create k8s Cluster:
 #job template for 1. Run PM4ML GP Tests	  
 .Run PM4ML GP Tests-job-template:
   script:
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-    #- aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-    - aws s3 cp s3://${BUCKET}/${environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+    - aws s3 sync s3://${bucket}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+    #- aws s3 sync s3://${bucket}/${environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+    - aws s3 cp s3://${bucket}/${environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
     - cd sim_tests
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopHub_Setup.postman_collection.json --insecure -e Lab.postman_environment.json
@@ -477,9 +476,9 @@ Create k8s Cluster:
   script:
     - if [ -f terraform-k8s.tfstate ]; then export fin_portal_users=$(terraform output -json -state=terraform-k8s.tfstate finance_portal_users); else ls -la .; fi 
     - if [ -f terraform-k8s.tfstate ]; then export fin_portal_url=$(terraform output -state=terraform-k8s.tfstate finance-portal-url); else ls -la .; fi 
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ ${CI_IMAGE_PROJECT_DIR}/sim_tests --sse
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ ${CI_IMAGE_PROJECT_DIR}/secrets_chart --sse
-    - aws s3 cp s3://${BUCKET}/${environment}/k3saddons/onboarding_internal_pm4ml_output.json ${CI_IMAGE_PROJECT_DIR}/sim_tests
+    - aws s3 sync s3://${bucket}/${environment}/k8s-cluster/sim_tests/ ${CI_IMAGE_PROJECT_DIR}/sim_tests --sse
+    - aws s3 sync s3://${bucket}/${environment}/k8s-cluster/secrets_chart/ ${CI_IMAGE_PROJECT_DIR}/secrets_chart --sse
+    - aws s3 cp s3://${bucket}/${environment}/k3saddons/onboarding_internal_pm4ml_output.json ${CI_IMAGE_PROJECT_DIR}/sim_tests
     - cd ${CI_IMAGE_PROJECT_DIR}/sim_tests
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopHub_Setup.postman_collection.json --insecure -e Lab.postman_environment.json
@@ -511,10 +510,10 @@ Create k8s Cluster:
 #job template for 4. Run Platform GP Tests:
 .Run Platform GP Tests-job-template:
   script:
-    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-    - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+    - aws s3 sync s3://${bucket}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+    - aws s3 sync s3://${bucket}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+    - aws s3 cp s3://${bucket}/${TF_VAR_environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+    - aws s3 cp s3://${bucket}/${TF_VAR_environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
     - cp $CI_PROJECT_DIR/tests/Myanmar-Golden-Path.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests
     - cd sim_tests
     - jq -s '[.[][]]' onboarding_external_pm4ml_output.json onboarding_internal_pm4ml_output.json > /tmp/onboarding_pm4ml_output.json
@@ -572,13 +571,12 @@ Create k8s Cluster:
     - export GLIBC_VER=2.34-r0
     - apk --no-cache add binutils curl jq && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk && apk add --no-cache glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip && unzip awscliv2.zip && aws/install && rm -rf awscliv2.zip aws /usr/local/aws-cli/v2/*/dist/aws_completer /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index /usr/local/aws-cli/v2/*/dist/awscli/examples glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk /var/cache/apk/*
     - wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/bin/ && rm /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
     - export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION=${region}
-    - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
+    - aws s3 sync s3://$bucket/$environment ./k8ss3/ --sse || true
     - export private_subdomain=$(terraform output -state=k8ss3/terraform.tfstate private_subdomain | tr -d '"')
   script:
     - |
@@ -616,25 +614,25 @@ Create k8s Cluster:
 5. Run RBAC Tests:
   stage: "Run Tests"
   script:
-    - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf test bof --filter name=bof-rbac-tests -n mojaloop || true
-    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf -n mojaloop logs bof-rbac-tests
-    - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf -n mojaloop get pod bof-rbac-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+    - helm test bof --filter name=bof-rbac-tests -n mojaloop || true
+    - kubectl -n mojaloop logs bof-rbac-tests
+    - exit `kubectl -n mojaloop get pod bof-rbac-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
 6. Run Report Tests:
   stage: "Run Tests"
   script:
-    - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf test bof --filter name=bof-report-tests -n mojaloop || true
-    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf -n mojaloop logs bof-report-tests
-    - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf -n mojaloop get pod bof-report-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+    - helm test bof --filter name=bof-report-tests -n mojaloop || true
+    - kubectl -n mojaloop logs bof-report-tests
+    - exit `kubectl -n mojaloop get pod bof-report-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
 1. Run External PM4ML Onboarding:
   stage: "Maintain Platform"
   script:
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-    - aws s3 cp s3://${BUCKET}/${environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+    - aws s3 sync s3://${bucket}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+    - aws s3 sync s3://${bucket}/${environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+    - aws s3 cp s3://${bucket}/${environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
     - cd sim_tests
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json -d onboarding_external_pm4ml_output.json
   when: manual
@@ -643,7 +641,7 @@ Create k8s Cluster:
   stage: "Maintain Platform"
   script:
     - export private_subdomain=$(terraform output -state=terraform.tfstate private_subdomain | tr -d '"')
-    - helm -n mojaloop -i --kubeconfig=$ENV_S3_DIR/k8s/admin.conf --set-string base_domain=${private_subdomain} --set-string bof_release_name=bof --set-string moja_release_name=moja upgrade bof-oathkeeper-rules $CI_IMAGE_PROJECT_DIR/bof-custom-resources/oathkeeper-rules
+    - helm -n mojaloop -i --set-string base_domain=${private_subdomain} --set-string bof_release_name=bof --set-string moja_release_name=moja upgrade bof-oathkeeper-rules $CI_IMAGE_PROJECT_DIR/bof-custom-resources/oathkeeper-rules
   when: manual
 
 3. Update mojaloop roles:
@@ -659,16 +657,16 @@ Create k8s Cluster:
       response_code=$(curl -s -X POST ${validation_api_url} -H 'Content-Type: application/json' -d "${request_body}" -w "%{http_code}" -o response_body.txt);
       if [ $response_code != 200 ]; then echo "VALIDATION FAILED"; cat response_body.txt; exit 1; else echo "VALIDATION PASSED"; fi;
     - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-roles
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - terragrunt init
+    - terragrunt apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   when: manual
 
 4. Update custom reports:
   stage: "Maintain Platform"
   script:
     - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-custom-reports
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - terragrunt init
+    - terragrunt apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   when: manual
 
 11. K8S Cluster Deployments:
@@ -688,7 +686,7 @@ Create k8s Cluster:
 12. Add-ons K8S Cluste Deployments:
   stage: "Run Tests"
   script:
-    - aws s3 cp s3://${BUCKET}/${environment}/admin-add-ons.conf ${CI_IMAGE_PROJECT_DIR}/reports/admin-add-ons.conf
+    - aws s3 cp s3://${bucket}/${environment}/admin-add-ons.conf ${CI_IMAGE_PROJECT_DIR}/reports/admin-add-ons.conf
     - cd ${CI_IMAGE_PROJECT_DIR}/reports
     - export KUBECONFIG=admin-add-ons.conf
     - echo "Namespace,Helm Chart,Deployment Name,Docker image,Creation Timestamp,Number of Available Replicas,Available Status Change Timestamp,Is Available?" > ${CI_PROJECT_DIR}/add-ons-cluster-report.csv
@@ -702,19 +700,19 @@ Create k8s Cluster:
 14. Automated Env Report :
   stage: "Run Tests"
   script:
-#    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+#    - aws s3 sync s3://${bucket}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
     - cd /tmp && git clone https://github.com/ashokalinux/Env-template.git
     - cd /tmp/Env-template
     - export
-    - terraform init
+    - terragrunt init
     - terraform plan -out=plan.env
-    - terraform apply "plan.env"
+    - terragrunt apply "plan.env"
     - pwd
     - ls -R
     - cp ./Auto/Env/Lab.auto_environment.html $CI_IMAGE_PROJECT_DIR
     - ls -l $CI_IMAGE_PROJECT_DIR
-#    - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/Auto s3://${BUCKET}/${environment}/Auto --sse
-    - aws s3 cp $CI_IMAGE_PROJECT_DIR/Lab.auto_environment.html s3://${BUCKET}/${environment}/Auto/Env/Lab.auto_environment.html --sse
+#    - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/Auto s3://${bucket}/${environment}/Auto --sse
+    - aws s3 cp $CI_IMAGE_PROJECT_DIR/Lab.auto_environment.html s3://${bucket}/${environment}/Auto/Env/Lab.auto_environment.html --sse
   when: manual
   artifacts:
     paths:
@@ -725,9 +723,9 @@ Create k8s Cluster:
 1. Setup MFI oracle:
   stage: "Maintain Platform"
   script:
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-  #  - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-    - aws s3 cp s3://${BUCKET}/${environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+    - aws s3 sync s3://${bucket}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+  #  - aws s3 sync s3://${bucket}/${environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+    - aws s3 cp s3://${bucket}/${environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
     - cd sim_tests
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Registration.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json || true

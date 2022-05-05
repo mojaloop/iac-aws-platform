@@ -118,3 +118,31 @@ variable "longhorn_backup_s3_destroy" {
   type        = bool
   default     = false
 }
+variable "public_subdomain_zone_id" {
+  description = "public_subdomain_zone_id"
+  type        = string
+}
+variable "private_subdomain_zone_id" {
+  description = "private_subdomain_zone_id"
+  type        = string
+}
+variable "public_subdomain" {
+  description = "public_subdomain"
+  type        = string
+}
+variable "private_subdomain" {
+  description = "private_subdomain"
+  type        = string
+}
+variable "external_load_balancer_dns" {
+  description = "external_load_balancer_dns"
+  type        = string
+}
+variable "internal_load_balancer_dns" {
+  description = "internal_load_balancer_dns"
+  type        = string
+}
+variable "static_files_path_location" {
+  description = "static_files_path_location"
+  type        = string
+}

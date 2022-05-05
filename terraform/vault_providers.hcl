@@ -6,7 +6,7 @@ generate "provider" {
   contents = <<EOF
 provider "vault" {
   address = "https://vault.${dependency.baseinfra.outputs.public_subdomain}"
-  token   = jsondecode(file("${get_env("vault_token_location")}/vault_seal_key"))["root_token"]
+  token   = jsondecode("${local.common_vars.vault_token_location}/vault_seal_key"))["root_token"]
 }
  
 EOF
