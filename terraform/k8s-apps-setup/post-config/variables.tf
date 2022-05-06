@@ -116,3 +116,7 @@ variable "sim_whitelist_secret_name" {
   description = "sim_whitelist_secret_name"
   type        = string
 }
+variable "mcm_fqdn" {
+  description = "mcm_fqdn"
+  type        = string
+}

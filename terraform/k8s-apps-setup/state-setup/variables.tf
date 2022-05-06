@@ -16,11 +16,6 @@ variable "storage_class_name" {
   default     = "longhorn"
 }
 
-variable "vault_endpoint" {
-  description = "vault_endpoint"
-  type        = string
-}
-
 variable "stateful_resources" {
   description = "stateful resource config data"
   type = list(object({
