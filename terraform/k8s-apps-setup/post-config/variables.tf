@@ -85,12 +85,6 @@ variable "external_pm4ml_configs" {
   default = []
 }
 
-variable "mcm_name" {
-  description = "Hostname of Connection Manager service"
-  type        = string
-  default     = "mcm"
-}
-
 variable "public_subdomain" {
   description = "public_subdomain"
   type        = string
