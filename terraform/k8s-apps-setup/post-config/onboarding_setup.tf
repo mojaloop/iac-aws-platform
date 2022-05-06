@@ -49,7 +49,7 @@ resource "local_file" "gp_postman_environment_file" {
     P2P_ORACLE_ADMIN_API_ENDPOINT      = "http://${var.mfi-p2p-oracle-fqdn}/admin-api",
     PM4ML_DOMAIN                       = "${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${var.public_subdomain}",
     MOJALOOP_RELEASE                   = var.helm_mojaloop_release_name
-    MCM_NAME                           = var.mcm_name
+    MCM_FQDN                           = var.mcm_fqdn
   })
   filename   = "${path.root}/sim_tests/Lab.postman_environment.json"
   depends_on = [module.provision_accounts_to_wso2]

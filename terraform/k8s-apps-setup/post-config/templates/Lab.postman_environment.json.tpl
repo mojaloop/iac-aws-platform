@@ -109,7 +109,7 @@
 		},
 		{
 			"key": "MCM_ENDPOINT",
-			"value": "https://${MCM_NAME}.${LAB_DOMAIN}",
+			"value": "https://${MCM_FQDN}",
 			"enabled": true
 		},
 		{

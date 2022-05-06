@@ -102,4 +102,5 @@ inputs = {
   mfi-account-oracle-fqdn = dependency.mojaloopcore.outputs.mfi-account-oracle-fqdn
   alias-oracle-fqdn = dependency.mojaloopcore.outputs.alias-oracle-fqdn
   sim_whitelist_secret_name = dependency.supportsvcs.outputs.sim_whitelist_secret_name
+  mcm_fqdn = dependency.supportsvcs.outputs.mcm_fqdn
 }
