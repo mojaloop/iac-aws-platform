@@ -9,7 +9,7 @@ resource "helm_release" "mfi-p2p-oracle" {
 
   values = [
     templatefile("${path.module}/templates/values-mfi-p2p-oracle.yaml.tpl", {
-      ingress_host = "${var.mfi_p2p_oracle_name}.${dependency.baseinfra.outputs.public_subdomain}"
+      ingress_host = "${var.mfi_p2p_oracle_name}.${var.public_subdomain}"
       storage_class = var.storage_class_name
       service_name = var.mfi_p2p_oracle_name
     })
@@ -20,5 +20,5 @@ resource "helm_release" "mfi-p2p-oracle" {
 
 output "mfi-p2p-oracle-fqdn" {
   description = "FQDN for the private hostname of the Internal GW service."
-  value = var.use_mfi_p2p_oracle_endpoint == "yes" ? "${var.mfi_p2p_oracle_name}.${dependency.baseinfra.outputs.public_subdomain}" : "not used"
+  value = var.use_mfi_p2p_oracle_endpoint == "yes" ? "${var.mfi_p2p_oracle_name}.${var.public_subdomain}" : "not used"
 }

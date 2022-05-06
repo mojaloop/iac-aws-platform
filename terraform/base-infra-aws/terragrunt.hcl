@@ -35,7 +35,6 @@ data "terraform_remote_state" "tenant" {
 }
 locals {
   public_zone_id = data.terraform_remote_state.tenant.outputs.public_zone_id
-  private_zone_id = data.terraform_remote_state.tenant.outputs.private_zone_id
   public_subdomain = data.terraform_remote_state.tenant.outputs.public_zone_name
   private_subdomain = data.terraform_remote_state.tenant.outputs.private_zone_name
   gitlab_hostname = data.terraform_remote_state.tenant.outputs.gitlab_hostname

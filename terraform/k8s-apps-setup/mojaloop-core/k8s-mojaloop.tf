@@ -8,7 +8,7 @@ resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
   }
   spec {
     rule {
-      host = dependency.baseinfra.outputs.interop_switch_private_fqdn
+      host = var.interop_switch_private_fqdn
 
       http {
         path {
@@ -111,7 +111,7 @@ locals {
   oss_values = {
     env    = var.environment
     name   = var.client
-    domain = data.terraform_remote_state.tenant.outputs.domain
+    private_subdomain = var.private_subdomain
     kafka_host = "${var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
     account_lookup_db_password = data.vault_generic_secret.mojaloop_als_db_password.data.value
     account_lookup_db_user = "account_lookup"
@@ -138,7 +138,7 @@ locals {
     cl_mongodb_pass = data.vault_generic_secret.bulk_mongodb_password.data.value
     elasticsearch_url = "http://localhost" 
     kibana_url = "http://localhost"
-    wso2is_host = "https://iskm.${dependency.baseinfra.outputs.public_subdomain}"
+    wso2is_host = "https://iskm.${var.public_subdomain}"
     portal_oauth_app_id = vault_generic_secret.mojaloop_fin_portal_backend_client_id.data.value
     portal_oauth_app_token = vault_generic_secret.mojaloop_fin_portal_backend_client_secret.data.value
     internal_ttk_enabled = var.internal_ttk_enabled
@@ -148,7 +148,7 @@ locals {
     internal_sim_enabled = var.internal_sim_enabled
     mojaloop_thirdparty_support_enabled = "false"
     storage_class_name = var.storage_class_name
-    jws_signing_priv_key = dependency.supportsvcs.outputs.switch_jws_private_key
+    jws_signing_priv_key = var.switch_jws_private_key
   }
   portal_users = [
     for user in var.finance_portal_users :
@@ -202,8 +202,8 @@ resource "kubernetes_secret" "account-lookup-mysql-secret" {
 
   values = [
     templatefile("${path.module}/templates/values-mojaloop-esp.yaml.tpl", {
-      ELASTICSEARCH_HOST = dependency.baseinfra.outputs.elasticsearch-services-private-fqdn,
-      APM_HOST           = dependency.baseinfra.outputs.apm-services-private-fqdn
+      ELASTICSEARCH_HOST = var.elasticsearch-services-private-fqdn,
+      APM_HOST           = var.apm-services-private-fqdn
     })
   ]
   set {
@@ -263,7 +263,7 @@ resource "vault_generic_secret" "finance_portal_user_password" {
 
 module "fin-portal-iskm" {
   source    = "git::https://github.com/mojaloop/wso2is-populate.git//terraform?ref=v2.0.4"
-  wso2_host = "https://iskm.${dependency.baseinfra.outputs.public_subdomain}:443"
+  wso2_host = "https://iskm.${var.public_subdomain}:443"
   admin_user = "admin"
   admin_password  = data.vault_generic_secret.ws02_admin_password.data.value
   auth_server_clientkey = vault_generic_secret.mojaloop_fin_portal_backend_client_id.data.value

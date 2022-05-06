@@ -1,6 +1,6 @@
 locals {
-  mojaloopRoles = jsondecode(file("${var.project_root_path}/bof-custom-resources/role-permissions/mojaloop-roles.json"))
-  permissionExclusions = jsondecode(file("${var.project_root_path}/bof-custom-resources/role-permissions/permission-exclusions.json"))
+  mojaloopRoles = jsondecode(file("${var.bof_custom_resources_dir}/role-permissions/mojaloop-roles.json"))
+  permissionExclusions = jsondecode(file("${var.bof_custom_resources_dir}/role-permissions/permission-exclusions.json"))
 }
 
 resource "kubernetes_manifest" "bof-roles" {

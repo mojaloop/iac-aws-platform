@@ -52,9 +52,9 @@ module "iskm" {
   db_password        = data.vault_generic_secret.wso2_root_db_password.data.value
   db_host            = "${var.stateful_resources[local.wso2_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
   contact_email      = var.wso2_email
-  iskm_fqdn          = "iskm.${dependency.baseinfra.outputs.public_subdomain}"
-  intgw_fqdn         = "intgw-mgmt-int.${dependency.baseinfra.outputs.public_subdomain}"
-  extgw_fqdn         = "extgw-mgmt-int.${dependency.baseinfra.outputs.public_subdomain}"
+  iskm_fqdn          = "iskm.${var.public_subdomain}"
+  intgw_fqdn         = "intgw-mgmt-int.${var.public_subdomain}"
+  extgw_fqdn         = "extgw-mgmt-int.${var.public_subdomain}"
   wso2_admin_pw      = vault_generic_secret.wso2_admin_password.data.value
   int_ingress_controller_name  = "nginx"
 
@@ -76,12 +76,12 @@ module "intgw" {
   # TODO: workout where to get keystore and JWS password from
   keystore_password       = "wso2carbon"
   jws_password            = "wso2carbon"
-  public_domain_name      = dependency.baseinfra.outputs.public_subdomain
+  public_domain_name      = var.public_subdomain
   db_user                 = "root"
   db_password             = data.vault_generic_secret.wso2_root_db_password.data.value
   db_host                 = "${var.stateful_resources[local.wso2_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
   contact_email           = var.wso2_email
-  iskm_fqdn               = "iskm.${dependency.baseinfra.outputs.public_subdomain}"
+  iskm_fqdn               = "iskm.${var.public_subdomain}"
   wso2_admin_pw           = vault_generic_secret.wso2_admin_password.data.value
   hostname                     = "intgw"
   int_ingress_controller_name  = "nginx"
@@ -104,12 +104,12 @@ module "extgw" {
   root_private_key = module.wso2_init.root_private_key
   # TODO: workout where to get keystore and JWS password from
   keystore_password             = "wso2carbon"
-  public_domain_name            = dependency.baseinfra.outputs.public_subdomain
+  public_domain_name            = var.public_subdomain
   db_user                       = "root"
   db_password                   = data.vault_generic_secret.wso2_root_db_password.data.value
   db_host                       = "${var.stateful_resources[local.wso2_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
   contact_email                 = var.wso2_email
-  iskm_fqdn                     = "iskm.${dependency.baseinfra.outputs.public_subdomain}"
+  iskm_fqdn                     = "iskm.${var.public_subdomain}"
   service_account_name          = kubernetes_service_account.vault-auth-gateway.metadata[0].name
   vault_role_name               = vault_kubernetes_auth_backend_role.kubernetes-gateway.role_name
   vault_secret_file_name        = "main-wl-config.xml"

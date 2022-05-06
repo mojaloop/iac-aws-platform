@@ -1,3 +1,3 @@
-variable "project_root_path" {
-  description = "Root path for IaC project"
+variable "bof_custom_resources_dir" {
+  description = "dir to find custom resources"
 }

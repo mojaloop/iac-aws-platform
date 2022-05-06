@@ -31,9 +31,9 @@ resource "helm_release" "oathkeeper" {
 
   values = [  
     templatefile(split(".", var.k8s_api_version)[1] > 18 ? "${path.module}/templates/values-oathkeeper.yaml.tpl" : "${path.module}/templates/values-oathkeeper_pre_1_19.yaml.tpl", {
-      wso2_host = "https://iskm.${dependency.baseinfra.outputs.public_subdomain}"
+      wso2_host = "https://iskm.${var.public_subdomain}"
       wso2_admin_creds = base64encode("admin:${data.vault_generic_secret.ws02_admin_password.data.value}")
-      portal_fqdn = "${var.bofportal_name}.${dependency.baseinfra.outputs.public_subdomain}"
+      portal_fqdn = "${var.bofportal_name}.${var.public_subdomain}"
     })
   ]
   provider = helm.helm-main
@@ -67,8 +67,8 @@ resource "helm_release" "kratos" {
 
   values = [
     templatefile("${path.module}/templates/values-kratos.yaml.tpl", {
-      wso2_host = "https://iskm.${dependency.baseinfra.outputs.public_subdomain}"
-      portal_fqdn = "${var.bofportal_name}.${dependency.baseinfra.outputs.public_subdomain}"
+      wso2_host = "https://iskm.${var.public_subdomain}"
+      portal_fqdn = "${var.bofportal_name}.${var.public_subdomain}"
       wso2_client_id = module.bizops-portal-iskm.consumer-key
       wso2_client_secret = module.bizops-portal-iskm.consumer-secret
       kratos_db_password = data.vault_generic_secret.kratos_db_password.data.value
@@ -95,13 +95,13 @@ resource "helm_release" "bof" {
 
   values = [
     templatefile("${path.module}/templates/values-bof.yaml.tpl", {
-      wso2_host = "https://iskm.${dependency.baseinfra.outputs.public_subdomain}"
-      portal_fqdn = "${var.bofportal_name}.${dependency.baseinfra.outputs.public_subdomain}"
-      api_fqdn = "${var.bofapi_name}.${dependency.baseinfra.outputs.public_subdomain}"
-      iamui_fqdn = "${var.bofiamui_name}.${dependency.baseinfra.outputs.public_subdomain}"
-      transfersui_fqdn = "${var.boftransfersui_name}.${dependency.baseinfra.outputs.public_subdomain}"
-      settlementsui_fqdn = "${var.bofsettlementsui_name}.${dependency.baseinfra.outputs.public_subdomain}"
-      positionsui_fqdn = "${var.bofpositionsui_name}.${dependency.baseinfra.outputs.public_subdomain}"
+      wso2_host = "https://iskm.${var.public_subdomain}"
+      portal_fqdn = "${var.bofportal_name}.${var.public_subdomain}"
+      api_fqdn = "${var.bofapi_name}.${var.public_subdomain}"
+      iamui_fqdn = "${var.bofiamui_name}.${var.public_subdomain}"
+      transfersui_fqdn = "${var.boftransfersui_name}.${var.public_subdomain}"
+      settlementsui_fqdn = "${var.bofsettlementsui_name}.${var.public_subdomain}"
+      positionsui_fqdn = "${var.bofpositionsui_name}.${var.public_subdomain}"
       central_admin_host = "moja-centralledger-service"
       central_settlements_host = "moja-centralsettlement-service"
       account_lookup_service_host = "moja-account-lookup-service"
@@ -149,14 +149,14 @@ resource "kubernetes_secret" "wso2-is-admin-creds" {
 
 resource "helm_release" "bof-rules" {
   name       = "bof-oathkeeper-rules"
-  chart      = "${var.project_root_path}/bof-custom-resources/oathkeeper-rules"
+  chart      = "${var.bof_custom_resources_dir}/oathkeeper-rules"
   namespace  = "mojaloop"
   timeout    = 300
   provider   = helm.helm-main
   force_update = true
   set {
     name  = "base_domain"
-    value = dependency.baseinfra.outputs.public_subdomain
+    value = var.public_subdomain
     type  = "string"
   }
   set {

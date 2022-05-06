@@ -9,7 +9,7 @@ resource "helm_release" "alias-oracle" {
 
   values = [
     templatefile("${path.module}/templates/values-alias-oracle.yaml.tpl", {
-      ingress_host = "${var.alias_oracle_name}.${dependency.baseinfra.outputs.public_subdomain}"
+      ingress_host = "${var.alias_oracle_name}.${var.public_subdomain}"
       storage_class = var.storage_class_name
     })
   ]
@@ -19,5 +19,5 @@ resource "helm_release" "alias-oracle" {
 
 output "alias-oracle-fqdn" {
   description = "FQDN for the private hostname of the Internal GW service."
-  value = var.use_alias_oracle_endpoint == "yes" ? "${var.alias_oracle_name}.${dependency.baseinfra.outputs.public_subdomain}" : "not used"
+  value = var.use_alias_oracle_endpoint == "yes" ? "${var.alias_oracle_name}.${var.public_subdomain}" : "not used"
 }

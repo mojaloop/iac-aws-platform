@@ -90,3 +90,35 @@ variable "mcm_name" {
   type        = string
   default     = "mcm"
 }
+
+variable "public_subdomain" {
+  description = "public_subdomain"
+  type        = string
+}
+
+variable "private_subdomain" {
+  description = "private_subdomain"
+  type        = string
+}
+variable "switch_jws_key" {
+  description = "switch_jws_key"
+  type        = string
+  sensitive = true
+}
+variable "alias-oracle-fqdn" {
+  description = "alias-oracle-fqdn"
+  type        = string
+}
+
+variable "mfi-account-oracle-fqdn" {
+  description = "mfi-account-oracle-fqdn"
+  type        = string
+}
+variable "mfi-p2p-oracle-fqdn" {
+  description = "mfi-p2p-oracle-fqdn"
+  type        = string
+}
+variable "sim_whitelist_secret_name" {
+  description = "sim_whitelist_secret_name"
+  type        = string
+}

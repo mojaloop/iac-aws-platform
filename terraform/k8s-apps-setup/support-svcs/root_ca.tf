@@ -1,8 +1,8 @@
 resource "vault_pki_secret_backend_config_urls" "config_urls" {
   depends_on              = [vault_mount.root]
   backend                 = vault_mount.root.path
-  issuing_certificates    = ["${local.vault_addr}/v1/pki/ca"]
-  crl_distribution_points = ["${local.vault_addr}/v1/pki/crl"]
+  issuing_certificates    = ["${var.vault_addr}/v1/pki/ca"]
+  crl_distribution_points = ["${var.vault_addr}/v1/pki/crl"]
 }
 
 # Create a private key for use with the Root CA.

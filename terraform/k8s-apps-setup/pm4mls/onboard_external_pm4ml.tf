@@ -30,13 +30,13 @@ locals {
       "mcm_auth_user"        = pm4ml_config.DFSP_NAME
       "mcm_auth_pass"        = "${pm4ml_config.DFSP_NAME}123"
       "dfsp_id"              = pm4ml_config.DFSP_NAME
-      "extgw_fqdn"           = "extgw-data.${dependency.baseinfra.outputs.public_subdomain}"
-      "mcm_host_url"         = "mcm.${dependency.baseinfra.outputs.public_subdomain}"
+      "extgw_fqdn"           = "extgw-data.${var.public_subdomain}"
+      "mcm_host_url"         = "mcm.${var.public_subdomain}"
       "helm_release_name"    = pm4ml_config.DFSP_NAME
       "ttk_enabled"          = false
       "extgw_client_key"     = module.external_provision_pm4ml_to_wso2.client-ids[pm4ml_config.DFSP_NAME]
       "extgw_client_secret"  = module.external_provision_pm4ml_to_wso2.client-secrets[pm4ml_config.DFSP_NAME]
-      "OAUTH_TOKEN_ENDPOINT" = "https://extgw-data.${dependency.baseinfra.outputs.public_subdomain}:443/oauth2/token"
+      "OAUTH_TOKEN_ENDPOINT" = "https://extgw-data.${var.public_subdomain}:443/oauth2/token"
     }
   }
   external_postman_pm4ml_output = [
@@ -45,7 +45,7 @@ locals {
       "DFSP_NAME" = pm4ml_config.DFSP_NAME
       "DFSP_PREFIX" = pm4ml_config.DFSP_PREFIX
       "DFSP_CURRENCY" = pm4ml_config.DFSP_CURRENCY
-      "GENERIC_DFSP_CALLBACK_URL" = "https://intgw-data-int.${dependency.baseinfra.outputs.public_subdomain}:443/${pm4ml_config.DFSP_NAME}/1.0"
+      "GENERIC_DFSP_CALLBACK_URL" = "https://intgw-data-int.${var.public_subdomain}:443/${pm4ml_config.DFSP_NAME}/1.0"
       "DFSP_NOTIFICATION_EMAIL" = pm4ml_config.DFSP_NOTIFICATION_EMAIL
     }
   ]
@@ -54,8 +54,8 @@ locals {
 
 module "external_provision_pm4ml_to_wso2" {
   source            = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/create-test-user?ref=v2.0.0"
-  extgw_fqdn        = "extgw-mgmt-int.${dependency.baseinfra.outputs.public_subdomain}"
-  token_extgw_fqdn  = "extgw-data-int.${dependency.baseinfra.outputs.public_subdomain}"
+  extgw_fqdn        = "extgw-mgmt-int.${var.public_subdomain}"
+  token_extgw_fqdn  = "extgw-data-int.${var.public_subdomain}"
   extgw_token_service_port = 443
   extgw_admin_port = 443
   test_user_details = local.external_pm4ml_details
@@ -65,8 +65,8 @@ module "external_provision_pm4ml_to_wso2" {
 
 module "external_provision_pm4ml_callbacks_to_wso2" {
   source            = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/callbacks-post-config?ref=v2.0.0"
-  intgw_fqdn        = "intgw-mgmt-int.${dependency.baseinfra.outputs.public_subdomain}"
-  intgw_token_fqdn  = "intgw-data-int.${dependency.baseinfra.outputs.public_subdomain}"
+  intgw_fqdn        = "intgw-mgmt-int.${var.public_subdomain}"
+  intgw_token_fqdn  = "intgw-data-int.${var.public_subdomain}"
   intgw_rest_port   = 443
   intgw_token_port  = 443
   test_user_details = local.external_pm4ml_details

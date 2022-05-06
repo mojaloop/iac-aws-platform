@@ -10,7 +10,7 @@ resource "helm_release" "finance-portal" {
     templatefile("${path.module}/templates/values-finance-portal.yaml.tpl", {
       image_tag = var.helm_finance_portal_version,
       fin_portal_backend_svc = "mojaloop-finance-portal.mojaloop.svc.cluster.local:3000"
-      ingress_host        = "finance-portal-v2.${dependency.baseinfra.outputs.public_subdomain}"
+      ingress_host        = "finance-portal-v2.${var.public_subdomain}"
       mojaloop_release    = helm_release.mojaloop.name
     })
   ]

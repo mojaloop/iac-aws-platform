@@ -90,3 +90,8 @@ variable "pm4ml_nat_ips" {
   type = list(string)
   default = ["192.168.0.1", "192.168.0.2", "192.168.0.3"]
 }
+
+variable "public_subdomain" {
+  description = "public_subdomain"
+  type        = string
+}

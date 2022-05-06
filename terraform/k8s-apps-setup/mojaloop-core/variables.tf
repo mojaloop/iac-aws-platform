@@ -3,14 +3,15 @@ variable "client" {
   type        = string
 }
 
+variable "public_subdomain" {
+  description = "public_subdomain"
+  type        = string
+}
 
-# variable "subdomain" {
-#   description = "Mojaloop subdomain"
-# }
-
-# variable "domain" {
-#   description = "Mojaloop base domain"
-# }
+variable "private_subdomain" {
+  description = "private_subdomain"
+  type        = string
+}
 
 variable "environment" {
   description = "Environment name"
@@ -24,22 +25,6 @@ variable "helm_mojaloop_version" {
 variable "helm_mojaloop_release_name" {
   description = "Mojaloop helm release name"
   default = "mojaloop"
-}
-
-variable "project_root_path" {
-  description = "Root path for IaC project"
-}
-
-variable "helm_prometheus_version" {
-  description = "prometheus chart version to install via Helm"
-}
-
-variable "helm_grafana_version" {
-  description = "grafana chart version to install via Helm"
-}
-
-variable "helm_kafka_version" {
-  description = "kafka version to install via Helm"
 }
 
 variable "helm_esp_version" {
@@ -63,31 +48,10 @@ variable "iac_post_init_version" {
   type        = string
 }
 
-variable "kafka" {
-  description = "Kafka default settings"
-  default = {
-    retention_hours = 24
-    storage_size    = "7Gi"
-    mountPath       = "/opt/kafka/data"
-  }
-}
-
 variable "private_registry_pw" {
   description = "pw for private registry"
   type        = string
   default     = "override this for private image repo usage"
-}
-
-variable "mcm_name" {
-  description = "Hostname of Connection Manager service"
-  type        = string
-  default     = "mcm"
-}
-
-variable "mcm-totp-issuer" {
-  description = "Name to associate with Connection Manaager TOTP"
-  type        = string
-  default     = "HACKATHON"
 }
 
 variable "ghcr_private_registry_pw" {
@@ -313,21 +277,27 @@ variable "helm_bof_version"{
   type        = string
   default     = "1.0.0"
 }
-variable "cert_man_letsencrypt_cluster_issuer_name" {
-  description = "cluster issuer name for letsencrypt"
-  type        = string
-  default     = "letsencrypt"
-}
-variable "cert_man_vault_cluster_issuer_name" {
-  description = "cluster issuer name for vault"
-  type        = string
-  default     = "vault-issuer-root"
-}
 
 variable "storage_class_name" {
   description = "storage class name"
   type        = string
   default     = "longhorn"
+}
+
+variable "switch_jws_private_key" {
+  description = "switch_jws_private_key"
+  type        = string
+  sensitive   = true
+}
+
+variable "bof_custom_resources_dir" {
+  description = "dir to find custom resources"
+  type        = string
+}
+
+variable "interop_switch_private_fqdn" {
+  description = "fqdn for mojaloop ingresses"
+  type        = string
 }
 
 variable "stateful_resources" {

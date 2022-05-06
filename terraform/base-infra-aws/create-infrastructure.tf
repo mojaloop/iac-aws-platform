@@ -13,7 +13,7 @@ data "local_file" "kubernetes-oauth-app" {
 resource "null_resource" "grafana-oauth-app" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command = "curl -v -X POST https://${local.gitlab_hostname}/api/v4/applications -H 'Content-Type: application/json' -H 'PRIVATE-TOKEN: ${local.gitlab_root_token}' -d '{\"name\": \"oauth-app-grafana-${local.environment}\", \"redirect_uri\": \"https://grafana.${aws_route53_zone.public_subdomain.name}/login/gitlab\", \"scopes\": \"read_api\" }' > ${path.module}/oauth-apps/oauth-app-grafana-${var.environment}.json"
+    command = "curl -v -X POST https://${local.gitlab_hostname}/api/v4/applications -H 'Content-Type: application/json' -H 'PRIVATE-TOKEN: ${local.gitlab_root_token}' -d '{\"name\": \"oauth-app-grafana-${var.environment}\", \"redirect_uri\": \"https://grafana.${aws_route53_zone.public_subdomain.name}/login/gitlab\", \"scopes\": \"read_api\" }' > ${path.module}/oauth-apps/oauth-app-grafana-${var.environment}.json"
   }
 }
 

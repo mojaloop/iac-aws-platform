@@ -7,11 +7,11 @@ ml-testing-toolkit:
     ingress:
       hosts:
         specApi:
-          host: ttkbackend.${env}.${name}.${domain}.internal
+          host: ttkbackend.${private_subdomain}
           port: 5000
           paths: ['/']
         adminApi:
-          host: ttkbackend.${env}.${name}.${domain}.internal
+          host: ttkbackend.${private_subdomain}
           port: 5050
           paths: ['/api/', '/socket.io/']
     config:
@@ -255,11 +255,11 @@ ml-testing-toolkit:
     ingress:
       hosts:
         ui: 
-          host: ttkfrontend.${env}.${name}.${domain}.internal
+          host: ttkfrontend.${private_subdomain}
           port: 6060
           paths: ['/']
     config:
-      API_BASE_URL: http://ttkbackend.${env}.${name}.${domain}.internal
+      API_BASE_URL: http://ttkbackend.${private_subdomain}
 
 ml-ttk-test-setup:
   parameters:

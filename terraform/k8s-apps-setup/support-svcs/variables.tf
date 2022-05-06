@@ -46,17 +46,6 @@ variable "wso2_email" {
   default     = "cicd@modusbox.com"
 }
 
-variable "helm_efs_provisioner_version" {
-  description = "Chart version for the efs provisioner"
-}
-variable "helm_certmanager_version" {
-  description = "helm certmanager version"
-}
-
-variable "helm_nginx_version" {
-  description = "Nginx version used by the ingress controller"
-}
-
 variable "mcm_name" {
   description = "Hostname of Connection Manager service"
   type        = string
@@ -103,11 +92,6 @@ variable "helm_loki_stack_version" {
   description = "helm loki-stack version"
 }
 
-variable "cert_man_letsencrypt_cluster_issuer_name" {
-  description = "cluster issuer name for letsencrypt"
-  type        = string
-  default     = "letsencrypt"
-}
 variable "cert_man_vault_cluster_issuer_name" {
   description = "cluster issuer name for vault"
   type        = string
@@ -146,6 +130,36 @@ variable "grafana_external_whitelist" {
 variable "kubeconfig_location" {
   description = "file location of kubeconfig"
   type = string
+}
+
+variable "gitlab_hostname" {
+  description = "gitlab_hostname"
+  type        = string
+}
+
+variable "public_subdomain" {
+  description = "public_subdomain"
+  type        = string
+}
+
+variable "private_subdomain" {
+  description = "private_subdomain"
+  type        = string
+}
+
+variable "internal_load_balancer_dns" {
+  description = "internal_load_balancer_dns"
+  type        = string
+}
+
+variable "k8s_worker_nodes_private_ip" {
+  description = "k8s_worker_nodes_private_ip"
+  type        = list(string)
+}
+
+variable "vault_addr" {
+  description = "vault_addr"
+  type        = string
 }
 
 variable "stateful_resources" {

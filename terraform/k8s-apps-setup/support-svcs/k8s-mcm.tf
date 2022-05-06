@@ -15,7 +15,7 @@ resource "null_resource" "wait_for_iskm_readiness" {
 
 module "mcm-iskm-key-secret-gen" {
   source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-mcm?ref=v1.0.21-rolesfixed"
-  iskm_fqdn = "iskm.${dependency.baseinfra.outputs.public_subdomain}"
+  iskm_fqdn = "iskm.${var.public_subdomain}"
   user      = "admin"
   password  = vault_generic_secret.wso2_admin_password.data.value
   iskm_rest_port = 443
@@ -70,17 +70,17 @@ locals {
     db_port           = var.stateful_resources[local.mcm_resource_index].logical_service_port
     db_host           = "${var.stateful_resources[local.mcm_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
     totp_issuer       = var.mcm-totp-issuer
-    mcm_public_fqdn   = "${var.mcm_name}.${dependency.baseinfra.outputs.public_subdomain}"
-    iskm_private_fqdn = "iskm.${dependency.baseinfra.outputs.public_subdomain}"
+    mcm_public_fqdn   = "${var.mcm_name}.${var.public_subdomain}"
+    iskm_private_fqdn = "iskm.${var.public_subdomain}"
     admin_pw          = vault_generic_secret.wso2_admin_password.data.value
-    env_name          = dependency.baseinfra.outputs.environment
-    env_cn            = dependency.baseinfra.outputs.public_subdomain
+    env_name          = var.environment
+    env_cn            = var.public_subdomain
     env_o             = "Modusbox"
     env_ou            = "Infra"
     storage_class_name = var.storage_class_name
     k8s_vault_role    = vault_kubernetes_auth_backend_role.kubernetes-mcm.role_name
     vault_endpoint    = "http://vault.default.svc.cluster.local:8200"
-    pki_base_domain   = dependency.baseinfra.outputs.public_subdomain
+    pki_base_domain   = var.public_subdomain
     service_account_name = kubernetes_service_account.vault-auth-mcm.metadata[0].name
     k8s_auth_path     = vault_auth_backend.kubernetes-gateway.path
     mcm_kv_secret_path = var.mcm_secret_path
@@ -92,7 +92,7 @@ locals {
     pki_server_role = vault_pki_secret_backend_role.role-server-cert.name
     server_cert_secret_name = var.vault-certman-secretname
     server_cert_secret_namespace = kubernetes_namespace.wso2.metadata[0].name
-    switch_domain        = dependency.baseinfra.outputs.public_subdomain
+    switch_domain        = var.public_subdomain
   }
 }
 

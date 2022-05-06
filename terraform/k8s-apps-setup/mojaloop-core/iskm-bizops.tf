@@ -44,12 +44,12 @@ resource "vault_generic_secret" "bizops_portal_user_password" {
 
 module "bizops-portal-iskm" {
   source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-bizops?ref=v1.0.42"
-  iskm_fqdn = "iskm.${dependency.baseinfra.outputs.public_subdomain}"
+  iskm_fqdn = "iskm.${var.public_subdomain}"
   iskm_rest_port = "443"
   user      = "admin"
   password  = data.vault_generic_secret.ws02_admin_password.data.value
   create_service_provider = "y"
-  callback_url = "https://${var.bofportal_name}.${dependency.baseinfra.outputs.public_subdomain}/kratos/self-service/methods/oidc/callback/idp"
+  callback_url = "https://${var.bofportal_name}.${var.public_subdomain}/kratos/self-service/methods/oidc/callback/idp"
   // portal_users = local.bizops_portal_users_with_passwords
   providers = {
     external = external.wso2-automation-iskm-mcm
@@ -58,7 +58,7 @@ module "bizops-portal-iskm" {
 
 module "bizops-portal-iskm-user-portaladmin" {
   source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-create-user?ref=v2.1.15"
-  iskm_fqdn = "iskm.${dependency.baseinfra.outputs.public_subdomain}"
+  iskm_fqdn = "iskm.${var.public_subdomain}"
   iskm_admin_port = "443"
   admin_user      = "admin"
   admin_password  = data.vault_generic_secret.ws02_admin_password.data.value
@@ -70,7 +70,7 @@ module "bizops-portal-iskm-user-portaladmin" {
 module "bizops-portal-iskm-user-portal-users" {
   for_each = {for user in var.bizops_portal_users: user.username => user}
   source    = "git::https://github.com/mojaloop/iac-shared-modules.git//wso2/iskm-create-user?ref=v2.1.15"
-  iskm_fqdn = "iskm.${dependency.baseinfra.outputs.public_subdomain}"
+  iskm_fqdn = "iskm.${var.public_subdomain}"
   iskm_admin_port = "443"
   admin_user      = "admin"
   admin_password  = data.vault_generic_secret.ws02_admin_password.data.value

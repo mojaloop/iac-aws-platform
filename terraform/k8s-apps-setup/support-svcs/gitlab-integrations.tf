@@ -2,10 +2,10 @@ resource "vault_jwt_auth_backend" "gitlab-oidc" {
   description         = "terraform oidc auth backend"
   path                = "oidc"
   type                = "oidc"
-  oidc_discovery_url  = "https://${data.terraform_remote_state.tenant.outputs.gitlab_hostname}"
+  oidc_discovery_url  = "https://${var.gitlab_hostname}"
   oidc_client_id      = local.vault_oauth_app_client_id
   oidc_client_secret  = local.vault_oauth_app_client_secret
-  bound_issuer        = "https://${data.terraform_remote_state.tenant.outputs.gitlab_hostname}"
+  bound_issuer        = "https://${var.gitlab_hostname}"
 }
 
 resource "vault_jwt_auth_backend_role" "techops-admin-oidc" {
@@ -16,7 +16,7 @@ resource "vault_jwt_auth_backend_role" "techops-admin-oidc" {
   oidc_scopes     = ["openid"]
   user_claim            = "sub"
   role_type             = "oidc"
-  allowed_redirect_uris = ["https://vault.${dependency.baseinfra.outputs.public_subdomain}/ui/vault/auth/oidc/oidc/callback"]
+  allowed_redirect_uris = ["https://vault.${var.public_subdomain}/ui/vault/auth/oidc/oidc/callback"]
   bound_claims  = {
       groups = local.gitlab_admin_group_name
   }

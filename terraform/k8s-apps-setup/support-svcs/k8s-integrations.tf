@@ -79,7 +79,7 @@ resource "vault_auth_backend" "kubernetes-gateway" {
 
 resource "vault_kubernetes_auth_backend_config" "kubernetes-gateway" {
   backend            = vault_auth_backend.kubernetes-gateway.path
-  kubernetes_host    =  "https://${dependency.baseinfra.outputs.internal_load_balancer_dns}:6443"
+  kubernetes_host    =  "https://${var.internal_load_balancer_dns}:6443"
   kubernetes_ca_cert = split(".", var.k8s_api_version)[1] > 18 ? null : data.kubernetes_secret.generated-vault-auth-gateway.data["ca.crt"]
   token_reviewer_jwt = split(".", var.k8s_api_version)[1] > 18 ? null : data.kubernetes_secret.generated-vault-auth-gateway.data.token
   issuer             = "https://kubernetes.default.svc.cluster.local"
@@ -213,7 +213,7 @@ resource "kubernetes_manifest" "vault-issuer-root" {
 resource "vault_pki_secret_backend_role" "role-server-cert" {
   backend            = vault_mount.root.path
   name               = "server-cert-role"
-  allowed_domains    = [trimsuffix(dependency.baseinfra.outputs.private_subdomain, "."), trimsuffix(dependency.baseinfra.outputs.public_subdomain, "."), "wso2.svc.cluster.local"]
+  allowed_domains    = [trimsuffix(var.private_subdomain, "."), trimsuffix(var.public_subdomain, "."), "wso2.svc.cluster.local"]
   allow_subdomains   = true
   allow_glob_domains = false
   allow_any_name     = false
@@ -234,7 +234,7 @@ resource "vault_pki_secret_backend_role" "role-server-cert" {
 resource "vault_pki_secret_backend_role" "role-client-cert" {
   backend            = vault_mount.root.path
   name               = "client-cert-role"
-  allowed_domains    = [dependency.baseinfra.outputs.private_subdomain, trimsuffix(dependency.baseinfra.outputs.public_subdomain, ".")]
+  allowed_domains    = [var.private_subdomain, trimsuffix(var.public_subdomain, ".")]
   allow_subdomains   = true
   allow_glob_domains = false
   allow_bare_domains = true # needed for email address verification
@@ -255,7 +255,7 @@ resource "vault_pki_secret_backend_role" "role-client-cert" {
 
 resource "kubectl_manifest" "vault-tls-cert" {
     yaml_body = templatefile("${path.module}/templates/vault-cert.yaml.tpl", {
-      domain_name = "extgw-data.${dependency.baseinfra.outputs.public_subdomain}"
+      domain_name = "extgw-data.${var.public_subdomain}"
       secret_name = var.vault-certman-secretname
       issuer_name = kubernetes_manifest.vault-issuer-root.manifest.metadata.name})
     override_namespace = kubernetes_namespace.wso2.metadata[0].name

@@ -1,14 +1,14 @@
-variable "region" {
-  description = "AWS region"
+variable "public_subdomain" {
+  description = "public_subdomain"
   type        = string
 }
 
-variable "client" {
-  description = "Name of client"
+variable "private_subdomain" {
+  description = "private_subdomain"
   type        = string
 }
 
-variable "environment" {
-  description = "Environment name"
+variable "helm_mojaloop_version" {
+  description = "helm_mojaloop_version"
   type        = string
 }

@@ -15,27 +15,41 @@ terraform {
     }
   }
 }
+
+EOF
+}
+
+generate "vault_provider" {
+  path = "vault_provider.tf"
+ 
+  if_exists = "overwrite_terragrunt"
+ 
+  contents = <<EOF
+provider "vault" {
+  address = "https://vault.${dependency.baseinfra.outputs.public_subdomain}"
+  token   = jsondecode(file("${local.common_vars.vault_token_location}"))["root_token"]
+}
+ 
 EOF
 }
 
 include "state" {
   path = find_in_parent_folders("remote_state.hcl")
 }
-include "ansible_provider" {
-  path = find_in_parent_folders("ansible_provider.hcl")
-}
-include "vault_provider" {
-  path = find_in_parent_folders("vault_provider.hcl")
-}
+
 dependency "baseinfra" {
-  config_path = "../../base-infra-aws"
+  config_path = "../../../../base-infra-aws"
 }
 dependency "mojaloopcore" {
-  config_path = "../mojaloop-core"
+  config_path = "../../../mojaloop-core"
 }
+
 locals {
   common_vars = yamldecode(file(find_in_parent_folders("common_vars.yaml")))
 }
+
 inputs = {
-  vault_token_location = ${local.common_vars.vault_token_location}
+  public_subdomain = dependency.baseinfra.outputs.public_subdomain
+  private_subdomain = dependency.baseinfra.outputs.private_subdomain
+  helm_mojaloop_version = dependency.mojaloopcore.outputs.helm_mojaloop_version
 }

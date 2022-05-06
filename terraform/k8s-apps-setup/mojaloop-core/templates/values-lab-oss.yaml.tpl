@@ -37,7 +37,7 @@ account-lookup-service:
       annotations:
         kubernetes.io/ingress.class: nginx
       hosts:
-        - account-lookup-service.${env}.${name}.${domain}.internal
+        - account-lookup-service.${private_subdomain}
   account-lookup-service-admin:
     containers:
     config:
@@ -72,7 +72,7 @@ account-lookup-service:
       annotations:
         kubernetes.io/ingress.class: nginx
       hosts:
-        - account-lookup-service-admin.${env}.${name}.${domain}.internal
+        - account-lookup-service-admin.${private_subdomain}
   mysql:
     enabled: false
   als-oracle-pathfinder:
@@ -93,7 +93,7 @@ central:
       annotations:
         kubernetes.io/ingress.class: nginx
       hosts:
-        api: central-event-processor.${env}.${name}.${domain}.internal
+        api: central-event-processor.${private_subdomain}
   centralledger:
     centralledger-handler-admin-transfer:
       config:
@@ -108,7 +108,7 @@ central:
         annotations:
           kubernetes.io/ingress.class: nginx
         hosts:
-          api: central-ledger-admin-transfer.${env}.${name}.${domain}.internal
+          api: central-ledger-admin-transfer.${private_subdomain}
     centralledger-handler-timeout:
       config:
         kafka_host: "${kafka_host}"
@@ -122,7 +122,7 @@ central:
         annotations:
           kubernetes.io/ingress.class: nginx
         hosts:
-          api: central-ledger-timeout.${env}.${name}.${domain}.internal
+          api: central-ledger-timeout.${private_subdomain}
     centralledger-handler-transfer-fulfil:
       config:
         kafka_host: "${kafka_host}"
@@ -136,7 +136,7 @@ central:
         annotations:
           kubernetes.io/ingress.class: nginx
         hosts:
-          api: central-ledger-transfer-fulfil.${env}.${name}.${domain}.internal
+          api: central-ledger-transfer-fulfil.${private_subdomain}
     centralledger-handler-transfer-get:
       config:
         kafka_host: "${kafka_host}"
@@ -150,7 +150,7 @@ central:
         annotations:
           kubernetes.io/ingress.class: nginx
         hosts:
-          api: central-ledger-transfer-get.${env}.${name}.${domain}.internal
+          api: central-ledger-transfer-get.${private_subdomain}
     centralledger-handler-transfer-position:
       config:
         kafka_host: "${kafka_host}"
@@ -164,7 +164,7 @@ central:
         annotations:
           kubernetes.io/ingress.class: nginx
         hosts:
-          api: central-ledger-transfer-position.${env}.${name}.${domain}.internal
+          api: central-ledger-transfer-position.${private_subdomain}
     centralledger-handler-transfer-prepare:
       config:
         kafka_host: "${kafka_host}"
@@ -178,7 +178,7 @@ central:
         annotations:
           kubernetes.io/ingress.class: nginx
         hosts:
-          api: central-ledger-transfer-prepare.${env}.${name}.${domain}.internal
+          api: central-ledger-transfer-prepare.${private_subdomain}
     centralledger-service:
       config:
         kafka_host: "${kafka_host}"
@@ -195,8 +195,8 @@ central:
         externalPath:
             api: /admin(/|$)(.*)
         hosts:
-          api: interop-switch.${env}.${name}.${domain}.internal
-          admin: interop-switch.${env}.${name}.${domain}.internal
+          api: interop-switch.${private_subdomain}
+          admin: interop-switch.${private_subdomain}
 
     mysql:
       enabled: false
@@ -211,7 +211,7 @@ central:
         externalPath: 
           api: /settlements(/|$)(.*)
         hosts:
-          api: interop-switch.${env}.${name}.${domain}.internal
+          api: interop-switch.${private_subdomain}
       config:
         kafka_host: "${kafka_host}"
         kafka_port: 9092
@@ -253,7 +253,7 @@ emailnotifier:
     annotations:
       kubernetes.io/ingress.class: nginx
     hosts:
-      api: emailnotifier.${env}.${name}.${domain}.internal
+      api: emailnotifier.${private_subdomain}
   enabled: false
   config:
     kafka_host: "${kafka_host}"
@@ -295,7 +295,7 @@ ml-api-adapter:
       annotations:
         kubernetes.io/ingress.class: nginx
       hosts:
-        api: ml-api-adapter-handler-notification.${env}.${name}.${domain}.internal
+        api: ml-api-adapter-handler-notification.${private_subdomain}
   ml-api-adapter-service:
     config:
       kafka_host: "${kafka_host}"
@@ -325,7 +325,7 @@ ml-api-adapter:
         nginx.ingress.kubernetes.io/rewrite-target: /$2
         kubernetes.io/ingress.class: nginx
       hosts:
-        api: ml-api-adapter.${env}.${name}.${domain}.internal
+        api: ml-api-adapter.${private_subdomain}
 quoting-service:
   config:
     simple_routing_mode_enabled: false
@@ -363,14 +363,14 @@ quoting-service:
     annotations:
       kubernetes.io/ingress.class: nginx
     hosts:
-      api: quoting-service.${env}.${name}.${domain}.internal
+      api: quoting-service.${private_subdomain}
 
 simulator:
   ingress:
     annotations:
       kubernetes.io/ingress.class: nginx
     hosts:
-      - moja-simulator.${env}.${name}.${domain}.internal
+      - moja-simulator.${private_subdomain}
 
 finance-portal:
   enabled: false
@@ -472,7 +472,7 @@ mojaloop-bulk:
         annotations:
           kubernetes.io/ingress.class: nginx
         hosts:
-          api: bulk-api-adapter.${env}.${name}.${domain}.internal
+          api: bulk-api-adapter.${private_subdomain}
 
 transaction-requests-service:
   config:
@@ -498,7 +498,7 @@ transaction-requests-service:
     annotations:
       kubernetes.io/ingress.class: nginx
     hosts:
-      api: transaction-request-service.${env}.${name}.${domain}.internal
+      api: transaction-request-service.${private_subdomain}
 
 thirdparty:
   enabled: ${mojaloop_thirdparty_support_enabled}
@@ -570,7 +570,7 @@ thirdparty:
       annotations:
         kubernetes.io/ingress.class: nginx
       hosts:
-        - host: tp-api-svc.${env}.${name}.${domain}.internal
+        - host: tp-api-svc.${private_subdomain}
           port: 3008
           name: tp-api-svc
           paths: ['/']

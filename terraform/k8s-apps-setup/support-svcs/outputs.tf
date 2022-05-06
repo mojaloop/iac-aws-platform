@@ -57,3 +57,11 @@ output "mcm_portal_client_secret" {
   value       = module.mcm-iskm-key-secret-gen.mcm-secret
   sensitive = true
 }
+output "mcm_fqdn" {
+  description = "fqdn for mcm server"
+  value       = "${var.mcm_name}.${var.public_subdomain}"
+}
+output "iskm_fqdn" {
+  description = "fqdn for iskm server"
+  value       = "iskm.${var.public_subdomain}"
+}

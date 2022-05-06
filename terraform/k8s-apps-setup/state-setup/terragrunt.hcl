@@ -21,20 +21,53 @@ terraform {
 EOF
 }
 
+generate "k8s_provider" {
+  path = "k8s_providers.tf"
+ 
+  if_exists = "overwrite_terragrunt"
+ 
+  contents = <<EOF
+provider "helm" {
+  alias = "helm-main"
+  kubernetes {
+    config_path = "${local.common_vars.kubeconfig_location}"
+  }
+}
+provider "kubernetes" {
+  alias       = "k8s-main"
+  config_path = "${local.common_vars.kubeconfig_location}"
+}
+
+provider "kubectl" {
+  alias       = "k8s-main"
+  config_path = "${local.common_vars.kubeconfig_location}"
+}
+ 
+EOF
+}
+
+generate "vault_provider" {
+  path = "vault_provider.tf"
+ 
+  if_exists = "overwrite_terragrunt"
+ 
+  contents = <<EOF
+provider "vault" {
+  address = "https://vault.${dependency.baseinfra.outputs.public_subdomain}"
+  token   = jsondecode(file("${local.common_vars.vault_token_location}"))["root_token"]
+}
+ 
+EOF
+}
+
 include "state" {
   path = find_in_parent_folders("remote_state.hcl")
 }
-include "k8s_providers" {
-  path = find_in_parent_folders("k8s_providers.hcl")
-}
-include "vault_provider" {
-  path = find_in_parent_folders("vault_provider.hcl")
+
+dependency "baseinfra" {
+  config_path = "../../base-infra-aws"
 }
 
 locals {
   common_vars = yamldecode(file(find_in_parent_folders("common_vars.yaml")))
-}
-inputs = {
-  kubeconfig_location = ${local.common_vars.kubeconfig_location}
-  vault_token_location = ${local.common_vars.vault_token_location}
 }

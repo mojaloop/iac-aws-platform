@@ -1,6 +1,5 @@
 locals {
   tenant = data.terraform_remote_state.tenant.outputs
-  env    = dependency.baseinfra.outputs
 }
 
 resource "vault_generic_secret" "whitelist_vpn" {
@@ -16,8 +15,8 @@ resource "vault_generic_secret" "whitelist_nat" {
   path = "${var.whitelist_secret_name_prefix}_nat"
 
   data_json = jsonencode({
-    "public_ip"  = local.tenant.ngw_public_ip
-    "private_ip" = local.tenant.ngw_private_ip
+    "public_ip"  = local.tenant.natgw_public_ip
+    "private_ip" = local.tenant.natgw_private_ip
   })
 }
 resource "vault_generic_secret" "whitelist_fsp" {
@@ -45,7 +44,7 @@ resource "vault_generic_secret" "whitelist_gateway" {
   path = "${var.whitelist_secret_name_prefix}_gateway"
 
   data_json = jsonencode({
-    "k8s-workernodes" = join(",", local.env.k8s_worker_nodes_private_ip)
+    "k8s-workernodes" = join(",", var.k8s_worker_nodes_private_ip)
     "gitlab"          = local.tenant.gitlab_ci_private_ip
     "gitlab_public"   = local.tenant.gitlab_ci_public_ip
   })
