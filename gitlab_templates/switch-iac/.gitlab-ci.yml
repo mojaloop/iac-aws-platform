@@ -1,6 +1,6 @@
 default: 
   image: 
-    name: ghcr.io/mojaloop/iac-aws-platform:2.2.0-beta4
+    name: ghcr.io/mojaloop/iac-aws-platform:2.2.0-beta6
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
@@ -19,10 +19,10 @@ default:
     - chmod 700 ~/.ssh
     - test -f $ENV_S3_DIR/ansible/ssh_provisioner_key && chmod 0400 $ENV_S3_DIR/ansible/ssh_provisioner_key && ssh-add $ENV_S3_DIR/ansible/ssh_provisioner_key
     - test -f $ENV_S3_DIR/k8s/admin.conf && export KUBECONFIG=$ENV_S3_DIR/k8s/admin.conf
-    - chmod +x ./searchandreplace.sh
     - if [ -d ${CI_PROJECT_DIR}/iac-sync-dir ]; then cp -r ${CI_PROJECT_DIR}/iac-sync-dir/. .; else echo "no local files to copy"; fi 
-    - cp $CI_PROJECT_DIR/workbench-config.json .
-    - cp $CI_PROJECT_DIR/searchandreplace . || true
+    - test -f $CI_PROJECT_DIR/workbench-config.json && cp $CI_PROJECT_DIR/workbench-config.json .
+    - test -f $CI_PROJECT_DIR/searchandreplace.sh && cp $CI_PROJECT_DIR/searchandreplace.sh .
+    - chmod +x ./searchandreplace.sh
     - ./searchandreplace.sh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
     - export ANSIBLE_FEATURE_TOGGLES="-e kube_version=v${k8s_api_version} -e dashboard_enabled=True -e kube_proxy_mode=iptables -e artifacts_dir=inventory/artifacts/cluster -e cloud_provider=aws -e ansible_user=ubuntu -b --become-user=root --flush-cache -e kubeconfig_localhost=true"
@@ -65,6 +65,9 @@ Destroy AWS:
     - terragrunt init
     - terragrunt validate
     - terragrunt destroy -auto-approve -refresh=false
+    - aws s3 rm --recursive s3://$bucket/$environment/ansible
+    - aws s3 rm --recursive s3://$bucket/$environment/k8s
+    - aws s3 rm --recursive s3://$bucket/$environment/oauth-apps
   when: manual
 
 Destroy Mojaloop K8s Stack:
@@ -104,33 +107,36 @@ Destroy Add-On Apps:
 Destroy of Internal PM4MLs Setup:
   stage: Destroy
   script:
-    - cd terraform/k8s-setup/pm4mls
+    - cd terraform/k8s-apps-setup/pm4mls
     - terragrunt init
     - terragrunt validate
-    - terragrunt destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-    - aws s3 rm s3://$bucket/$environment/k3saddons/ansible_internal_pm4ml_output.json
+    - terragrunt destroy -auto-approve
+    - aws s3 rm s3://$bucket/$environment/k3saddons/ansible_internal_pm4ml_output.yaml
     - aws s3 rm s3://$bucket/$environment/k3saddons/onboarding_internal_pm4ml_output.json
     - aws s3 rm s3://$bucket/$environment/k3saddons/ansible_external_pm4ml_output.yaml
+    - aws s3 rm s3://$bucket/$environment/k3saddons/onboarding_external_pm4ml_output.json
   when: manual
 
 Destroy Vault:
   stage: Destroy
   script:
-    - cd terraform/k8s-setup/vault-deploy
+    - cd terraform/base-k8s-setup
+    - cp $ENV_S3_DIR/vault/vault_seal_key $CI_IMAGE_PROJECT_DIR/static_files/ || true
     - terragrunt init
     - terragrunt validate
-    - terragrunt destroy -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - terragrunt destroy -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID"
+    - aws s3 rm s3://$bucket/$environment/vault/vault_seal_key
   when: manual
 
 Destroy Support Services:
   stage: Destroy
   script:
-    - cd terraform/k8s-setup/support-svcs
-    - aws s3 sync s3://${bucket}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
+    - cd terraform/k8s-apps-setup/support-svcs
+    - mkdir -p ./oauth-apps
+    - cp $ENV_S3_DIR/oauth-apps/* ./oauth-apps/ || true
     - terragrunt init
     - terragrunt validate
-    - terragrunt destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-    ##kill force kill efs provsioner
+    - terragrunt destroy -auto-approve
     - kubectl delete pods --all -n wso2 --grace-period=0 --force
     - kubectl delete namespace wso2 || true
     ##kill force wso2-bizops
@@ -141,10 +147,10 @@ Destroy Support Services:
 Destroy Stateful Services:
   stage: Destroy
   script:
-    - cd terraform/k8s-setup/state-setup
+    - cd terraform/k8s-apps-setup/state-setup
     - terragrunt init
     - terragrunt validate
-    - terragrunt destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+    - terragrunt destroy -auto-approve
   when: manual
 
 Destroy Environment:
@@ -242,10 +248,9 @@ Deploy AWS Infrastructure:
   script:
     - cd terraform/base-infra-aws
     - mkdir -p ./oauth-apps
-    - touch ./oauth-apps/.test
     - cp $ENV_S3_DIR/oauth-apps/* ./oauth-apps/ || true
     - terragrunt init
-    - terragrunt apply -auto-approve || true
+    - terragrunt apply -auto-approve
     - export inventory_location=$(terragrunt output inventory_file_location | tr -d '"')
     - aws s3 cp ${inventory_location} s3://${bucket}/${environment}/ansible/ --sse || true
     - aws s3 cp ssh_provisioner_key s3://${bucket}/${environment}/ansible/ --sse || true
@@ -331,7 +336,8 @@ Create k8s Cluster:
   stage: "Deploy Base Platform"
   script:
     - cd terraform/k8s-apps-setup/support-svcs
-    - aws s3 sync s3://${bucket}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
+    - mkdir -p ./oauth-apps
+    - cp $ENV_S3_DIR/oauth-apps/* ./oauth-apps/ || true
     - terragrunt init
     - terragrunt apply -auto-approve
   when: manual
@@ -341,10 +347,10 @@ Create k8s Cluster:
   script:
     - cd terraform/k8s-apps-setup/mojaloop-core
     - terragrunt init
-    - terragrunt apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - terragrunt apply -auto-approve
     - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/mojaloop-core/mojaloop-roles
     - terragrunt init
-    - terragrunt apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - terragrunt apply -auto-approve
     - chmod o-w $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/apps/wso2/config/
     - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/apps/wso2/config/
     - terragrunt init
@@ -408,21 +414,11 @@ Create k8s Cluster:
 2c. Install Post Deployment:
   stage: "Deploy Platform"
   script:
-  #todo remove hardcoded values here
-    - aws s3 sync s3://${bucket}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
-    - aws s3 sync s3://${client}${environment}k3s-pm4mladdons-state/k3s ./k3sstate --sse || true
-    - if [ -f k3sstate/terraform.tfstate ]; then export pm4ml_nat_ips_tmp=$(terraform output -state=k3sstate/terraform.tfstate nat_public_ips); else ls -la ./k3sstate; fi 
-    - echo $pm4ml_nat_ips_tmp
-    - if [ $(echo $pm4ml_nat_ips_tmp | grep --quiet Warning) ]; then echo "nats not found"; else export TF_VAR_pm4ml_nat_ips=$pm4ml_nat_ips_tmp; fi
-    - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/addons || true
-    - cd terraform/k8s-apps-setup/addons
-    #- wget -q https://releases.hashicorp.com/terraform/1.1.8/terraform_1.1.8_linux_amd64.zip -O /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-    #- export TF_CLI_CONFIG_FILE=./restapi.tfrc
+    - cd terraform/k8s-apps-setup/post-config
     - terragrunt init
     - terragrunt apply -auto-approve
-    #- aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/secrets_chart s3://${bucket}/${environment}/k8s-cluster/secrets_chart --sse
+    - ls -la ./sim_tests
     - aws s3 sync ./sim_tests s3://${bucket}/${environment}/k8s-cluster/sim_tests --sse
-    #- find . -type f -iname '*_results' -exec cat '{}' \;
   when: manual
 
 
