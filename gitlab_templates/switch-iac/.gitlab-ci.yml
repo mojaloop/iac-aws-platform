@@ -618,6 +618,14 @@ Create Gateway Cluster:
     - exit `kubectl --kubeconfig=admin-gateway.conf -n mojaloop get pod bof-report-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
+7. Run MCM Tests:
+  stage: "Run Tests"
+  script:
+    - helm --kubeconfig=admin-gateway.conf test connection-manager -n mcm || true
+    - kubectl --kubeconfig=admin-gateway.conf -n mcm logs connection-manager-api-test
+    - exit `kubectl --kubeconfig=admin-gateway.conf -n mcm get pod connection-manager-api-test --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+  when: manual
+
 1. Run External PM4ML Onboarding:
   stage: "Maintain Platform"
   script:
