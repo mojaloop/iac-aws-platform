@@ -617,7 +617,7 @@ Create Gateway Cluster:
   stage: "Run Tests"
   image: *ttk-snippets-image
   before_script:
-    - export TTK_TESTCASES_VERSION=14.0.0
+    - export TTK_TESTCASES_VERSION=${helm_mojaloop_version}
   script:
     - *ttk-snippets-set-env-vars
     - *ttk-snippets-download-ttk-test-cases
@@ -678,7 +678,7 @@ Create Gateway Cluster:
   stage: "Run Tests"
   image: *ttk-snippets-image
   before_script:
-    - export TTK_TESTCASES_VERSION=14.0.0
+    - export TTK_TESTCASES_VERSION=${helm_mojaloop_version}
   script:
     - *ttk-snippets-set-env-vars
     - *ttk-snippets-download-ttk-test-cases
