@@ -654,6 +654,8 @@ Create Gateway Cluster:
 8. Run PM4ML TTK Tests:
   stage: "Run Tests"
   image: *ttk-snippets-image
+  before_script:
+    - export TTK_TESTCASES_VERSION=${helm_mojaloop_version}
   script:
     - *ttk-snippets-set-env-vars
     - |
@@ -666,12 +668,14 @@ Create Gateway Cluster:
     - |
       cd /opt/mojaloop-testing-toolkit
       export pm4mlgoldenPathTestCasesPathInZip=pm4ml-test-scripts-${ttk_pm4ml_gp_version}/ttk/collections/feature_tests;
-      npm run cli -- -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://${BUCKET}/${environment}/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=https://hooks.slack.com/services/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 --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
+      npm run cli -- -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-report.html --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
+      # Use the following syntax instead of the above line for slack notification and comment out artifacts. We can not have both with the current TTK CLI options.
+      # npm run cli -- -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://${BUCKET}/${environment}/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=${SLACK_WEBHOOK_URL_HERE} --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
       echo "Done";
-#  artifacts:
-#    when: always
-#    paths:
-#      - ${CI_PROJECT_DIR}/pm4ml-ttk-goldenpath-report.html
+  artifacts: &ttk-snippets-artifacts
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ttk-pm4ml-report.html
   when: manual
 
 9. Run TTK Bulk Tests:
