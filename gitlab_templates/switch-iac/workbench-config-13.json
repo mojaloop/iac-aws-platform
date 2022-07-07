@@ -43,7 +43,7 @@
   "helm_mfi_p2p_oracle_version": "2.0.0",
   "use_mfi_p2p_oracle_endpoint": "no",
   "helm_mojaloop_reporting_service_version": "10.5.0",
-  "grafana_slack_notifier_url": "https://hooks.slack.com/services/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",
+  "grafana_slack_notifier_url": "webhookid",
   "TAG_ML_GP": "v12.0.3",
   "k8s_api_version": "1.21.6",
   "helm_haproxy_version": "1.7.2",
