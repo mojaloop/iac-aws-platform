@@ -224,7 +224,9 @@
           "user": "account_lookup",
           "user_password": null,
           "database_name": "account_lookup",
-          "storage_size": "8Gi"
+          "storage_size": "8Gi",
+          "architecture": "replication",
+          "replica_count": 2
         },
         "mongodb_data": null,
         "kafka_data": null
@@ -253,7 +255,9 @@
           "user": "central_ledger",
           "user_password": null,
           "database_name": "central_ledger",
-          "storage_size": "8Gi"
+          "storage_size": "8Gi",
+          "architecture": "replication",
+          "replica_count": 2
         },
         "mongodb_data": null,
         "kafka_data": null
