@@ -104,3 +104,9 @@ variable "custom_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "route53_zone_force_destroy" {
+  description = "destroy public zone on destroy of env"
+  type        = bool
+  default     = false
+}

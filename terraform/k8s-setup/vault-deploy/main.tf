@@ -1,3 +1,7 @@
+locals {
+  consul_num_replicas = length(data.terraform_remote_state.infrastructure.outputs.available_zones)
+}
+
 resource "aws_kms_key" "vault_unseal_key" {
   description             = "KMS Key used to auto-unseal vault"
   deletion_window_in_days = 10
@@ -10,6 +14,7 @@ resource "helm_release" "deploy_consul" {
   version    = var.helm_consul_version
   values     = [templatefile("templates/values-consul.yaml.tpl", {
     storage_class_name = var.storage_class_name
+    num_replicas = local.consul_num_replicas
   })]
   timeout    = 300
   provider   = helm.helm-gateway

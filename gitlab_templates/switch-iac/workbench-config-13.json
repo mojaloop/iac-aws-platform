@@ -25,6 +25,8 @@
   "hub_currency_code": "USD",
   "iac_post_init_version": "v1.0.0",
   "storage_class_name": "longhorn",
+  "longhorn_backup_s3_destroy": "true",
+  "route53_zone_force_destroy": "true",
   "wso2_namespace": "wso2",
   "kubernetes_auth_path": "kubernetes-gateway",
   "helm_efs_provisioner_version": "0.13.2",
@@ -32,7 +34,7 @@
   "helm_consul_version": "0.35.0",
   "helm_vault_version": "0.17.1",
   "helm_certmanager_version": "1.6.1",
-  "helm_external_dns_version": "6.0.2",
+  "helm_external_dns_version": "6.7.2",
   "helm_loki_stack_version": "2.5.0",
   "helm_alias_oracle_version": "1.4.2",
   "use_alias_oracle_endpoint": "no",
@@ -56,6 +58,7 @@
   "cert_man_vault_cluster_issuer_name": "vault-issuer-int",
   "cert_man_letsencrypt_cluster_issuer_name": "letsencrypt",
   "grafana_external_access": "true",
+  "kube_worker_size": "m5.large",
   "internal_pm4ml_configs": [
     {
       "DFSP_NAME": "pm4mlreceiverfsp",

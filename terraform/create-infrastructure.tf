@@ -116,7 +116,7 @@ resource "aws_route53_zone" "main_private" {
 
 resource "aws_route53_zone" "public_subdomain" {
   name = "${var.environment}.${data.terraform_remote_state.tenant.outputs.public_zone_name}"
-
+  force_destroy = var.route53_zone_force_destroy
   tags = {
     "ProductDomain" = data.terraform_remote_state.tenant.outputs.public_zone_name
     "Environment"   = var.environment
