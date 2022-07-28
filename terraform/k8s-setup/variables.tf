@@ -6,7 +6,10 @@ variable "client" {
   description = "Name of client"
   type        = string
 }
-
+variable "bucket" {
+  description = "Name of aws s3 bucket"
+  type        = string
+}
 
 # variable "subdomain" {
 #   description = "Mojaloop subdomain"

@@ -24,8 +24,8 @@ module "ubuntu-focal-ami" {
 }
 
 locals {
-  master_node_permutations = {for pair in setproduct(data.aws_availability_zones.available.names, range(var.kube_master_num)) : "${pair[0]}-${pair[1]}" => pair[0]}
-  worker_node_permutations = {for pair in setproduct(data.aws_availability_zones.available.names, range(var.kube_worker_num)) : "${pair[0]}-${pair[1]}" => pair[0]}  
+  master_node_permutations = {for pair in setproduct(local.availability_zones, range(var.kube_master_num)) : "${pair[0]}-${pair[1]}" => pair[0]}
+  worker_node_permutations = {for pair in setproduct(local.availability_zones, range(var.kube_worker_num)) : "${pair[0]}-${pair[1]}" => pair[0]}  
   
   master_kube_ec2_config = [
     for cluster_ref, az in local.master_node_permutations : 
