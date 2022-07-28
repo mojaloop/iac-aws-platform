@@ -4,7 +4,7 @@ locals {
 
 resource "aws_eip" "nlb" {
   for_each = {
-    for az in data.aws_availability_zones.available.names : data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-${az}"]["id"] => data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-${az}"]
+    for az in local.availability_zones : data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-${az}"]["id"] => data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-${az}"]
   }
   tags = merge({ Name = "${local.name}-eip-${each.key}" }, local.default_tags)
 }
@@ -14,7 +14,7 @@ resource "aws_lb" "internal-lb" { #  for internal traffic, including kube traffi
   internal           = true
   load_balancer_type = "network"
   enable_cross_zone_load_balancing = true
-  subnets            = [for az in data.aws_availability_zones.available.names : data.terraform_remote_state.tenant.outputs.private_subnet_ids["${var.environment}-${az}"]["id"]]
+  subnets            = [for az in local.availability_zones : data.terraform_remote_state.tenant.outputs.private_subnet_ids["${var.environment}-${az}"]["id"]]
   tags = merge({ Name = "${local.name}-internal" }, local.default_tags)
 }
 
@@ -26,7 +26,7 @@ resource "aws_lb" "external-lb" {
   tags = merge({ Name = "${local.name}-public" }, local.default_tags)
   dynamic subnet_mapping {
     for_each = { 
-      for az in data.aws_availability_zones.available.names : data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-${az}"]["id"] => data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-${az}"]
+      for az in local.availability_zones : data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-${az}"]["id"] => data.terraform_remote_state.tenant.outputs.public_subnet_ids["${var.environment}-${az}"]
     }
     content {
       subnet_id = subnet_mapping.key
