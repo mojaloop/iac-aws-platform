@@ -21,6 +21,11 @@ variable "environment" {
   type        = string
 }
 
+variable "bucket" {
+  description = "Name of aws s3 bucket"
+  type        = string
+}
+
 variable "use_focal_ubuntu" {
   description = "use focal or bionic"
   type = bool

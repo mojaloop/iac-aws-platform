@@ -29,6 +29,11 @@ variable "client" {
   description = "Name of client"
   type        = string
 }
+
+variable "bucket" {
+  description = "Name of aws s3 bucket"
+  type        = string
+}
 variable "wso2_namespace" {
   description = "Kubernetes namespace to install WSO2 into"
   type        = string
