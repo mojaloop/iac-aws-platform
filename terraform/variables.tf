@@ -21,6 +21,11 @@ variable "environment" {
   type        = string
 }
 
+variable "bucket" {
+  description = "Name of aws s3 bucket"
+  type        = string
+}
+
 variable "use_focal_ubuntu" {
   description = "use focal or bionic"
   type = bool
@@ -53,15 +58,15 @@ variable "region" {
 }
 
 variable "kube_master_num" {
-  description = "Number of Kubernetes Master Nodes for mojaloop k8"
+  description = "Number of Kubernetes Master Nodes for mojaloop k8 per az"
   type        = number
-  default     = 3
+  default     = 1
 }
 
 variable "kube_worker_num" {
-  description = "Number of Kubernetes Worker Nodes for mojaloop k8"
+  description = "Number of Kubernetes Worker Nodes for mojaloop k8 per az"
   type        = number
-  default     = 6
+  default     = 2
 }
 variable "kube_worker_size" {
   description = "Instance size of Kubernetes Worker Nodes for mojaloop k8"
@@ -99,6 +104,7 @@ variable "custom_tags" {
   type        = map(string)
   default     = {}
 }
+
 variable "route53_zone_force_destroy" {
   description = "destroy public zone on destroy of env"
   type        = bool

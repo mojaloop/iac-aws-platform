@@ -13,6 +13,11 @@ variable "client" {
   type        = string
 }
 
+variable "bucket" {
+  description = "Name of aws s3 bucket"
+  type        = string
+}
+
 variable "storage_class_name" {
   description = "storage class name"
   type        = string

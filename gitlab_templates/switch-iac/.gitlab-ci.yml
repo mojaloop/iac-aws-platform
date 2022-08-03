@@ -1,6 +1,6 @@
 default: 
   image: 
-    name: ghcr.io/mojaloop/iac-aws-platform:2.1.2
+    name: ghcr.io/mojaloop/iac-aws-platform:2.1.3
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -160,7 +160,7 @@ Destroy Environment:
 Destroy k3s Cluster:
   stage: "Destroy"  
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.16.0
+    name: ghcr.io/pm4ml/k3sbootstrap:0.16.3
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"')
@@ -199,7 +199,7 @@ Destroy k3s Cluster:
 Undeploy PM4ML Charts:
   stage: "Destroy"  
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.16.0
+    name: ghcr.io/pm4ml/k3sbootstrap:0.16.3
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -254,7 +254,7 @@ Deploy AWS Infrastructure:
 Create k3s Cluster:
   stage: "Run k3s"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.16.0
+    name: ghcr.io/pm4ml/k3sbootstrap:0.16.3
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -367,7 +367,7 @@ Create Gateway Cluster:
 2b. Install Internal PM4MLs:
   stage: "Deploy Platform"
   image: 
-    name: ghcr.io/pm4ml/k3sbootstrap:0.16.0
+    name: ghcr.io/pm4ml/k3sbootstrap:0.16.3
   before_script:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
@@ -563,11 +563,12 @@ Create Gateway Cluster:
     variables:
       - $SCHEDULE_PLATFORM == "PLAT_GP"
 
-4. Run TTK Tests:
-  stage: "Run Tests"
-  image: 
+.ttk-snippets:
+  image: &ttk-snippets-image
     name: mojaloop/ml-testing-toolkit:v13.5.1
   before_script:
+    - export TTK_TESTCASES_VERSION=${helm_mojaloop_version}
+  set-env-vars: &ttk-snippets-set-env-vars
     - export TERRAFORM_VERSION=1.0.5
     - export GLIBC_VER=2.34-r0
     - apk --no-cache add binutils curl jq && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk && apk add --no-cache glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip && unzip awscliv2.zip && aws/install && rm -rf awscliv2.zip aws /usr/local/aws-cli/v2/*/dist/aws_completer /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index /usr/local/aws-cli/v2/*/dist/awscli/examples glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk /var/cache/apk/*
@@ -580,20 +581,18 @@ Create Gateway Cluster:
     - export AWS_DEFAULT_REGION=${region}
     - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
     - export private_subdomain=$(terraform output -state=k8ss3/terraform.tfstate private_subdomain | tr -d '"')
-  script:
+    - export ttkBackendUrl=http://ttkbackend.${private_subdomain};
+  download-ttk-test-cases: &ttk-snippets-download-ttk-test-cases
     - |
-      echo "Set environment variables";
       cd /opt/mojaloop-testing-toolkit;
-      export testCasesZipUrl=https://github.com/mojaloop/testing-toolkit-test-cases/archive/v${helm_mojaloop_version}.zip;
-      export provisioningTestCasesPathInZip=testing-toolkit-test-cases-${helm_mojaloop_version}/collections/hub/provisioning;
-      export goldenPathTestCasesPathInZip=testing-toolkit-test-cases-${helm_mojaloop_version}/collections/hub/golden_path      
-      export ttkBackendUrl=http://ttkbackend.${private_subdomain};
-    - |
+      export testCasesZipUrl=https://github.com/mojaloop/testing-toolkit-test-cases/archive/v${TTK_TESTCASES_VERSION}.zip;
+
       echo "Downloading the test collection...";
-      cd /opt/mojaloop-testing-toolkit;
       wget $testCasesZipUrl -O downloaded-test-collections.zip;
       mkdir tmp_test_cases;
       unzip -d tmp_test_cases -o downloaded-test-collections.zip;
+      rm downloaded-test-collections.zip
+  download-default-env: &ttk-snippets-download-default-env
     - |
       echo "Downloading the default environment file...";
       cd /opt/mojaloop-testing-toolkit;
@@ -601,16 +600,42 @@ Create Gateway Cluster:
       defaultEnvFileName=`node -pe 'JSON.parse(process.argv[1]).runtime.DEFAULT_ENVIRONMENT_FILE_NAME' "$(cat user_config.json)"`;
       wget -O environment_http_response.json $ttkBackendUrl/api/samples/loadFolderWise?environment=examples/environments/$defaultEnvFileName;
       node -pe 'JSON.stringify({inputValues: JSON.parse(process.argv[1]).body.environment})' "$(cat environment_http_response.json)" > cli-testcase-environment.json;
+  execute-provisioning-collection: &ttk-snippets-execute-provisioning-collection
     - |
-      cd /opt/mojaloop-testing-toolkit
+      cd /opt/mojaloop-testing-toolkit;
+      export provisioningTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/provisioning;
       npm run cli -- -e cli-testcase-environment.json -i tmp_test_cases/$provisioningTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-provisioning-report.html || true;
+      echo "Done";
+  execute-golden-path-collection: &ttk-snippets-execute-golden-path-collection
+    - |
+      cd /opt/mojaloop-testing-toolkit;
+      export goldenPathTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/golden_path;
       npm run cli -- -e cli-testcase-environment.json -i tmp_test_cases/$goldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-goldenpath-report.html;
       echo "Done";
-  artifacts:
+  execute-bulk-transfers-collection: &ttk-snippets-execute-bulk-transfers-collection
+    - |
+      cd /opt/mojaloop-testing-toolkit;
+      export bulkTransfersTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/other_tests/bulk_transfers;
+      npm run cli -- -e cli-testcase-environment.json -i tmp_test_cases/$bulkTransfersTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html;
+      echo "Done";
+  artifacts: &ttk-snippets-artifacts
     when: always
     paths:
       - ${CI_PROJECT_DIR}/ttk-provisioning-report.html
       - ${CI_PROJECT_DIR}/ttk-goldenpath-report.html
+
+4. Run TTK Tests:
+  stage: "Run Tests"
+  image: *ttk-snippets-image
+  before_script:
+    - export TTK_TESTCASES_VERSION=${helm_mojaloop_version}
+  script:
+    - *ttk-snippets-set-env-vars
+    - *ttk-snippets-download-ttk-test-cases
+    - *ttk-snippets-download-default-env
+    - *ttk-snippets-execute-provisioning-collection
+    - *ttk-snippets-execute-golden-path-collection
+  artifacts: *ttk-snippets-artifacts
   when: manual
 
 5. Run RBAC Tests:
@@ -627,6 +652,55 @@ Create Gateway Cluster:
     - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-report-tests -n mojaloop || true
     - kubectl --kubeconfig=admin-gateway.conf -n mojaloop logs bof-report-tests
     - exit `kubectl --kubeconfig=admin-gateway.conf -n mojaloop get pod bof-report-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+  when: manual
+
+7. Run MCM Tests:
+  stage: "Run Tests"
+  script:
+    - helm --kubeconfig=admin-gateway.conf test connection-manager -n mcm || true
+    - kubectl --kubeconfig=admin-gateway.conf -n mcm logs connection-manager-api-test
+    - exit `kubectl --kubeconfig=admin-gateway.conf -n mcm get pod connection-manager-api-test --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+  when: manual
+
+8. Run PM4ML TTK Tests:
+  stage: "Run Tests"
+  image: *ttk-snippets-image
+  before_script:
+    - export TTK_TESTCASES_VERSION=${helm_mojaloop_version}
+  script:
+    - *ttk-snippets-set-env-vars
+    - |
+      echo "Downloading the test collection...";
+      cd /opt/mojaloop-testing-toolkit;
+      export testCasesZipUrl=https://github.com/pm4ml/pm4ml-test-scripts/archive/refs/tags/v${ttk_pm4ml_gp_version}.zip;
+      wget $testCasesZipUrl -O downloaded-test-collections.zip;
+      mkdir tmp_test_cases;
+      unzip -d tmp_test_cases -o downloaded-test-collections.zip;
+    - |
+      cd /opt/mojaloop-testing-toolkit
+      export pm4mlgoldenPathTestCasesPathInZip=pm4ml-test-scripts-${ttk_pm4ml_gp_version}/ttk/collections/feature_tests;
+      npm run cli -- -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-report.html --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
+      # Use the following syntax instead of the above line for slack notification and comment out artifacts. We can not have both with the current TTK CLI options.
+      # npm run cli -- -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://${BUCKET}/${environment}/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=${SLACK_WEBHOOK_URL_HERE} --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
+      echo "Done";
+  artifacts: &ttk-snippets-artifacts
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ttk-pm4ml-report.html
+  when: manual
+
+9. Run TTK Bulk Tests:
+  stage: "Run Tests"
+  image: *ttk-snippets-image
+  before_script:
+    - export TTK_TESTCASES_VERSION=${helm_mojaloop_version}
+  script:
+    - *ttk-snippets-set-env-vars
+    - *ttk-snippets-download-ttk-test-cases
+    - *ttk-snippets-download-default-env
+    - *ttk-snippets-execute-provisioning-collection
+    - *ttk-snippets-execute-bulk-transfers-collection
+  artifacts: *ttk-snippets-artifacts
   when: manual
 
 1. Run External PM4ML Onboarding:

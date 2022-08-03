@@ -17,11 +17,12 @@ provider "aws" {
   region = var.region
 }
 
+
 data "terraform_remote_state" "tenant" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.client}-mojaloop-state"
+    bucket = var.bucket
     key    = "bootstrap/terraform.tfstate"
   }
 }
@@ -189,5 +190,5 @@ locals {
   }
   default_tags = merge(local.dynamic_tags, var.custom_tags)
   oauth_app_id = jsondecode(data.local_file.kubernetes-oauth-app.content)["application_id"]
-  tenancy_azs = data.terraform_remote_state.tenant.outputs.availability_zones
+  availability_zones = data.terraform_remote_state.tenant.outputs.availability_zones
 }

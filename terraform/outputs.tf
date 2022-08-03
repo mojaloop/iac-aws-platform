@@ -63,5 +63,5 @@ output "perm2" {
 
 output "available_zones" {
   description = "available azs at time of infra build"
-  value       = local.tenancy_azs
+  value       = local.availability_zones
 }

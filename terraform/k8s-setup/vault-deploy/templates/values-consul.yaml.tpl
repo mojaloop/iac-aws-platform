@@ -7,4 +7,4 @@ server:
   enabled: true
   storage: 5Gi
   storageClass: ${storage_class_name}
-  replicas: 3
+  replicas: ${num_replicas}

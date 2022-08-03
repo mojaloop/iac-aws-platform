@@ -18,6 +18,11 @@ variable "client" {
   type        = string
 }
 
+variable "bucket" {
+  description = "Name of aws s3 bucket"
+  type        = string
+}
+
 variable "wso2_mysql_repo_version" {
   description = "MySQL database version to install WSO2 into"
   type        = string

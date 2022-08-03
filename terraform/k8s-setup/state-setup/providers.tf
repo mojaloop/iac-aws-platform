@@ -50,7 +50,7 @@ data "terraform_remote_state" "infrastructure" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.client}-mojaloop-state"
+    bucket = var.bucket
     key    = "${var.environment}/terraform.tfstate"
   }
 }
@@ -59,7 +59,7 @@ data "terraform_remote_state" "vault" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.client}-mojaloop-state"
+    bucket = var.bucket
     key    = "${var.environment}/terraform-vault.tfstate"
   }
 }
@@ -68,7 +68,7 @@ data "terraform_remote_state" "tenant" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.client}-mojaloop-state"
+    bucket = var.bucket
     key    = "bootstrap/terraform.tfstate"
   }
 }
