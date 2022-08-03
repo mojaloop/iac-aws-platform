@@ -66,11 +66,12 @@ prometheus:
     persistentVolume:
       enabled: true
       storageClass: ${storage_class_name}
+      size: 10Gi
 loki:
   persistence:
     enabled: true
     storageClassName: ${storage_class_name}
-    size: 5Gi
+    size: 10Gi
   config:
     table_manager:
       retention_deletes_enabled: true

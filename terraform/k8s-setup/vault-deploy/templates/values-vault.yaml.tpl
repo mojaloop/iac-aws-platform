@@ -1,5 +1,8 @@
 server:
   enabled: true
+  image:
+    repository: "hashicorp/vault"
+    tag: "1.9.3"
   dev: 
     enabled: false
   ha:
@@ -63,5 +66,8 @@ ui:
 injector:
   enabled: true
   authPath: auth/${kube_engine_path}
+  agentImage:
+    repository: "hashicorp/vault"
+    tag: "1.9.3"
 csi:
   enabled: false

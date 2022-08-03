@@ -225,8 +225,8 @@ resource "vault_pki_secret_backend_role" "role-server-cert" {
   organization       = ["ModusBox"]
   key_bits           = 2048
   # 2 years
-  max_ttl  = 2592000
-  ttl      = 2592000
+  max_ttl  = 7776000
+  ttl      = 7776000
   no_store = true
   require_cn = false
 }
@@ -247,8 +247,8 @@ resource "vault_pki_secret_backend_role" "role-client-cert" {
   organization       = ["ModusBox"]
   key_bits           = 2048
   # 2 years
-  max_ttl  = 2592000
-  ttl      = 2592000
+  max_ttl  = 7776000
+  ttl      = 7776000
   no_store = true
   require_cn = false
 }
