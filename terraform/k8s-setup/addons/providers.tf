@@ -8,6 +8,10 @@ terraform {
     vault = "~> 3.0"
     kubernetes = "~> 2.6"
     external = "~> 1.2.0"
+    restapi = {
+      source = "Mastercard/restapi"
+      version = "~> 1.16.2"
+    }
   }
 }
 
