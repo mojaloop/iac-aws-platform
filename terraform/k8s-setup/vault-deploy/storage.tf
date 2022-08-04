@@ -11,7 +11,6 @@ resource "aws_s3_bucket" "longhorn-backups" {
   acl    = "private"
   force_destroy = var.longhorn_backup_s3_destroy
   tags = merge({ Name = "${var.environment}-${var.client}-longhorn-backups" }, local.default_tags)
-  force_destroy = var.longhorn_backup_s3_destroy
 }
 
 resource "aws_iam_user_policy" "longhorn-backups" {
