@@ -566,8 +566,6 @@ Create Gateway Cluster:
 .ttk-snippets:
   image: &ttk-snippets-image
     name: mojaloop/ml-testing-toolkit:v13.5.1
-  before_script:
-    - export TTK_TESTCASES_VERSION=${helm_mojaloop_version}
   set-env-vars: &ttk-snippets-set-env-vars
     - export TERRAFORM_VERSION=1.0.5
     - export GLIBC_VER=2.34-r0
@@ -576,6 +574,7 @@ Create Gateway Cluster:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - export TTK_TESTCASES_VERSION=${helm_mojaloop_version}
     - export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
     - export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION=${region}
@@ -585,9 +584,8 @@ Create Gateway Cluster:
   download-ttk-test-cases: &ttk-snippets-download-ttk-test-cases
     - |
       cd /opt/mojaloop-testing-toolkit;
-      export testCasesZipUrl=https://github.com/mojaloop/testing-toolkit-test-cases/archive/v${TTK_TESTCASES_VERSION}.zip;
-
-      echo "Downloading the test collection...";
+      export testCasesZipUrl=https://github.com/mojaloop/testing-toolkit-test-cases/archive/refs/tags/v${TTK_TESTCASES_VERSION}.zip;
+      echo "Downloading the test collection from $testCasesZipUrl";
       wget $testCasesZipUrl -O downloaded-test-collections.zip;
       mkdir tmp_test_cases;
       unzip -d tmp_test_cases -o downloaded-test-collections.zip;
