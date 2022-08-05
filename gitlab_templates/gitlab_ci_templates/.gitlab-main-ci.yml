@@ -1,7 +1,46 @@
+default: 
+  image: 
+    name: ghcr.io/mojaloop/iac-aws-platform:$PLATFORM_IAC_IMAGE_VERSION
+  before_script:
+    - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - aws s3 sync s3://$BUCKET/bootstrap ./k8ss3bootstrap/ --sse || true
+    - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
+    # Define the contents of the workbench-config file as environment variables for use in gitlab and optionally in terraform
+    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - export ENVIRONMENT=$environment
+    - test -n "$BUCKET"
+    - cd $CI_IMAGE_PROJECT_DIR
+    - aws s3 sync s3://${BUCKET}/${environment}/ . --sse || true
+    - eval `ssh-agent`
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - test -f terraform/ssh_provisioner_key &&  chmod 0600 terraform/ssh_provisioner_key &&  ssh-add terraform/ssh_provisioner_key
+    - chmod +x ./searchandreplace.sh
+    - if [ -d ${CI_PROJECT_DIR}/iac-sync-dir ]; then cp -r ${CI_PROJECT_DIR}/iac-sync-dir/. .; else echo "no local files to copy"; fi 
+    - cp $CI_PROJECT_DIR/workbench-config.json .
+    - ./searchandreplace.sh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - export ANSIBLE_FEATURE_TOGGLES="-e kube_version=v${k8s_api_version} -e dashboard_enabled=True -e kube_proxy_mode=iptables -e artifacts_dir=inventory/artifacts/cluster -e cloud_provider=aws -e ansible_user=ubuntu -b --become-user=root --flush-cache -e kubeconfig_localhost=true"
+
 variables:
   GIT_SSL_NO_VERIFY: "overwritten"
   PLATFORM_IAC_IMAGE_VERSION: "overwritten"
   K3S_IAC_IMAGE_VERSION: "overwritten"
+
+stages:
+  - Validate
+  - Destroy
+  - "Deploy AWS infrastructure"
+  - "Run Kubespray"
+  - "Run k3s"
+  - "Deploy Base Platform"
+  - "Deploy Platform"
+  - "Run Tests"
+  - "Maintain Platform"
+  - "Deploy All"
 
 Validate and Plan:
   stage: Validate
