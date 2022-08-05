@@ -1,5 +1,5 @@
 resource "helm_release" "mongodb" {
-  for_each    = {for stateful_resource in var.stateful_resources : stateful_resource.resource_name => stateful_resource if stateful_resource.local_resource != null && stateful_resource.local_resource.mongodb_data != null}
+  for_each    = {for stateful_resource in var.stateful_resources : stateful_resource.resource_name => stateful_resource if stateful_resource.enabled && stateful_resource.local_resource != null && stateful_resource.local_resource.mongodb_data != null}
   name       = each.value.resource_name
   repository = each.value.local_resource.resource_helm_repo
   chart      = each.value.local_resource.resource_helm_chart
@@ -21,13 +21,13 @@ resource "helm_release" "mongodb" {
 }
 
 resource "random_password" "mongodb" {
-  for_each    = {for stateful_resource in var.stateful_resources : stateful_resource.resource_name => stateful_resource if stateful_resource.local_resource != null && stateful_resource.local_resource.mongodb_data != null && stateful_resource.local_resource.create_resource_random_password == true}
+  for_each    = {for stateful_resource in var.stateful_resources : stateful_resource.resource_name => stateful_resource if stateful_resource.enabled && stateful_resource.local_resource != null && stateful_resource.local_resource.mongodb_data != null && stateful_resource.local_resource.create_resource_random_password == true}
   length = 16
   special = false
 }
 
 resource "vault_generic_secret" "mongodb" {
-  for_each    = {for stateful_resource in var.stateful_resources : stateful_resource.resource_name => stateful_resource if stateful_resource.local_resource != null && stateful_resource.local_resource.mongodb_data != null && stateful_resource.vault_credential_paths.pw_data != null}
+  for_each    = {for stateful_resource in var.stateful_resources : stateful_resource.resource_name => stateful_resource if stateful_resource.enabled && stateful_resource.local_resource != null && stateful_resource.local_resource.mongodb_data != null && stateful_resource.vault_credential_paths.pw_data != null}
   path = "${each.value.vault_credential_paths.pw_data.user_password_path_prefix}/${each.key}"
 
   data_json = jsonencode({
@@ -36,13 +36,13 @@ resource "vault_generic_secret" "mongodb" {
 }
 
 resource "random_password" "mongodb-root" {
-  for_each    = {for stateful_resource in var.stateful_resources : stateful_resource.resource_name => stateful_resource if stateful_resource.local_resource != null && stateful_resource.local_resource.mongodb_data != null && stateful_resource.local_resource.create_resource_random_password == true}
+  for_each    = {for stateful_resource in var.stateful_resources : stateful_resource.resource_name => stateful_resource if stateful_resource.enabled && stateful_resource.local_resource != null && stateful_resource.local_resource.mongodb_data != null && stateful_resource.local_resource.create_resource_random_password == true}
   length = 16
   special = false
 }
 
 resource "vault_generic_secret" "mongodb-root" {
-  for_each    = {for stateful_resource in var.stateful_resources : stateful_resource.resource_name => stateful_resource if stateful_resource.local_resource != null && stateful_resource.local_resource.mongodb_data != null && stateful_resource.vault_credential_paths.pw_data != null}
+  for_each    = {for stateful_resource in var.stateful_resources : stateful_resource.resource_name => stateful_resource if stateful_resource.enabled && stateful_resource.local_resource != null && stateful_resource.local_resource.mongodb_data != null && stateful_resource.vault_credential_paths.pw_data != null}
   path = "${each.value.vault_credential_paths.pw_data.root_password_path_prefix}/${each.key}"
 
   data_json = jsonencode({

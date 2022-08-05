@@ -61,7 +61,7 @@ Destroy AWS:
     - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform validate
-    - terraform destroy -auto-approve
+    - terraform destroy -auto-approve -refresh=false
   when: manual
 
 Destroy Mojaloop K8s Stack:
@@ -120,7 +120,7 @@ Destroy Vault:
     - terraform destroy -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   when: manual
 
-Destroy Base Services:
+Destroy Support Services:
   stage: Destroy
   script:
     - cd terraform/k8s-setup/support-svcs
@@ -134,7 +134,12 @@ Destroy Base Services:
     ##kill force wso2-bizops
     - kubectl --kubeconfig=../../../admin-gateway.conf delete pods --all -n wso2-bizops --grace-period=0 --force
     - kubectl --kubeconfig=../../../admin-gateway.conf delete namespace wso2-bizops || true
-    - cd ../state-setup
+  when: manual
+
+Destroy Stateful Services:
+  stage: Destroy
+  script:
+    - cd terraform/k8s-setup/state-setup
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform validate
     - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
@@ -145,6 +150,7 @@ Destroy Environment:
   script:
     - aws s3 sync s3://${BUCKET}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
     - aws s3 sync s3://${client}${environment}k3s-pm4mladdons-state/k3s ./k3sstate --sse || true
+    - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
     - for var in $(jq -r '.internal_pm4ml_configs | to_entries[] .value.DFSP_NAME' ./workbench-config.json); do touch terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-key.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-ca-cert.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-cert.pem; done
     - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/addons || true
     - cp $CI_PROJECT_DIR/teardown.sh $CI_IMAGE_PROJECT_DIR/teardown.sh || true
@@ -239,10 +245,10 @@ Deploy AWS Infrastructure:
     - cd terraform
     - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve
-    - aws s3 sync $CI_IMAGE_PROJECT_DIR/kubespray-inventory s3://${BUCKET}/${environment}/kubespray-inventory/ --sse
-    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/ssh_provisioner_key s3://${BUCKET}/${environment}/terraform/ --sse
-    - aws s3 sync ./oauth-apps s3://${BUCKET}/${environment}/terraform/oauth-apps/ --sse
+    - terraform apply -auto-approve || true
+    - aws s3 sync $CI_IMAGE_PROJECT_DIR/kubespray-inventory s3://${BUCKET}/${environment}/kubespray-inventory/ --sse || true
+    - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/ssh_provisioner_key s3://${BUCKET}/${environment}/terraform/ --sse || true
+    - aws s3 sync ./oauth-apps s3://${BUCKET}/${environment}/terraform/oauth-apps/ --sse || true
   when: manual
 
 Create k3s Cluster:
@@ -311,19 +317,22 @@ Create Gateway Cluster:
     - aws s3 cp $CI_IMAGE_PROJECT_DIR/vault_seal_key s3://${BUCKET}/${environment}/ --sse
   when: manual
 
-2. Deploy Base Services:
+2a. Deploy Stateful Services:
   stage: "Deploy Base Platform"
   script:
     - cd terraform/k8s-setup/state-setup
     - kubectl --kubeconfig=../../../admin-gateway.conf -n default wait --for=condition=ready certificate/wildcard-cert-internal --timeout=180s
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-    - cd ../support-svcs
+  when: manual
+
+2b. Deploy Support Services:
+  stage: "Deploy Base Platform"
+  script:
+    - cd terraform/k8s-setup/support-svcs
     - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
-    - kubectl --kubeconfig=../../../admin-gateway.conf -n default wait --for=condition=ready certificate/wildcard-cert-internal --timeout=180s
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-    - aws s3 sync ./oauth-apps s3://${BUCKET}/${environment}/terraform/oauth-apps/ --sse
   when: manual
 
 1. Initial Install Base Apps:
@@ -408,6 +417,8 @@ Create Gateway Cluster:
     - if [ $(echo $pm4ml_nat_ips_tmp | grep --quiet Warning) ]; then echo "nats not found"; else export TF_VAR_pm4ml_nat_ips=$pm4ml_nat_ips_tmp; fi
     - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/addons || true
     - cd terraform/k8s-setup/addons
+    #- wget -q https://releases.hashicorp.com/terraform/1.1.8/terraform_1.1.8_linux_amd64.zip -O /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+    #- export TF_CLI_CONFIG_FILE=./restapi.tfrc
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
     #- aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/secrets_chart s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart --sse
@@ -504,15 +515,15 @@ Create Gateway Cluster:
     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - cp $CI_IMAGE_PROJECT_DIR/tests/Golden-Path.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests
+    - cp $CI_PROJECT_DIR/tests/Myanmar-Golden-Path.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests
     - cd sim_tests
     - jq -s '[.[][]]' onboarding_external_pm4ml_output.json onboarding_internal_pm4ml_output.json > /tmp/onboarding_pm4ml_output.json
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
-    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
+  #  - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Registration.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json || true
-    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Setup.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
+  #  - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Setup.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Sim_Backend.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
-    - newman run Golden-Path.postman_collection.json --ssl-client-cert-list test_cert_list.json --folder loan-repayment --insecure -e Lab.postman_environment.json --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/alias_report.html --reporter-junit-export ${CI_PROJECT_DIR}/alias_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
+    - newman run Myanmar-Golden-Path.postman_collection.json --ssl-client-cert-list test_cert_list.json --folder loan-repayment --insecure -e Lab.postman_environment.json --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/alias_report.html --reporter-junit-export ${CI_PROJECT_DIR}/alias_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
   after_script:
 #    - curl https://slack.com/api/files.upload
 #      -F file=@"Platform_report.html"
@@ -555,8 +566,6 @@ Create Gateway Cluster:
 .ttk-snippets:
   image: &ttk-snippets-image
     name: mojaloop/ml-testing-toolkit:v13.5.1
-  before_script:
-    - export TTK_TESTCASES_VERSION=${helm_mojaloop_version}
   set-env-vars: &ttk-snippets-set-env-vars
     - export TERRAFORM_VERSION=1.0.5
     - export GLIBC_VER=2.34-r0
@@ -565,6 +574,7 @@ Create Gateway Cluster:
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - export TTK_TESTCASES_VERSION=${helm_mojaloop_version}
     - export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
     - export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION=${region}
@@ -574,9 +584,8 @@ Create Gateway Cluster:
   download-ttk-test-cases: &ttk-snippets-download-ttk-test-cases
     - |
       cd /opt/mojaloop-testing-toolkit;
-      export testCasesZipUrl=https://github.com/mojaloop/testing-toolkit-test-cases/archive/v${TTK_TESTCASES_VERSION}.zip;
-
-      echo "Downloading the test collection...";
+      export testCasesZipUrl=https://github.com/mojaloop/testing-toolkit-test-cases/archive/refs/tags/v${TTK_TESTCASES_VERSION}.zip;
+      echo "Downloading the test collection from $testCasesZipUrl";
       wget $testCasesZipUrl -O downloaded-test-collections.zip;
       mkdir tmp_test_cases;
       unzip -d tmp_test_cases -o downloaded-test-collections.zip;
@@ -783,3 +792,18 @@ Create Gateway Cluster:
   artifacts:
     paths:
       - Lab.auto_environment.html
+
+
+
+1. Setup MFI oracle:
+  stage: "Maintain Platform"
+  script:
+    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+  #  - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+    - aws s3 cp s3://${BUCKET}/${environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+    - cd sim_tests
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Registration.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json || true
+    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Setup.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
+#    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json -d onboarding_internal_pm4ml_output.json
+  when: manual

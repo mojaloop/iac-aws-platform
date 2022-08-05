@@ -96,12 +96,6 @@ variable "external_pm4ml_configs" {
   default = []
 }
 
-variable "pm4ml_nat_ips" {
-  description = "pm4ml nat gateway ips"
-  type = list(string)
-  default = ["192.168.0.1", "192.168.0.2", "192.168.0.3"]
-}
-
 variable "mcm_name" {
   description = "Hostname of Connection Manager service"
   type        = string

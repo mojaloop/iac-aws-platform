@@ -5,7 +5,7 @@
     "dfspSettlementDetail": true,
     "reconciliationAmount": true,
     "settlementWindow": true,
-    "settlementInitiation": true,
+    "settlementInitiation": false,
     "transactionReconciliation": true,
     "dfspSettlementStatement": true,
     "settlementAudit": true

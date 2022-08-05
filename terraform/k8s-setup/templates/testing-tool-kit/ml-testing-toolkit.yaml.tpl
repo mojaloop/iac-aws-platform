@@ -31,6 +31,7 @@ ml-testing-toolkit:
           "cgscurrency": "${ttk_test_currency3}",
           "SIMPLE_ROUTING_MODE_ENABLED": true,
           "ON_US_TRANSFERS_ENABLED": false,
+          "NET_DEBIT_CAP": "10000000",
           "accept": "application/vnd.interoperability.parties+json;version=1.1",
           "acceptParties": "application/vnd.interoperability.parties+json;version=1.1",
           "acceptPartiesOld": "application/vnd.interoperability.parties+json;version=1.0",

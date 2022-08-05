@@ -1,5 +1,5 @@
 resource "helm_release" "kafka" {
-  for_each    = {for stateful_resource in var.stateful_resources : stateful_resource.resource_name => stateful_resource if stateful_resource.local_resource != null && stateful_resource.local_resource.kafka_data != null}
+  for_each    = {for stateful_resource in var.stateful_resources : stateful_resource.resource_name => stateful_resource if stateful_resource.enabled && stateful_resource.local_resource != null && stateful_resource.local_resource.kafka_data != null}
   name       = each.value.resource_name
   repository = each.value.local_resource.resource_helm_repo
   chart      = each.value.local_resource.resource_helm_chart

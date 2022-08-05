@@ -7,3 +7,8 @@ persistence:
 defaultSettings:
   backupTarget: "s3://${longhorn_backups_bucket_name}@${region}/"
   backupTargetCredentialSecret: "${secret_name}"
+  nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
+  defaultDataLocality: disabled
+  replicaAutoBalance: disabled
+  autoDeletePodWhenVolumeDetachedUnexpectedly: true
+  replicaReplenishmentWaitInterval: 360
