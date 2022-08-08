@@ -463,5 +463,5 @@ Create Gateway Cluster:
 
 Deploy IaC:
   stage: "Deploy All"
-  <<: *deploy_switch_iac
+  extends: *deploy_switch_iac
   when: manual
