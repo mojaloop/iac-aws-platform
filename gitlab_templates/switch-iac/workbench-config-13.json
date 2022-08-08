@@ -75,9 +75,7 @@
       "PARTY_LAST_NAME": "PM4MLReceiverLast",
       "PARTY_FIRST_NAME": "PM4MLReceiverFirst",
       "PARTY_MIDDLE_NAME": "PM4MLReceiverMiddle",
-      "PARTY_DOB": "2010-10-10",
-      "TTK_ENABLED": false,
-      "TTK_PAYEE_SIMULATOR_ENABLED": false
+      "PARTY_DOB": "2010-10-10"
     },
     {
       "DFSP_NAME": "pm4mlsenderfsp",
@@ -92,9 +90,7 @@
       "PARTY_LAST_NAME": "PM4MLSenderLast",
       "PARTY_FIRST_NAME": "PM4MLSenderFirst",
       "PARTY_MIDDLE_NAME": "PM4MLSenderMiddle",
-      "PARTY_DOB": "2010-10-10",
-      "TTK_ENABLED": false,
-      "TTK_PAYEE_SIMULATOR_ENABLED": false
+      "PARTY_DOB": "2010-10-10"
     },
     {
       "DFSP_NAME": "pm4mltestfsp",
@@ -109,9 +105,7 @@
       "PARTY_LAST_NAME": "PM4MLTestLast",
       "PARTY_FIRST_NAME": "PM4MLTestFirst",
       "PARTY_MIDDLE_NAME": "PM4MLTestMiddle",
-      "PARTY_DOB": "2010-10-10",
-      "TTK_ENABLED": false,
-      "TTK_PAYEE_SIMULATOR_ENABLED": false
+      "PARTY_DOB": "2010-10-10"
     }
   ],
   "external_pm4ml_configs": [
@@ -121,9 +115,7 @@
       "DFSP_PREFIX": "101",
       "DFSP_P2P_PREFIX": "101",
       "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com",
-      "DFSP_SUBDOMAIN": "dfspextpm4ml.infra.mojatest.live",
-      "TTK_ENABLED": false,
-      "TTK_PAYEE_SIMULATOR_ENABLED": false
+      "DFSP_SUBDOMAIN": "dfspextpm4ml.infra.mojatest.live"
     }
   ],
   "finance_portal_users": [
