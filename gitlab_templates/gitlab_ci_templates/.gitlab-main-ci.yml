@@ -303,7 +303,7 @@ Deploy AWS Infrastructure:
 
 Create k3s Cluster:
   stage: "Run k3s"
-  extends: *create_k3s_cluster
+  <<: *create_k3s_cluster
   when: manual
 
 .create_gw_cluster: &create_gw_cluster
@@ -430,7 +430,7 @@ Create Gateway Cluster:
 
 2b. Install Internal PM4MLs:
   stage: "Deploy Platform"
-  extends: *install_internal_pm4mls
+  <<: *install_internal_pm4mls
   when: manual
 
 .install_post_deploy: &install_post_deploy
