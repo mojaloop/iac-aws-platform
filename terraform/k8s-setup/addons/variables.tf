@@ -75,6 +75,8 @@ variable "internal_pm4ml_configs" {
     PARTY_FIRST_NAME = string
     PARTY_MIDDLE_NAME = string
     PARTY_DOB = string
+    TTK_ENABLED = bool
+    TTK_PAYEE_SIMULATOR_ENABLED = bool
   }))
   default = []
 }
@@ -88,6 +90,8 @@ variable "external_pm4ml_configs" {
     DFSP_P2P_PREFIX   = string
     DFSP_NOTIFICATION_EMAIL = string
     DFSP_SUBDOMAIN = string
+    TTK_ENABLED = bool
+    TTK_PAYEE_SIMULATOR_ENABLED = bool
   }))
   default = []
 }

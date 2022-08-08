@@ -33,7 +33,8 @@ locals {
       "extgw_fqdn"           = "extgw-data.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
       "mcm_host_url"         = "mcm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
       "helm_release_name"    = pm4ml_config.DFSP_NAME
-      "ttk_enabled"          = false
+      "ttk_enabled"          = pm4ml_config.TTK_ENABLED
+      "ttk_payee_simulator_enabled" = pm4ml_config.TTK_PAYEE_SIMULATOR_ENABLED
       "extgw_client_key"     = module.internal_provision_pm4ml_to_wso2.client-ids[pm4ml_config.DFSP_NAME]
       "extgw_client_secret"  = module.internal_provision_pm4ml_to_wso2.client-secrets[pm4ml_config.DFSP_NAME]
       "OAUTH_TOKEN_ENDPOINT" = "https://extgw-data.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}:443/oauth2/token"
