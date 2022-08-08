@@ -21,6 +21,11 @@ variable "environment" {
   type        = string
 }
 
+variable "bucket" {
+  description = "Name of aws s3 bucket"
+  type        = string
+}
+
 variable "use_focal_ubuntu" {
   description = "use focal or bionic"
   type = bool
@@ -98,4 +103,10 @@ variable "custom_tags" {
   description = "Hostname to use with apm"
   type        = map(string)
   default     = {}
+}
+
+variable "route53_zone_force_destroy" {
+  description = "destroy public zone on destroy of env"
+  type        = bool
+  default     = false
 }

@@ -45,3 +45,15 @@ output "switch_jws_private_key" {
   value       = module.intgw.jws_private_key
   sensitive = true
 }
+
+output "mcm_portal_client_id" {
+  description = "client id for mcm portal"
+  value       = module.mcm-iskm-key-secret-gen.mcm-key
+  sensitive = true
+}
+
+output "mcm_portal_client_secret" {
+  description = "client secret for mcm portal"
+  value       = module.mcm-iskm-key-secret-gen.mcm-secret
+  sensitive = true
+}

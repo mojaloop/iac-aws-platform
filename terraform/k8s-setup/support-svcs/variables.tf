@@ -18,6 +18,11 @@ variable "client" {
   type        = string
 }
 
+variable "bucket" {
+  description = "Name of aws s3 bucket"
+  type        = string
+}
+
 variable "wso2_mysql_repo_version" {
   description = "MySQL database version to install WSO2 into"
   type        = string
@@ -152,6 +157,7 @@ variable "grafana_external_whitelist" {
 variable "stateful_resources" {
   description = "stateful resource config data"
   type = list(object({
+    enabled = bool
     resource_name     = string
     resource_namespace   = string
     logical_service_port = number
@@ -167,6 +173,7 @@ variable "stateful_resources" {
       external_credentials = string
     })
     local_resource = object({
+      override_service_name = string
       resource_helm_repo = string
       resource_helm_chart = string
       resource_helm_chart_version = string
@@ -178,6 +185,8 @@ variable "stateful_resources" {
         user_password = string
         database_name = string
         storage_size = string
+        architecture = string
+        replica_count = number
       })
       mongodb_data = object({
         root_password = string

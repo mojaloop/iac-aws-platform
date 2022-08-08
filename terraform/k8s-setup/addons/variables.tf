@@ -13,6 +13,10 @@ variable "client" {
   type        = string
 }
 
+variable "bucket" {
+  description = "Name of aws s3 bucket"
+  type        = string
+}
 variable "project_root_path" {
   description = "Root path for IaC project"
 }
@@ -94,12 +98,6 @@ variable "external_pm4ml_configs" {
     TTK_PAYEE_SIMULATOR_ENABLED = bool
   }))
   default = []
-}
-
-variable "pm4ml_nat_ips" {
-  description = "pm4ml nat gateway ips"
-  type = list(string)
-  default = ["192.168.0.1", "192.168.0.2", "192.168.0.3"]
 }
 
 variable "mcm_name" {

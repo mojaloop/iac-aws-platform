@@ -29,6 +29,11 @@ variable "client" {
   description = "Name of client"
   type        = string
 }
+
+variable "bucket" {
+  description = "Name of aws s3 bucket"
+  type        = string
+}
 variable "wso2_namespace" {
   description = "Kubernetes namespace to install WSO2 into"
   type        = string
@@ -112,4 +117,9 @@ variable "int_wildcard_cert_sec_name" {
   description = "letsenc wildcard sec for operations tls endpoints"
   type        = string
   default     = "int-ops-wildcard-tls"
+}
+variable "longhorn_backup_s3_destroy" {
+  description = "destroy s3 backup on destroy of env"
+  type        = bool
+  default     = false
 }

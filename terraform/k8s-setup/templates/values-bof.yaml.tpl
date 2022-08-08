@@ -230,6 +230,11 @@ reporting-hub-bop-trx-ui:
       REACT_APP_MOCK_API: false
 
 reporting-hub-bop-settlements-ui:
+  ## Overriding the image version for bugfix related to https://modusbox.atlassian.net/browse/MBP-639
+  image:
+    registry: docker.io
+    repository: mojaloop/reporting-hub-bop-settlements-ui
+    tag: v0.0.17
   enabled: true
   config:
     env:

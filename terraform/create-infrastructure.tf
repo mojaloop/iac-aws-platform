@@ -17,14 +17,12 @@ provider "aws" {
   region = var.region
 }
 
-data "aws_availability_zones" "available" {
-}
 
 data "terraform_remote_state" "tenant" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.client}-mojaloop-state"
+    bucket = var.bucket
     key    = "bootstrap/terraform.tfstate"
   }
 }
@@ -36,7 +34,7 @@ resource "null_resource" "oauth-app" {
       curl -s -X POST https://${data.terraform_remote_state.tenant.outputs.gitlab_hostname}/api/v4/applications \
             -H 'Content-Type: application/json' \
             -H 'PRIVATE-TOKEN: ${data.terraform_remote_state.tenant.outputs.gitlab_root_token}' \
-            -d '{"name": "oauth-app-kubernetes-${var.environment}", "redirect_uri": "http://localhost", "scopes": "read_api" }' \
+            -d '{"name": "oauth-app-kubernetes-${var.environment}", "redirect_uri": "http://localhost:8000", "scopes": "read_api openid" }' \
             > ${path.module}/oauth-apps/oauth-app-kubernetes-${var.environment}.json
     EOT
   }
@@ -47,6 +45,41 @@ data "local_file" "kubernetes-oauth-app" {
     depends_on = [null_resource.oauth-app]
 }
 
+resource "null_resource" "grafana-oauth-app" {
+  provisioner "local-exec" {
+    on_failure = continue
+    command = <<EOT
+      curl -s -X POST https://${data.terraform_remote_state.tenant.outputs.gitlab_hostname}/api/v4/applications \
+            -H 'Content-Type: application/json' \
+            -H 'PRIVATE-TOKEN: ${data.terraform_remote_state.tenant.outputs.gitlab_root_token}' \
+            -d '{"name": "oauth-app-grafana-${var.environment}", "redirect_uri": "https://grafana.${aws_route53_zone.public_subdomain.name}/login/gitlab", "scopes": "read_api" }' \
+            > ${path.module}/oauth-apps/oauth-app-grafana-${var.environment}.json
+    EOT
+  }
+}
+
+data "local_file" "grafana-oauth-app" {
+    filename = "${path.module}/oauth-apps/oauth-app-grafana-${var.environment}.json"
+    depends_on = [null_resource.grafana-oauth-app]
+}
+
+resource "null_resource" "vault-oauth-app" {
+  provisioner "local-exec" {
+    on_failure = continue
+    command = <<EOT
+      curl -s -X POST https://${data.terraform_remote_state.tenant.outputs.gitlab_hostname}/api/v4/applications \
+            -H 'Content-Type: application/json' \
+            -H 'PRIVATE-TOKEN: ${data.terraform_remote_state.tenant.outputs.gitlab_root_token}' \
+            -d '{"name": "oauth-app-vault-${var.environment}", "redirect_uri": "https://vault.${aws_route53_zone.public_subdomain.name}/ui/vault/auth/oidc/oidc/callback", "scopes": "openid" }' \
+            > ${path.module}/oauth-apps/oauth-app-vault-${var.environment}.json
+    EOT
+  }
+}
+
+data "local_file" "vault-oauth-app" {
+    filename = "${path.module}/oauth-apps/oauth-app-vault-${var.environment}.json"
+    depends_on = [null_resource.vault-oauth-app]
+}
 
 #creating nexus entries json file for kubespray execution (requires bootstrap version >= v0.5.3)
 resource "local_file" "kubespray_extra_vars" {
@@ -58,9 +91,10 @@ resource "local_file" "kubespray_extra_vars" {
     kube_oidc_client_id = local.oauth_app_id
     kube_oidc_url = "https://${data.terraform_remote_state.tenant.outputs.gitlab_hostname}"
     groups_name = "groups_direct"
-    })
+  })
   filename        = "${path.module}/../kubespray-inventory/extra-vars.json"
 }
+
 
 data "aws_vpc" "selected" {
   id = data.terraform_remote_state.tenant.outputs.vpc_id
@@ -118,7 +152,7 @@ resource "aws_route53_zone" "main_private" {
 
 resource "aws_route53_zone" "public_subdomain" {
   name = "${var.environment}.${data.terraform_remote_state.tenant.outputs.public_zone_name}"
-
+  force_destroy = var.route53_zone_force_destroy
   tags = {
     "ProductDomain" = data.terraform_remote_state.tenant.outputs.public_zone_name
     "Environment"   = var.environment
@@ -156,4 +190,5 @@ locals {
   }
   default_tags = merge(local.dynamic_tags, var.custom_tags)
   oauth_app_id = jsondecode(data.local_file.kubernetes-oauth-app.content)["application_id"]
+  availability_zones = data.terraform_remote_state.tenant.outputs.availability_zones
 }

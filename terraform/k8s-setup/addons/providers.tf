@@ -8,6 +8,10 @@ terraform {
     vault = "~> 3.0"
     kubernetes = "~> 2.6"
     external = "~> 1.2.0"
+    restapi = {
+      source = "Mastercard/restapi"
+      version = "~> 1.16.2"
+    }
   }
 }
 
@@ -42,7 +46,7 @@ data "terraform_remote_state" "support-svcs" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.client}-mojaloop-state"
+    bucket = var.bucket
     key    = "${var.environment}/terraform-suppsvcs.tfstate"
   }
 }
@@ -51,7 +55,7 @@ data "terraform_remote_state" "infrastructure" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.client}-mojaloop-state"
+    bucket = var.bucket
     key    = "${var.environment}/terraform.tfstate"
   }
 }
@@ -60,7 +64,7 @@ data "terraform_remote_state" "k8s-base" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.client}-mojaloop-state"
+    bucket = var.bucket
     key    = "${var.environment}/terraform-k8s.tfstate"
   }
 }
@@ -69,7 +73,7 @@ data "terraform_remote_state" "tenant" {
   backend = "s3"
   config = {
     region = var.region
-    bucket = "${var.client}-mojaloop-state"
+    bucket = var.bucket
     key    = "bootstrap/terraform.tfstate"
   }
 }
