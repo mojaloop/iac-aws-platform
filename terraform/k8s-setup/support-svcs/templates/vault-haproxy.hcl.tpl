@@ -119,7 +119,7 @@ frontend https-in
 {{end}}
 {{range secrets "secret/onboarding_pm4mls"}}
 {{ with secret (printf "secret/onboarding_pm4mls/%s" .) }}
-    acl {{.Data.fqdn}}_acl path -i -m beg /sim/{{.Data.host}}/
+    acl {{.Data.fqdn}}_acl path -i -m beg /fsp/{{.Data.host}}/
 {{end}}
 {{end}}
 
@@ -149,7 +149,7 @@ backend {{.Data.host}}
 {{range secrets "secret/onboarding_pm4mls"}}
 {{ with secret (printf "secret/onboarding_pm4mls/%s" .) }}
 backend {{.Data.host}}
-    http-request set-path %[path,regsub(^/sim/{{.Data.host}}/,/)]
+    http-request set-path %[path,regsub(^/fsp/{{.Data.host}}/,/)]
     http-request set-header Host {{.Data.fqdn}}
     balance roundrobin
     server {{.Data.host}} {{.Data.fqdn}} {{if .Data.mtls_disabled}}{{else}}ssl sni str({{.Data.fqdn}}) crt /etc/haproxy/certificates/{{.Data.host}}.client.fullchain.crt ca-file /etc/haproxy/certificates/{{.Data.host}}_server_ca.crt verify none{{end}}
