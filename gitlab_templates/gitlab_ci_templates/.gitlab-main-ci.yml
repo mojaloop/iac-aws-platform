@@ -33,9 +33,7 @@ variables:
 stages:
   - Validate
   - "Deploy All"
-  - "Deploy AWS infrastructure"
-  - "Run Kubespray"
-  - "Run k3s"
+  - "Deploy Infrastructure"
   - "Deploy Platform"
   - "Maintain Platform"
   - "Run Tests"
@@ -244,7 +242,7 @@ Undeploy PM4ML Charts:
   - aws s3 sync ./oauth-apps s3://${BUCKET}/${environment}/terraform/oauth-apps/ --sse || true
 
 Deploy AWS Infrastructure:
-  stage: "Deploy AWS infrastructure"
+  stage: "Deploy Infrastructure"
   script:
     - *deploy_aws_infra
   when: manual
@@ -296,7 +294,7 @@ Deploy AWS Infrastructure:
     - make monitoring 
 
 Create k3s Cluster:
-  stage: "Run k3s"
+  stage: "Deploy Infrastructure"
   <<: *create_k3s_cluster
   when: manual
 
@@ -306,7 +304,7 @@ Create k3s Cluster:
   - aws s3 cp inventory/artifacts/cluster/admin.conf s3://$BUCKET/$environment/admin-gateway.conf --sse
 
 Create Gateway Cluster:
-  stage: "Run Kubespray"
+  stage: "Deploy Infrastructure"
   script: 
     - *create_gw_cluster
   when: manual
