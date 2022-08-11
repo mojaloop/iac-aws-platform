@@ -35,8 +35,8 @@ stages:
   - "Deploy All"
   - "Deploy Infrastructure"
   - "Deploy Platform"
-  - "Maintain Platform"
   - "Run Tests"
+  - "Maintain Platform"
   - Destroy
   
 Validate and Plan:
