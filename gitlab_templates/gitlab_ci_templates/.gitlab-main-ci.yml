@@ -312,7 +312,7 @@ Create Gateway Cluster:
   when: manual
 
 
-.deploy_vault: &deploy_base_services
+.deploy_base_services: &deploy_base_services
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/vault-deploy
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
   - terraform apply -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
@@ -432,7 +432,7 @@ Create Gateway Cluster:
   script:
     - *deploy_aws_infra
     - *create_gw_cluster
-    - *deploy_vault
+    - *deploy_base_services
     - *deploy_stateful_svcs
     - *deploy_support_svcs
     - *deploy_mojaloop_apps
