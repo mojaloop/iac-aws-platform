@@ -32,16 +32,15 @@ variables:
 
 stages:
   - Validate
-  - Destroy
+  - "Deploy All"
   - "Deploy AWS infrastructure"
   - "Run Kubespray"
   - "Run k3s"
-  - "Deploy Base Platform"
   - "Deploy Platform"
-  - "Run Tests"
   - "Maintain Platform"
-  - "Deploy All"
-
+  - "Run Tests"
+  - Destroy
+  
 Validate and Plan:
   stage: Validate
   script:
@@ -87,11 +86,9 @@ Destroy Mojaloop K8s Stack:
 Destroy Add-On Apps:
   stage: Destroy
   script:
-    - aws s3 sync s3://${BUCKET}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
     - aws s3 sync s3://${client}${environment}k3s-pm4mladdons-state/k3s ./k3sstate --sse || true
-    - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/addons || true
-    - for var in $(jq -r '.internal_pm4ml_configs | to_entries[] .value.DFSP_NAME' ./workbench-config.json); do touch terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-key.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-ca-cert.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-cert.pem; done
-    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons
+    - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/post-install || true
+    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install
     - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
     - terraform validate
     - terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
@@ -149,11 +146,8 @@ Destroy Stateful Services:
 Destroy Environment:
   stage: Destroy
   script:
-    - aws s3 sync s3://${BUCKET}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
     - aws s3 sync s3://${client}${environment}k3s-pm4mladdons-state/k3s ./k3sstate --sse || true
     - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
-    - for var in $(jq -r '.internal_pm4ml_configs | to_entries[] .value.DFSP_NAME' ./workbench-config.json); do touch terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-key.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-ca-cert.pem terraform/k8s-setup/addons/pm4ml-certoutput/$var-client-cert.pem; done
-    - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/addons || true
     - cp $CI_PROJECT_DIR/teardown.sh $CI_IMAGE_PROJECT_DIR/teardown.sh || true
     - $CI_IMAGE_PROJECT_DIR/teardown.sh
   when: manual
@@ -318,16 +312,16 @@ Create Gateway Cluster:
   when: manual
 
 
-.deploy_vault: &deploy_vault
+.deploy_vault: &deploy_base_services
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/vault-deploy
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
   - terraform apply -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   - aws s3 cp $CI_IMAGE_PROJECT_DIR/vault_seal_key s3://${BUCKET}/${environment}/ --sse
 
-1. Deploy Vault:
-  stage: "Deploy Base Platform"
+1. Deploy Base Services:
+  stage: "Deploy Platform"
   script: 
-    - *deploy_vault
+    - *deploy_base_services
   when: manual
 
 .deploy_stateful_svcs: &deploy_stateful_svcs
@@ -337,7 +331,7 @@ Create Gateway Cluster:
   - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
 
 2a. Deploy Stateful Services:
-  stage: "Deploy Base Platform"
+  stage: "Deploy Platform"
   script: 
     - *deploy_stateful_svcs
   when: manual
@@ -350,12 +344,12 @@ Create Gateway Cluster:
   - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
 
 2b. Deploy Support Services:
-  stage: "Deploy Base Platform"
+  stage: "Deploy Platform"
   script: 
     - *deploy_support_svcs
   when: manual
 
-.deploy_platform: &deploy_platform
+.deploy_platform: &deploy_mojaloop_apps
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
   - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
@@ -368,25 +362,26 @@ Create Gateway Cluster:
   - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   - ansible-playbook publish.yaml
 
-1. Initial Install Base Apps:
+3. Deploy Mojaloop Apps:
   stage: "Deploy Platform"
   script: 
-    - *deploy_platform
+    - *deploy_mojaloop_apps
   when: manual
 
-.setup_pm4mls: &setup_pm4mls
-  - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/pm4mls
+.deploy_post_install: &deploy_post_install
+  - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
   - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-  - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/pm4mls/ansible_internal_pm4ml_output.yaml s3://${BUCKET}/${environment}/k3saddons/ --sse
-  - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/pm4mls/onboarding_internal_pm4ml_output.json s3://${BUCKET}/${environment}/k3saddons/ --sse
-  - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/pm4mls/ansible_external_pm4ml_output.yaml s3://${BUCKET}/${environment}/k3saddons/ --sse
-  - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/pm4mls/onboarding_external_pm4ml_output.json s3://${BUCKET}/${environment}/k3saddons/ --sse
+  - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install/ansible_internal_pm4ml_output.yaml s3://${BUCKET}/${environment}/k3saddons/ --sse
+  - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install/onboarding_internal_pm4ml_output.json s3://${BUCKET}/${environment}/k3saddons/ --sse
+  - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install/ansible_external_pm4ml_output.yaml s3://${BUCKET}/${environment}/k3saddons/ --sse
+  - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install/onboarding_external_pm4ml_output.json s3://${BUCKET}/${environment}/k3saddons/ --sse
+  - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install/sim_tests s3://${BUCKET}/${environment}/k8s-cluster/sim_tests --sse
 
-2a. Setup PM4MLs:
+4. Deploy Post Install:
   stage: "Deploy Platform"
   script: 
-    - *setup_pm4mls
+    - *deploy_post_install
   when: manual
 
 .install_internal_pm4mls: &install_internal_pm4mls
@@ -428,29 +423,10 @@ Create Gateway Cluster:
     - make apply -- -auto-approve
     - make pm4ml
 
-2b. Install Internal PM4MLs:
+5. Install Internal PM4MLs:
   stage: "Deploy Platform"
   <<: *install_internal_pm4mls
-  when: manual
-
-.install_post_deploy: &install_post_deploy
-  #todo remove hardcoded values here
-  - aws s3 sync s3://${BUCKET}/${environment}/k3saddons/pm4ml-certoutput/ terraform/k8s-setup/addons/pm4ml-certoutput
-  - aws s3 sync s3://${client}${environment}k3s-pm4mladdons-state/k3s ./k3sstate --sse || true
-  - if [ -f k3sstate/terraform.tfstate ]; then export pm4ml_nat_ips_tmp=$(terraform output -state=k3sstate/terraform.tfstate nat_public_ips); else ls -la ./k3sstate; fi 
-  - echo $pm4ml_nat_ips_tmp
-  - if [ $(echo $pm4ml_nat_ips_tmp | grep --quiet Warning) ]; then echo "nats not found"; else export TF_VAR_pm4ml_nat_ips=$pm4ml_nat_ips_tmp; fi
-  - cp $CI_PROJECT_DIR/ext-pm4ml-certs.yaml terraform/k8s-setup/addons || true
-  - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons
-  - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-  - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons/sim_tests s3://${BUCKET}/${environment}/k8s-cluster/sim_tests --sse
-
-2c. Install Post Deployment:
-  stage: "Deploy Platform"
-  script: 
-    - *install_post_deploy
-  when: manual
+  when: manual    
 
 .deploy_switch_iac: &deploy_switch_iac
   script:
@@ -459,7 +435,8 @@ Create Gateway Cluster:
     - *deploy_vault
     - *deploy_stateful_svcs
     - *deploy_support_svcs
-    - *deploy_platform
+    - *deploy_mojaloop_apps
+    - *deploy_post_install
 
 Deploy IaC:
   stage: "Deploy All"

@@ -29,7 +29,7 @@ variable "hub_account_names" {
 }
 
 variable "hub_account_cidr_blocks" {
-  description = "Simulator CIDR Blocks for whitelisting the matching simulator_names list variable"
+  description = "hubaccount CIDR Block"
   type        = list(string)
   default     = ["10.0.0.0/8"]
 }
@@ -50,6 +50,11 @@ variable "helm_mojaloop_version" {
 
 variable "helm_mojaloop_simulator_version" {
   description = "Mojaloop Simulator version to install via Helm"
+}
+
+variable "helm_mojaloop_release_name" {
+  description = "Mojaloop helm release name"
+  default = "mojaloop"
 }
 
 variable "private_registry_pw" {
@@ -95,6 +100,12 @@ variable "external_pm4ml_configs" {
     DFSP_SUBDOMAIN = string
   }))
   default = []
+}
+
+variable "mcm_name" {
+  description = "Hostname of Connection Manager service"
+  type        = string
+  default     = "mcm"
 }
 
 variable "pm4ml_nat_ips" {
