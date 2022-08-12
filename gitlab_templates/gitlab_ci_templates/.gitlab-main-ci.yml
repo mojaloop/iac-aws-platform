@@ -299,6 +299,7 @@ Create k3s Cluster:
   when: manual
 
 .create_gw_cluster: &create_gw_cluster
+  - aws s3 sync s3://${BUCKET}/${environment}/ $CI_IMAGE_PROJECT_DIR --sse || true
   - cd /kubespray
   - ansible-playbook -i $CI_IMAGE_PROJECT_DIR/kubespray-inventory/hosts-gateway -e @$CI_IMAGE_PROJECT_DIR/kubespray-inventory/extra-vars.json ./cluster.yml $ANSIBLE_FEATURE_TOGGLES
   - aws s3 cp inventory/artifacts/cluster/admin.conf s3://$BUCKET/$environment/admin-gateway.conf --sse
@@ -311,6 +312,7 @@ Create Gateway Cluster:
 
 
 .deploy_base_services: &deploy_base_services
+  - aws s3 sync s3://${BUCKET}/${environment}/ $CI_IMAGE_PROJECT_DIR --sse || true
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/vault-deploy
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
   - terraform apply -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
@@ -323,6 +325,7 @@ Create Gateway Cluster:
   when: manual
 
 .deploy_stateful_svcs: &deploy_stateful_svcs
+  - aws s3 sync s3://${BUCKET}/${environment}/ $CI_IMAGE_PROJECT_DIR --sse || true
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/state-setup
   - kubectl --kubeconfig=../../../admin-gateway.conf -n default wait --for=condition=ready certificate/wildcard-cert-internal --timeout=180s
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
@@ -335,6 +338,7 @@ Create Gateway Cluster:
   when: manual
 
 .deploy_support_svcs: &deploy_support_svcs
+  - aws s3 sync s3://${BUCKET}/${environment}/ $CI_IMAGE_PROJECT_DIR --sse || true
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/support-svcs
   - aws s3 sync s3://${BUCKET}/${environment}/terraform/oauth-apps/ ./oauth-apps/ || true
   - kubectl --kubeconfig=../../../admin-gateway.conf -n default wait --for=condition=ready certificate/wildcard-cert-internal --timeout=180s
@@ -348,6 +352,7 @@ Create Gateway Cluster:
   when: manual
 
 .deploy_platform: &deploy_mojaloop_apps
+  - aws s3 sync s3://${BUCKET}/${environment}/ $CI_IMAGE_PROJECT_DIR --sse || true
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
   - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
@@ -367,6 +372,7 @@ Create Gateway Cluster:
   when: manual
 
 .deploy_post_install: &deploy_post_install
+  - aws s3 sync s3://${BUCKET}/${environment}/ $CI_IMAGE_PROJECT_DIR --sse || true
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
   - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
