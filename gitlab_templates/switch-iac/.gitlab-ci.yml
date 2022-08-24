@@ -6,4 +6,4 @@ include:
 variables:
   GIT_SSL_NO_VERIFY: "true"
   PLATFORM_IAC_IMAGE_VERSION: "2.1.7"
-  K3S_IAC_IMAGE_VERSION: "0.17.0"
+  K3S_IAC_IMAGE_VERSION: "v0.18.0"
