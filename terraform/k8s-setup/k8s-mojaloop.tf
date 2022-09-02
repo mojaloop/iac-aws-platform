@@ -41,10 +41,17 @@ resource "kubernetes_ingress" "wso2-mojaloop-ingress" {
         }
         path {
           backend {
-            service_name = "bulk-quoting-service"
+            service_name = "${var.helm_mojaloop_release_name}-quoting-service"
             service_port = 80
           }
           path = "/bulkQuotes"
+        }
+        path {
+          backend {
+            service_name = "${var.helm_mojaloop_release_name}-bulk-api-adapter-service"
+            service_port = 80
+          }
+          path = "/bulkTransfers"
         }
         path {
           backend {

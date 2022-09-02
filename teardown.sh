@@ -2,7 +2,7 @@
 
 set -e
 if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-k8s-postinstall.tfstate ]; then
-  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons
+  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install
   terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
   terraform validate
   terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
@@ -10,19 +10,7 @@ if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-k8s-postinstall.tfstate ]; then
   export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
   aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform-k8s-postinstall.tfstate-md5"}}' --return-values ALL_OLD
 else
-  echo "terraform-k8s-postinstall.tfstate not found. Skipping terraform/k8s-setup/addons ..."
-fi
-
-if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-k8s-pm4mls.tfstate ]; then
-  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/pm4mls
-  terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  terraform validate
-  terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-  aws s3 rm s3://$BUCKET/$ENVIRONMENT/terraform-k8s-pm4mls.tfstate
-  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
-  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform-k8s-pm4mls.tfstate-md5"}}' --return-values ALL_OLD
-else
-  echo "terraform-k8s-pm4mls.tfstate not found. Skipping terraform/k8s-setup/pm4mls ..."
+  echo "terraform-k8s-postinstall.tfstate not found. Skipping terraform/k8s-setup/post-install ..."
 fi
 
 if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-k8s-mojaloop-roles.tfstate ]; then
