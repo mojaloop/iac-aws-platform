@@ -7,7 +7,8 @@ ARG KUBESPRAY_VERSION=2.20.0
 ARG NEWMAN_VERSION=5.0.0
 
 # Update apt and Install dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y \
+    tzdata \
     curl \
     dnsutils \
     git \
