@@ -45,7 +45,7 @@
   "helm_mojaloop_reporting_service_version": "10.5.0",
   "grafana_slack_notifier_url": "webhookid",
   "TAG_ML_GP": "v12.0.3",
-  "k8s_api_version": "1.21.6",
+  "k8s_api_version": "1.24.6",
   "helm_haproxy_version": "1.7.2",
   "helm_keycloak_version": "6.0.0",
   "helm_oauth2_proxy_version": "5.0.6",
