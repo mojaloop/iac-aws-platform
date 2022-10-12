@@ -355,7 +355,8 @@ Create Gateway Cluster:
   - aws s3 sync s3://${BUCKET}/${environment}/ $CI_IMAGE_PROJECT_DIR --sse || true
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+  - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+  - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/sim_tests s3://${BUCKET}/${environment}/k8s-cluster/sim_tests --sse
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-roles
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
   - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
