@@ -355,7 +355,8 @@ Create Gateway Cluster:
   - aws s3 sync s3://${BUCKET}/${environment}/ $CI_IMAGE_PROJECT_DIR --sse || true
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+  - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"  || true
+  - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/sim_tests s3://${BUCKET}/${environment}/k8s-cluster/sim_tests --sse
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-roles
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
   - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
@@ -375,7 +376,7 @@ Create Gateway Cluster:
   - aws s3 sync s3://${BUCKET}/${environment}/ $CI_IMAGE_PROJECT_DIR --sse || true
   - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install
   - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
+  - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
   - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install/ansible_internal_pm4ml_output.yaml s3://${BUCKET}/${environment}/k3saddons/ --sse
   - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install/onboarding_internal_pm4ml_output.json s3://${BUCKET}/${environment}/k3saddons/ --sse
   - aws s3 cp $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install/ansible_external_pm4ml_output.yaml s3://${BUCKET}/${environment}/k3saddons/ --sse
