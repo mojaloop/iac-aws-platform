@@ -185,3 +185,34 @@ locals {
   rpt_mongodb_resource_index = index(var.stateful_resources.*.resource_name, "reporting-events-mongodb")
   mojaloop_reports_config = jsondecode(file("${path.module}/mojaloop-custom-reports/config.json"))
 }
+
+resource "kubernetes_ingress_v1" "kratos-public" {
+  metadata {
+    name      = "kratos-public"
+    namespace = "mojaloop"
+  }
+  spec {
+    ingress_class_name = "nginx"
+    rule {
+      host = "${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      http {
+        path {
+          backend {
+            service {
+              name = "kratos-public"
+              port {
+                name = "http"
+              }
+            }
+          }
+          path = "/kratos(/|$)(.*)"
+        }
+      }
+    }
+    tls {
+      hosts = ["${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"]
+    }
+  }
+  provider   = kubernetes.k8s-gateway
+  depends_on = [helm_release.kratos]
+}

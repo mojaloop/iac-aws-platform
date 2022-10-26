@@ -57,9 +57,6 @@ variable "wso2_email" {
   default     = "cicd@modusbox.com"
 }
 
-variable "helm_efs_provisioner_version" {
-  description = "Chart version for the efs provisioner"
-}
 variable "helm_certmanager_version" {
   description = "helm certmanager version"
 }
@@ -152,6 +149,19 @@ variable "grafana_external_whitelist" {
   description = "whitelist for grafana when exposed externally"
   type = string
   default = "0.0.0.0/0"
+}
+
+variable "iskm_helm_chart_version" {
+  description = "version of wso2 iskm helm chart to deploy"
+  type        = string
+}
+variable "extgw_helm_chart_version" {
+  description = "version of wso2 extgw helm chart to deploy"
+  type        = string
+}
+variable "intgw_helm_chart_version" {
+  description = "version of wso2 intgw helm chart to deploy"
+  type        = string
 }
 
 variable "stateful_resources" {

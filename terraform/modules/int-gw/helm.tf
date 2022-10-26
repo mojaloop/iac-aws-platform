@@ -22,7 +22,7 @@ resource "helm_release" "app" {
   name         = "wso2-am-int"
   repository   = "https://mojaloop.github.io/wso2-helm-charts-simple/repo"
   chart        = "wso2-am"
-  version      = "2.2.14"
+  version      = var.helm_chart_version
   namespace    = var.namespace
   timeout      = 500
   force_update = true

@@ -385,3 +385,21 @@ variable "stateful_resources" {
   }))
   default = []
 }
+
+variable "third_party_enabled" {
+  description = "whether third party apis are enabled or not"
+  type = bool
+  default = false
+}
+
+variable "bulk_enabled" {
+  description = "whether bulk is enabled or not"
+  type = bool
+  default = false
+}
+
+variable "quoting_service_simple_routing_mode_enabled" {
+  description = "whether buquoting_service_simple_routing_mode_enabled is enabled or not"
+  type = bool
+  default = false
+}

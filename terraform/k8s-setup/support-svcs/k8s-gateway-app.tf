@@ -57,6 +57,7 @@ module "iskm" {
   extgw_fqdn         = "extgw-mgmt-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
   wso2_admin_pw      = vault_generic_secret.wso2_admin_password.data.value
   int_ingress_controller_name  = "nginx"
+  helm_chart_version = var.iskm_helm_chart_version
 
   providers = {
     helm = helm.helm-gateway
@@ -85,6 +86,7 @@ module "intgw" {
   wso2_admin_pw           = vault_generic_secret.wso2_admin_password.data.value
   hostname                     = "intgw"
   int_ingress_controller_name  = "nginx"
+  helm_chart_version = var.intgw_helm_chart_version
   
   providers = {
     helm = helm.helm-gateway
@@ -125,6 +127,7 @@ module "extgw" {
   int_ingress_controller_name  = "nginx"
   vault-certman-secretname     = var.vault-certman-secretname
   storage_class_name = var.storage_class_name
+  helm_chart_version = var.extgw_helm_chart_version
   providers = {
     helm = helm.helm-gateway
     kubernetes = kubernetes.k8s-gateway

@@ -135,7 +135,7 @@ module "aws-iam" {
 
 resource "aws_route53_zone" "main_private" {
   name = "${var.environment}.${data.terraform_remote_state.tenant.outputs.private_zone_name}"
-
+  force_destroy = var.route53_zone_force_destroy
   vpc {
     vpc_id = data.aws_vpc.selected.id
   }
