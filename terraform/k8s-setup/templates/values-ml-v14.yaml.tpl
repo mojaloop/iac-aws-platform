@@ -27,6 +27,18 @@ CONFIG:
   mongo_password: &MONGO_PASSWORD "${cl_mongodb_pass}"
   mongo_database: &MONGO_DATABASE "${cl_mongodb_database}"
   mongo_port: &MONGO_PORT ${cl_mongodb_port}
+  third_party_consent_db_host: &THIRD_PTY_CONSENT_HOST "${third_party_consent_db_host}"
+  third_party_consent_db_user: &THIRD_PTY_CONSENT_USER "${third_party_consent_db_user}"
+  third_party_consent_db_password: &THIRD_PTY_CONSENT_PASSWORD "${third_party_consent_db_password}"
+  third_party_consent_db_database: &THIRD_PTY_CONSENT_DATABASE "${third_party_consent_db_database}"
+  third_party_consent_db_port: &THIRD_PTY_CONSENT_PORT ${third_party_consent_db_port}
+  third_party_auth_db_host: &THIRD_PTY_AUTH_HOST "${third_party_auth_db_host}"
+  third_party_auth_db_user: &THIRD_PTY_AUTH_USER "${third_party_auth_db_user}"
+  third_party_auth_db_password: &THIRD_PTY_AUTH_PASSWORD "${third_party_auth_db_password}"
+  third_party_auth_db_database: &THIRD_PTY_AUTH_DATABASE "${third_party_auth_db_database}"
+  third_party_auth_db_port: &THIRD_PTY_AUTH_PORT ${third_party_auth_db_port}
+  third_party_auth_redis_host: &THIRD_PTY_AUTH_REDIS_HOST "${third_party_auth_redis_host}"
+  third_party_auth_redis_port: &THIRD_PTY_AUTH_REDIS_PORT ${third_party_auth_redis_port}
   objstore_uri: &OBJSTORE_URI 'mongodb://${cl_mongodb_user}:${cl_mongodb_pass}@${cl_mongodb_host}:${cl_mongodb_port}/${cl_mongodb_database}'
   ingress_class: &INGRESS_CLASS "${ingress_class_name}"
 
@@ -358,8 +370,8 @@ thirdparty:
       production.json: {
         "PARTICIPANT_ID": "centralauth",
         "REDIS": {
-          "PORT": 6379,
-          "HOST": "auth-svc-redis-svc",
+          "PORT": ${third_party_auth_redis_port},
+          "HOST": ${third_party_auth_redis_host},
         },
         "SHARED": {
           "JWS_SIGN": false,
@@ -369,11 +381,11 @@ thirdparty:
           "client": "mysql",
           "version": "5.5",
           "connection": {
-            "host": "mysql-auth-svc",
-            "port": 3306,
-            "user": "auth-svc",
-            "password": "password",
-            "database": "auth-svc",
+            "host": "${third_party_auth_db_host}",
+            "port": ${third_party_auth_db_port},
+            "user": "${third_party_auth_db_user}",
+            "password": "${third_party_auth_db_password}",
+            "database": "${third_party_auth_db_database}",
             "timezone": "UTC"
           }
         },
@@ -391,11 +403,11 @@ thirdparty:
     config:
       default.json: {
         "DATABASE": {
-          "HOST": "mysql-consent-oracle",
-          "PORT": 3306,
-          "USER": "consent-oracle",
-          "PASSWORD": "password",
-          "DATABASE": "consent-oracle"
+          "HOST": "${third_party_consent_db_host}",
+          "PORT": "${third_party_consent_db_port}",
+          "USER": "${third_party_consent_db_user}",
+          "PASSWORD": "${third_party_consent_db_password}",
+          "DATABASE": "${third_party_consent_db_database}"
         }
       }
 
@@ -411,3 +423,15 @@ thirdparty:
       enabled: true
       hostname: tp-api-svc.upgtest.${internal_subdomain}
       className: *INGRESS_CLASS
+
+ml-ttk-test-val-bulk:
+  tests:
+    enabled: true
+
+ml-ttk-test-setup-tp:
+  tests:
+    enabled: true
+
+ml-ttk-test-val-tp:
+  tests:
+    enabled: true

@@ -109,7 +109,7 @@ resource "helm_release" "mojaloop" {
   chart            = "mojaloop"
   version          = var.helm_mojaloop_version
   namespace        = "mojaloop"
-  timeout          = 800
+  timeout          = 420
   create_namespace = true
   values = [
     templatefile("${path.module}/templates/values-ml-v${local.ml_chart_major_version}.yaml.tpl", local.oss_values),
@@ -138,63 +138,88 @@ data "vault_generic_secret" "bulk_mongodb_password" {
 data "vault_generic_secret" "cep_mongodb_password" {
   path = "${var.stateful_resources[local.cep_mongodb_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/cep-mongodb"
 }
+data "vault_generic_secret" "third_party_auth_db_password" {
+  path = "${var.stateful_resources[local.third_party_auth_db_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/thirdparty-auth-svc-db"
+}
+data "vault_generic_secret" "third_party_consent_oracle_db_password" {
+  path = "${var.stateful_resources[local.third_party_consent_oracle_db_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/mysql-consent-oracle-db"
+}
+data "vault_generic_secret" "third_party_auth_redis_password" {
+  path = "${var.stateful_resources[local.third_party_redis_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/thirdparty-auth-svc-redis"
+}
 locals {
-  ml_als_resource_index         = index(var.stateful_resources.*.resource_name, "account-lookup-db")
-  ml_cl_resource_index          = index(var.stateful_resources.*.resource_name, "central-ledger-db")
-  bulk_mongodb_resource_index   = index(var.stateful_resources.*.resource_name, "bulk-mongodb")
-  cep_mongodb_resource_index    = index(var.stateful_resources.*.resource_name, "cep-mongodb")
-  mojaloop_kafka_resource_index = index(var.stateful_resources.*.resource_name, "mojaloop-kafka")
-  ml_chart_major_version        = split(".", var.helm_mojaloop_version)[0]
+  ml_als_resource_index                        = index(var.stateful_resources.*.resource_name, "account-lookup-db")
+  ml_cl_resource_index                         = index(var.stateful_resources.*.resource_name, "central-ledger-db")
+  bulk_mongodb_resource_index                  = index(var.stateful_resources.*.resource_name, "bulk-mongodb")
+  cep_mongodb_resource_index                   = index(var.stateful_resources.*.resource_name, "cep-mongodb")
+  mojaloop_kafka_resource_index                = index(var.stateful_resources.*.resource_name, "mojaloop-kafka")
+  third_party_redis_resource_index             = index(var.stateful_resources.*.resource_name, "thirdparty-auth-svc-redis")
+  third_party_auth_db_resource_index           = index(var.stateful_resources.*.resource_name, "thirdparty-auth-svc-db")
+  third_party_consent_oracle_db_resource_index = index(var.stateful_resources.*.resource_name, "mysql-consent-oracle-db")
+
+  ml_chart_major_version = split(".", var.helm_mojaloop_version)[0]
   oss_values = {
-    env                                 = var.environment
-    name                                = var.client
-    domain                              = data.terraform_remote_state.tenant.outputs.domain
-    kafka_host                          = "${var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
-    kafka_port                          = var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_port
-    account_lookup_db_password          = data.vault_generic_secret.mojaloop_als_db_password.data.value
-    account_lookup_db_user              = var.stateful_resources[local.ml_als_resource_index].local_resource.mysql_data.user
-    account_lookup_db_host              = "${var.stateful_resources[local.ml_als_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
-    account_lookup_db_port              = var.stateful_resources[local.ml_als_resource_index].logical_service_port
-    account_lookup_db_database          = var.stateful_resources[local.ml_als_resource_index].local_resource.mysql_data.database_name
-    central_ledger_db_password          = data.vault_generic_secret.mojaloop_cl_db_password.data.value
-    central_ledger_db_user              = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.user
-    central_ledger_db_host              = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
-    central_ledger_db_port              = var.stateful_resources[local.ml_cl_resource_index].logical_service_port
-    central_ledger_db_database          = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.database_name
-    central_settlement_db_password      = data.vault_generic_secret.mojaloop_cl_db_password.data.value
-    central_settlement_db_user          = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.user
-    central_settlement_db_host          = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
-    central_settlement_db_port          = var.stateful_resources[local.ml_cl_resource_index].logical_service_port
-    central_settlement_db_database      = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.database_name
-    quoting_db_password                 = data.vault_generic_secret.mojaloop_cl_db_password.data.value
-    quoting_db_user                     = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.user
-    quoting_db_host                     = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
-    quoting_db_port                     = var.stateful_resources[local.ml_cl_resource_index].logical_service_port
-    quoting_db_database                 = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.database_name
-    cep_mongodb_database                = var.stateful_resources[local.cep_mongodb_resource_index].local_resource.mongodb_data.database_name
-    cep_mongodb_user                    = var.stateful_resources[local.cep_mongodb_resource_index].local_resource.mongodb_data.user
-    cep_mongodb_host                    = "${var.stateful_resources[local.cep_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
-    cep_mongodb_pass                    = data.vault_generic_secret.cep_mongodb_password.data.value
-    cep_mongodb_port                    = var.stateful_resources[local.cep_mongodb_resource_index].logical_service_port
-    cl_mongodb_database                 = var.stateful_resources[local.bulk_mongodb_resource_index].local_resource.mongodb_data.database_name
-    cl_mongodb_user                     = var.stateful_resources[local.bulk_mongodb_resource_index].local_resource.mongodb_data.user
-    cl_mongodb_host                     = "${var.stateful_resources[local.bulk_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
-    cl_mongodb_pass                     = data.vault_generic_secret.bulk_mongodb_password.data.value
-    cl_mongodb_port                     = var.stateful_resources[local.bulk_mongodb_resource_index].logical_service_port
-    elasticsearch_url                   = "http://localhost"
-    kibana_url                          = "http://localhost"
-    wso2is_host                         = "https://iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
-    internal_ttk_enabled                = var.internal_ttk_enabled
-    ttk_test_currency1                  = var.ttk_test_currency1
-    ttk_test_currency2                  = var.ttk_test_currency2
-    ttk_test_currency3                  = var.ttk_test_currency3
-    internal_sim_enabled                = var.internal_sim_enabled
-    mojaloop_thirdparty_support_enabled = false
-    bulk_enabled                        = true
-    storage_class_name                  = var.storage_class_name
-    jws_signing_priv_key                = data.terraform_remote_state.support-svcs.outputs.switch_jws_private_key
-    ingress_class_name                  = "nginx"
-    internal_subdomain                  = "${var.environment}.${var.client}.${data.terraform_remote_state.tenant.outputs.domain}.internal"
+    env                                         = var.environment
+    name                                        = var.client
+    domain                                      = data.terraform_remote_state.tenant.outputs.domain
+    kafka_host                                  = "${var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    kafka_port                                  = var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_port
+    account_lookup_db_password                  = data.vault_generic_secret.mojaloop_als_db_password.data.value
+    account_lookup_db_user                      = var.stateful_resources[local.ml_als_resource_index].local_resource.mysql_data.user
+    account_lookup_db_host                      = "${var.stateful_resources[local.ml_als_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    account_lookup_db_port                      = var.stateful_resources[local.ml_als_resource_index].logical_service_port
+    account_lookup_db_database                  = var.stateful_resources[local.ml_als_resource_index].local_resource.mysql_data.database_name
+    central_ledger_db_password                  = data.vault_generic_secret.mojaloop_cl_db_password.data.value
+    central_ledger_db_user                      = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.user
+    central_ledger_db_host                      = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    central_ledger_db_port                      = var.stateful_resources[local.ml_cl_resource_index].logical_service_port
+    central_ledger_db_database                  = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.database_name
+    central_settlement_db_password              = data.vault_generic_secret.mojaloop_cl_db_password.data.value
+    central_settlement_db_user                  = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.user
+    central_settlement_db_host                  = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    central_settlement_db_port                  = var.stateful_resources[local.ml_cl_resource_index].logical_service_port
+    central_settlement_db_database              = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.database_name
+    quoting_db_password                         = data.vault_generic_secret.mojaloop_cl_db_password.data.value
+    quoting_db_user                             = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.user
+    quoting_db_host                             = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    quoting_db_port                             = var.stateful_resources[local.ml_cl_resource_index].logical_service_port
+    quoting_db_database                         = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.database_name
+    cep_mongodb_database                        = var.stateful_resources[local.cep_mongodb_resource_index].local_resource.mongodb_data.database_name
+    cep_mongodb_user                            = var.stateful_resources[local.cep_mongodb_resource_index].local_resource.mongodb_data.user
+    cep_mongodb_host                            = "${var.stateful_resources[local.cep_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    cep_mongodb_pass                            = data.vault_generic_secret.cep_mongodb_password.data.value
+    cep_mongodb_port                            = var.stateful_resources[local.cep_mongodb_resource_index].logical_service_port
+    cl_mongodb_database                         = var.stateful_resources[local.bulk_mongodb_resource_index].local_resource.mongodb_data.database_name
+    cl_mongodb_user                             = var.stateful_resources[local.bulk_mongodb_resource_index].local_resource.mongodb_data.user
+    cl_mongodb_host                             = "${var.stateful_resources[local.bulk_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    cl_mongodb_pass                             = data.vault_generic_secret.bulk_mongodb_password.data.value
+    cl_mongodb_port                             = var.stateful_resources[local.bulk_mongodb_resource_index].logical_service_port
+    third_party_consent_db_password             = data.vault_generic_secret.third_party_consent_oracle_db_password.data.value
+    third_party_consent_db_user                 = var.stateful_resources[local.third_party_consent_oracle_db_resource_index].local_resource.mysql_data.user
+    third_party_consent_db_host                 = "${var.stateful_resources[local.third_party_consent_oracle_db_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    third_party_consent_db_port                 = var.stateful_resources[local.third_party_consent_oracle_db_resource_index].logical_service_port
+    third_party_consent_db_database             = var.stateful_resources[local.third_party_consent_oracle_db_resource_index].local_resource.mysql_data.database_name
+    third_party_auth_db_password                = data.vault_generic_secret.third_party_auth_db_password.data.value
+    third_party_auth_db_user                    = var.stateful_resources[local.third_party_auth_db_resource_index].local_resource.mysql_data.user
+    third_party_auth_db_host                    = "${var.stateful_resources[local.third_party_auth_db_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    third_party_auth_db_port                    = var.stateful_resources[local.third_party_auth_db_resource_index].logical_service_port
+    third_party_auth_db_database                = var.stateful_resources[local.third_party_auth_db_resource_index].local_resource.mysql_data.database_name
+    third_party_auth_redis_host                 = "${var.stateful_resources[local.third_party_redis_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    third_party_auth_redis_port                 = var.stateful_resources[local.third_party_redis_resource_index].logical_service_port
+    elasticsearch_url                           = "http://localhost"
+    kibana_url                                  = "http://localhost"
+    wso2is_host                                 = "https://iskm.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+    internal_ttk_enabled                        = var.internal_ttk_enabled
+    ttk_test_currency1                          = var.ttk_test_currency1
+    ttk_test_currency2                          = var.ttk_test_currency2
+    ttk_test_currency3                          = var.ttk_test_currency3
+    internal_sim_enabled                        = var.internal_sim_enabled
+    mojaloop_thirdparty_support_enabled         = var.third_party_enabled
+    bulk_enabled                                = var.bulk_enabled
+    storage_class_name                          = var.storage_class_name
+    jws_signing_priv_key                        = data.terraform_remote_state.support-svcs.outputs.switch_jws_private_key
+    ingress_class_name                          = "nginx"
+    internal_subdomain                          = "${var.environment}.${var.client}.${data.terraform_remote_state.tenant.outputs.domain}.internal"
     quoting_service_simple_routing_mode_enabled = var.quoting_service_simple_routing_mode_enabled
   }
 }

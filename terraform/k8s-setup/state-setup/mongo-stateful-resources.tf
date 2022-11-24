@@ -15,6 +15,7 @@ resource "helm_release" "mongodb" {
       storage_size = each.value.local_resource.mongodb_data.storage_size
       storage_class_name = var.storage_class_name
       name_override = each.value.resource_name
+      service_port = each.value.local_resource.mongodb_data.service_port
     })
   ]
   provider = helm.helm-gateway

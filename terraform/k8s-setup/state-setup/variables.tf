@@ -57,6 +57,7 @@ variable "stateful_resources" {
         storage_size = string
         architecture = string
         replica_count = number
+        service_port = number
       })
       mongodb_data = object({
         root_password = string
@@ -64,9 +65,19 @@ variable "stateful_resources" {
         user_password = string
         database_name = string
         storage_size = string
+        service_port = number
       })
       kafka_data = object({
         storage_size = string
+        service_port = number
+      })
+      redis_data = object({
+        user_password = string
+        user = string
+        storage_size = string
+        architecture = string
+        replica_count = number
+        service_port = number
       })
     }) 
   }))

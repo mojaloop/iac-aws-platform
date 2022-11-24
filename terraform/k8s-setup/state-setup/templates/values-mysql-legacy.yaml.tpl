@@ -7,3 +7,5 @@ persistence:
   accessMode: ReadWriteOnce
   size: ${storage_size}
 fullnameOverride: ${name_override}
+service:
+  port: ${service_port}

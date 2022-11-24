@@ -12,6 +12,7 @@ resource "helm_release" "kafka" {
       storage_class_name = var.storage_class_name
       name_override = each.value.resource_name
       svc_endpoint = each.value.logical_service_name
+      service_port = each.value.local_resource.kafka_data.service_port
     })
   ]
   provider = helm.helm-gateway
