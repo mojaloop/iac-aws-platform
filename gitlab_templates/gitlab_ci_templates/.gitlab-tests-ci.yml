@@ -165,7 +165,7 @@ variables:
   download-ttk-test-cases: &ttk-snippets-download-ttk-test-cases
     - |
       cd /tmp;
-      export testCasesZipUrl=https://github.com/mojaloop/testing-toolkit-test-cases/archive/refs/heads/release/v${TTK_TESTCASES_VERSION}.zip;
+      export testCasesZipUrl=https://github.com/mojaloop/testing-toolkit-test-cases/archive/refs/tags/v${TTK_TESTCASES_VERSION}.zip;
       echo "Downloading the test collection from $testCasesZipUrl";
       wget $testCasesZipUrl -O downloaded-test-collections.zip;
       mkdir tmp_test_cases;
