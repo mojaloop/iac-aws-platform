@@ -109,7 +109,7 @@ resource "helm_release" "mojaloop" {
   chart            = "mojaloop"
   version          = var.helm_mojaloop_version
   namespace        = "mojaloop"
-  timeout          = 420
+  timeout          = 600
   create_namespace = true
   values = [
     templatefile("${path.module}/templates/values-ml-v${local.ml_chart_major_version}.yaml.tpl", local.oss_values),
