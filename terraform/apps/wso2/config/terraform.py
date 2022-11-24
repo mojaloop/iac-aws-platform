@@ -370,7 +370,6 @@ class AnsibleGroup(object):
 
 
 def _execute_shell():
-    encoding = 'utf-8'
     tf_workspace = [TERRAFORM_PATH, 'workspace', 'select', TERRAFORM_WS_NAME]
     proc_ws = Popen(tf_workspace, cwd=TERRAFORM_DIR, stdout=PIPE,
                     stderr=PIPE, universal_newlines=True)
@@ -387,7 +386,7 @@ def _execute_shell():
             sys.stderr.write(str(err_cmd)+'\n')
             sys.exit(1)
         else:
-            return json.loads(out_cmd, encoding=encoding)
+            return json.loads(out_cmd)
 
 
 def _main():
