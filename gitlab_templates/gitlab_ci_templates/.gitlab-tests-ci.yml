@@ -182,19 +182,19 @@ variables:
   execute-provisioning-collection: &ttk-snippets-execute-provisioning-collection
     - |
       cd /tmp;
-      export provisioningTestCasesPathInZip=testing-toolkit-test-cases-release-v${TTK_TESTCASES_VERSION}/collections/hub/provisioning;
+      export provisioningTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/provisioning;
       ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$provisioningTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-provisioning-report.html || true;
       echo "Done";
   execute-golden-path-collection: &ttk-snippets-execute-golden-path-collection
     - |
       cd /tmp;
-      export goldenPathTestCasesPathInZip=testing-toolkit-test-cases-release-v${TTK_TESTCASES_VERSION}/collections/hub/golden_path;
+      export goldenPathTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/golden_path;
       ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$goldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-goldenpath-report.html;
       echo "Done";
   execute-bulk-transfers-collection: &ttk-snippets-execute-bulk-transfers-collection
     - |
       cd /tmp;
-      export bulkTransfersTestCasesPathInZip=testing-toolkit-test-cases-release-v${TTK_TESTCASES_VERSION}/collections/hub/other_tests/bulk_transfers;
+      export bulkTransfersTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/other_tests/bulk_transfers;
       ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$bulkTransfersTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html;
       echo "Done";
   artifacts: &ttk-snippets-artifacts
