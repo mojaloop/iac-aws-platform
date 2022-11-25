@@ -58,6 +58,7 @@ locals {
       "DFSP_PREFIX" = pm4ml_config.DFSP_PREFIX
       "DFSP_P2P_PREFIX" = pm4ml_config.DFSP_P2P_PREFIX
       "DFSP_SUB_ID" = pm4ml_config.DFSP_SUB_ID
+      "DFSP_TRANSFER_FUNDSIN_AMOUNT" = pm4ml_config.INITIAL_FUNDING_AMOUNT
     }
   ]
 }

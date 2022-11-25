@@ -48,6 +48,7 @@ locals {
       "DFSP_CURRENCY" = pm4ml_config.DFSP_CURRENCY
       "GENERIC_DFSP_CALLBACK_URL" = "https://intgw-data-int.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}:443/${pm4ml_config.DFSP_NAME}/1.0"
       "DFSP_NOTIFICATION_EMAIL" = pm4ml_config.DFSP_NOTIFICATION_EMAIL
+      "DFSP_TRANSFER_FUNDSIN_AMOUNT" = pm4ml_config.INITIAL_FUNDING_AMOUNT
     }
   ]
 
