@@ -68,6 +68,7 @@ prometheus:
       storageClass: ${storage_class_name}
       size: 10Gi
 loki:
+  isDefault: false
   persistence:
     enabled: true
     storageClassName: ${storage_class_name}

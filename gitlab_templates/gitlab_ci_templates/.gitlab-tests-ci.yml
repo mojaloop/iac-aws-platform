@@ -144,26 +144,27 @@ variables:
       - $SCHEDULE_PLATFORM == "PLAT_GP"
 
 .ttk-snippets:
-  image: &ttk-snippets-image
-    name: mojaloop/ml-testing-toolkit:v13.5.1
+  # image: &ttk-snippets-image
+  #   name: mojaloop/ml-testing-toolkit-client-lib:latest
   set-env-vars: &ttk-snippets-set-env-vars
-    - export TERRAFORM_VERSION=1.0.5
-    - export GLIBC_VER=2.34-r0
-    - apk --no-cache add binutils curl jq && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk && apk add --no-cache glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip && unzip awscliv2.zip && aws/install && rm -rf awscliv2.zip aws /usr/local/aws-cli/v2/*/dist/aws_completer /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index /usr/local/aws-cli/v2/*/dist/awscli/examples glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk /var/cache/apk/*
-    - wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/bin/ && rm /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+    # - export TERRAFORM_VERSION=1.0.5
+    # - export GLIBC_VER=2.34-r0
+    # - apk --no-cache add binutils curl jq && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk && apk add --no-cache glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip && unzip awscliv2.zip && aws/install && rm -rf awscliv2.zip aws /usr/local/aws-cli/v2/*/dist/aws_completer /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index /usr/local/aws-cli/v2/*/dist/awscli/examples glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk /var/cache/apk/*
+    # - wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/bin/ && rm /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
     - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - export TTK_TESTCASES_VERSION=${helm_mojaloop_version}
+    - export TTK_TESTCASES_VERSION=${TAG_TTK_TEST}
     - export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
     - export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION=${region}
     - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
     - export private_subdomain=$(terraform output -state=k8ss3/terraform.tfstate private_subdomain | tr -d '"')
     - export ttkBackendUrl=http://ttkbackend.${private_subdomain};
+    - npm install @mojaloop/ml-testing-toolkit-client-lib --global
   download-ttk-test-cases: &ttk-snippets-download-ttk-test-cases
     - |
-      cd /opt/mojaloop-testing-toolkit;
+      cd /tmp;
       export testCasesZipUrl=https://github.com/mojaloop/testing-toolkit-test-cases/archive/refs/tags/v${TTK_TESTCASES_VERSION}.zip;
       echo "Downloading the test collection from $testCasesZipUrl";
       wget $testCasesZipUrl -O downloaded-test-collections.zip;
@@ -173,28 +174,28 @@ variables:
   download-default-env: &ttk-snippets-download-default-env
     - |
       echo "Downloading the default environment file...";
-      cd /opt/mojaloop-testing-toolkit;
+      cd /tmp;
       wget -O user_config.json $ttkBackendUrl/api/config/user;
       defaultEnvFileName=`node -pe 'JSON.parse(process.argv[1]).runtime.DEFAULT_ENVIRONMENT_FILE_NAME' "$(cat user_config.json)"`;
       wget -O environment_http_response.json $ttkBackendUrl/api/samples/loadFolderWise?environment=examples/environments/$defaultEnvFileName;
       node -pe 'JSON.stringify({inputValues: JSON.parse(process.argv[1]).body.environment})' "$(cat environment_http_response.json)" > cli-testcase-environment.json;
   execute-provisioning-collection: &ttk-snippets-execute-provisioning-collection
     - |
-      cd /opt/mojaloop-testing-toolkit;
+      cd /tmp;
       export provisioningTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/provisioning;
-      npm run cli -- -e cli-testcase-environment.json -i tmp_test_cases/$provisioningTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-provisioning-report.html || true;
+      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$provisioningTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-provisioning-report.html || true;
       echo "Done";
   execute-golden-path-collection: &ttk-snippets-execute-golden-path-collection
     - |
-      cd /opt/mojaloop-testing-toolkit;
+      cd /tmp;
       export goldenPathTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/golden_path;
-      npm run cli -- -e cli-testcase-environment.json -i tmp_test_cases/$goldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-goldenpath-report.html;
+      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$goldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-goldenpath-report.html;
       echo "Done";
   execute-bulk-transfers-collection: &ttk-snippets-execute-bulk-transfers-collection
     - |
-      cd /opt/mojaloop-testing-toolkit;
+      cd /tmp;
       export bulkTransfersTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/other_tests/bulk_transfers;
-      npm run cli -- -e cli-testcase-environment.json -i tmp_test_cases/$bulkTransfersTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html;
+      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$bulkTransfersTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html;
       echo "Done";
   artifacts: &ttk-snippets-artifacts
     when: always
@@ -204,7 +205,7 @@ variables:
 
 4. Run TTK Tests:
   stage: "Run Tests"
-  image: *ttk-snippets-image
+  # image: *ttk-snippets-image
   before_script:
     - echo "running with testing toolkit image"
   script:
@@ -215,6 +216,16 @@ variables:
     - *ttk-snippets-execute-golden-path-collection
   artifacts: *ttk-snippets-artifacts
   when: manual
+
+# 4. Run TTK Tests:
+#   stage: "Run Tests"
+#   script:
+#     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+#     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+#     - helm --kubeconfig=admin-gateway.conf test ${helm_mojaloop_release_name} -n mojaloop || true
+#     - kubectl --kubeconfig=admin-gateway.conf -n mojaloop logs ${helm_mojaloop_release_name}-ml-ttk-test-val-gp
+#     - exit `kubectl --kubeconfig=admin-gateway.conf -n mojaloop get pod ${helm_mojaloop_release_name}-ml-ttk-test-val-gp --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+#   when: manual
 
 5. Run RBAC Tests:
   stage: "Run Tests"
@@ -242,25 +253,25 @@ variables:
 
 8. Run PM4ML TTK Tests:
   stage: "Run Tests"
-  image: *ttk-snippets-image
+  # image: *ttk-snippets-image
   before_script:
     - echo "running with testing toolkit image"
   script:
     - *ttk-snippets-set-env-vars
     - |
       echo "Downloading the test collection...";
-      cd /opt/mojaloop-testing-toolkit;
+      cd /tmp;
       export testCasesZipUrl=https://github.com/pm4ml/pm4ml-test-scripts/archive/refs/tags/v${TTK_TESTCASES_VERSION}.zip;
       wget $testCasesZipUrl -O downloaded-test-collections.zip;
       mkdir tmp_test_cases;
       unzip -d tmp_test_cases -o downloaded-test-collections.zip;
     - |
-      cd /opt/mojaloop-testing-toolkit
+      cd /tmp;
       export pm4mlgoldenPathTestCasesPathInZip=pm4ml-test-scripts-${ttk_pm4ml_gp_version}/ttk/collections/feature_tests;
-      # npm run cli -- -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://${BUCKET}/${environment}/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=https://hooks.slack.com/services/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 --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
-      npm run cli -- -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-report.html --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
+      # ml-ttk-cli -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://${BUCKET}/${environment}/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=https://hooks.slack.com/services/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 --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
+      ml-ttk-cli -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-report.html --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
       # Use the following syntax instead of the above line for slack notification and comment out artifacts. We can not have both with the current TTK CLI options.
-      # npm run cli -- -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://${BUCKET}/${environment}/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=${SLACK_WEBHOOK_URL_HERE} --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
+      # ml-ttk-cli -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://${BUCKET}/${environment}/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=${SLACK_WEBHOOK_URL_HERE} --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
       echo "Done";
   artifacts: &ttk-snippets-artifacts
     when: always
@@ -274,7 +285,7 @@ variables:
 
 9. Run TTK Bulk Tests:
   stage: "Run Tests"
-  image: *ttk-snippets-image
+  # image: *ttk-snippets-image
   before_script:
     - echo "running with testing toolkit image"
   script:
