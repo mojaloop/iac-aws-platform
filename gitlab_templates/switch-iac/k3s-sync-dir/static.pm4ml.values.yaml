@@ -3,21 +3,19 @@ management-api:
     tlsClientCSRParametersData: |-
       {
         "subject": {
-          "emailAddress": "test@test.com",
+          "E": "test@test.com",
           "ST": "test_client",
-              "C": "US",
-              "L": "test",
-              "O": "test",
-              "CN": "test_client",
-              "OU": "test"
+          "C": "US",
+          "L": "test",
+          "O": "test",
+          "CN": "test_client",
+          "OU": "test"
         },
         "extensions": {
           "subjectAltName": {
             "dns": [
-              "test"
             ],
             "ips": [
-              "test"
             ]
           }
         }
@@ -25,34 +23,95 @@ management-api:
     tlsServerCSRParametersData: |-
       {
         "subject": {
-          "emailAddress": "test@test.com",
+          "E": "test@test.com",
           "ST": "test_server",
-              "C": "US",
-              "L": "test",
-              "O": "test",
-              "CN": "test_server",
-              "OU": "test"
+          "C": "US",
+          "L": "test",
+          "O": "test",
+          "CN": "test_server",
+          "OU": "test"
         },
         "extensions": {
           "subjectAltName": {
             "dns": [
-              "test"
             ],
             "ips": [
-              "test"
             ]
           }
         }
       }
-      
+
 mojaloop-core-connector:
   image:
-    repository: pm4ml/mojaloop-payment-manager-simulator-core-connector
-    tag: 1.4.2
+    repository: pm4ml/wallet-core-connector
+    tag: 1.0.34
   env:
-    MLCONN_OUTBOUND_ENDPOINT: "http://{{ item.value.helm_release_name }}-pm4ml-mojaloop-connector:4001"
+    MLCONN_OUTBOUND_ENDPOINT: "http://{{ item.value.helm_release_name }}-scheme-adapter:4001"
     BACKEND_ENDPOINT: "http://sim-backend:3000"
   livenessProbe:
     enabled: true
   readinessProbe:
     enabled: true
+
+scheme-adapter:
+  env:
+    RESOURCE_VERSIONS: transfers=1.1,
+    RESERVE_NOTIFICATION: true
+    AUTO_ACCEPT_PARTY: true
+    AUTO_ACCEPT_QUOTES: true
+
+sim-backend:
+  rules: |-
+    [
+      {
+        "ruleId": 1,
+        "description": "Returns an invalid fulfillment from the simulator when transfer value is 123456789 in any currency",
+        "conditions": {
+          "all": [
+            {
+              "fact": "path",
+              "operator": "equal",
+              "value": "/transfers"
+            },
+            {
+              "fact": "method",
+              "operator": "equal",
+              "value": "POST"
+            },
+            {
+              "fact": "body",
+              "operator": "equal",
+              "value": "123456789",
+              "path": "$.amount"
+            }
+          ]
+        },
+        "event": {
+          "type": "simulateResponse",
+          "params": {
+            "statusCode": 200,
+            "body": {
+              "homeTransactionId": "274107e7-cac7-427b-8485-065c919db2e6",
+              "fulfilment": "Lw8ygZt5_ZxQ9uPDoT0pSezu7Jyj_CNtmvFFZMgJHo5"
+            }
+          }
+        }
+      }
+    ]
+
+keycloak:
+  enabled: true
+
+  extraVolumes: |
+    - name: realm-config
+      # the below should be set to the name of the keycloak realm config map
+      # this has the deployment name on the front but because helm is so horrible
+      # we cant get the deployment name here in a nice way. You have to plug it
+      # in manually. e.g. the below works for a deployment called "pm4ml"
+      configMap:
+        name: {{ '{{ $.Release.Name }}' }}-keycloak-realm
+
+  extraVolumeMounts: |
+    - name: realm-config
+      mountPath: "/realm"
+      readOnly: true

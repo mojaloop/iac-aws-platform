@@ -435,11 +435,17 @@ Create Gateway Cluster:
 .deploy_switch_iac: &deploy_switch_iac
   script:
     - *deploy_aws_infra
+    - sleep 10
     - *create_gw_cluster
+    - sleep 10
     - *deploy_base_services
+    - sleep 10
     - *deploy_stateful_svcs
+    - sleep 10
     - *deploy_support_svcs
+    - sleep 10
     - *deploy_mojaloop_apps
+    - sleep 10
     - *deploy_post_install
 
 Deploy IaC:
