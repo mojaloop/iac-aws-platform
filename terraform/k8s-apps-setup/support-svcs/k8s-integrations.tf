@@ -9,8 +9,7 @@ resource "kubernetes_service_account" "vault-auth-gateway" {
     name      = "vault-auth-gateway"
     namespace = kubernetes_namespace.wso2.metadata[0].name
   }
-  automount_service_account_token = true
-  provider                        = kubernetes.k8s-main
+  provider    = kubernetes.k8s-main
 }
 resource "kubernetes_role" "nginx-ext-cm-all" {
   metadata {
@@ -63,13 +62,16 @@ resource "kubernetes_cluster_role_binding" "role-tokenreview-binding-vault" {
   provider   = kubernetes.k8s-main
 }
 
-data "kubernetes_secret" "generated-vault-auth-gateway" {
+resource "kubernetes_secret" "vault-auth-gateway" {
   metadata {
-    name      = kubernetes_service_account.vault-auth-gateway.default_secret_name
     namespace = kubernetes_namespace.wso2.metadata[0].name
+    name = "vault-auth-gateway"
+    annotations = {
+      "kubernetes.io/service-account.name" = kubernetes_service_account.vault-auth-gateway.metadata[0].name
+    }
   }
-  provider   = kubernetes.k8s-main
-  depends_on = [kubernetes_cluster_role_binding.role-tokenreview-binding-vault]
+  type        = "kubernetes.io/service-account-token"
+  provider    = kubernetes.k8s-main
 }
 
 resource "vault_auth_backend" "kubernetes-gateway" {
@@ -80,8 +82,8 @@ resource "vault_auth_backend" "kubernetes-gateway" {
 resource "vault_kubernetes_auth_backend_config" "kubernetes-gateway" {
   backend            = vault_auth_backend.kubernetes-gateway.path
   kubernetes_host    =  "https://${var.internal_load_balancer_dns}:6443"
-  kubernetes_ca_cert = split(".", var.k8s_api_version)[1] > 18 ? null : data.kubernetes_secret.generated-vault-auth-gateway.data["ca.crt"]
-  token_reviewer_jwt = split(".", var.k8s_api_version)[1] > 18 ? null : data.kubernetes_secret.generated-vault-auth-gateway.data.token
+  kubernetes_ca_cert = split(".", var.k8s_api_version)[1] > 18 ? null : kubernetes_secret.vault-auth-gateway.data["ca.crt"]
+  token_reviewer_jwt = split(".", var.k8s_api_version)[1] > 18 ? null : kubernetes_secret.vault-auth-gateway.data.token
   issuer             = "https://kubernetes.default.svc.cluster.local"
   disable_iss_validation = split(".", var.k8s_api_version)[1] > 18 ? "false" : "true"
 }
@@ -225,8 +227,8 @@ resource "vault_pki_secret_backend_role" "role-server-cert" {
   organization       = ["ModusBox"]
   key_bits           = 2048
   # 2 years
-  max_ttl  = 2592000
-  ttl      = 2592000
+  max_ttl  = 7776000
+  ttl      = 7776000
   no_store = true
   require_cn = false
 }
@@ -247,8 +249,8 @@ resource "vault_pki_secret_backend_role" "role-client-cert" {
   organization       = ["ModusBox"]
   key_bits           = 2048
   # 2 years
-  max_ttl  = 2592000
-  ttl      = 2592000
+  max_ttl  = 7776000
+  ttl      = 7776000
   no_store = true
   require_cn = false
 }

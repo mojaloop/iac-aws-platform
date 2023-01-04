@@ -33,6 +33,10 @@ listeners: []
 ##
 advertisedListeners: []
 
+service:
+  ports:
+    client: ${service_port}
+
 ## Persistence parameters
 ##
 persistence:

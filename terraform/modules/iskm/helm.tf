@@ -19,7 +19,7 @@ resource "helm_release" "app" {
   name          = var.iskm_release_name
   repository    = "https://mojaloop.github.io/wso2-helm-charts-simple/repo"
   chart         = "wso2-is-km"
-  version       = "2.2.11"
+  version       = var.helm_chart_version
   namespace     = var.namespace
   timeout       = 500
   force_update  = true

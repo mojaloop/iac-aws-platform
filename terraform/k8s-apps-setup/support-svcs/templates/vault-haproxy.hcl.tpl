@@ -119,7 +119,7 @@ frontend https-in
 {{end}}
 {{range secrets "secret/onboarding_pm4mls"}}
 {{ with secret (printf "secret/onboarding_pm4mls/%s" .) }}
-    acl {{.Data.fqdn}}_acl path -i -m beg /sim/{{.Data.host}}/
+    acl {{.Data.fqdn}}_acl path -i -m beg /fsp/{{.Data.host}}/
 {{end}}
 {{end}}
 

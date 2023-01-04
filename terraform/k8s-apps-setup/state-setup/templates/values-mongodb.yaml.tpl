@@ -70,3 +70,7 @@ persistence:
   ## @param persistence.enabled Enable MongoDB(&reg;) data persistence using PVC
   ##
   enabled: true
+  size: ${storage_size}
+service:
+  ports:
+    mongodb: ${service_port}

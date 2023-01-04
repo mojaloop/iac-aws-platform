@@ -1,51 +1,51 @@
 resource "null_resource" "oauth-app" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command = "curl -v -X POST https://${local.gitlab_hostname}/api/v4/applications -H 'Content-Type: application/json' -H 'PRIVATE-TOKEN: ${local.gitlab_root_token}' -d '{\"name\": \"oauth-app-kubernetes-${var.environment}\", \"redirect_uri\": \"https://grafana.${aws_route53_zone.public_subdomain.name}/login/gitlab\", \"scopes\": \"read_api openid\" }' > ${path.module}/oauth-apps/oauth-app-kubernetes-${var.environment}.json"
+    command     = "curl -v -X POST https://${local.gitlab_hostname}/api/v4/applications -H 'Content-Type: application/json' -H 'PRIVATE-TOKEN: ${local.gitlab_root_token}' -d '{\"name\": \"oauth-app-kubernetes-${var.environment}\", \"redirect_uri\": \"https://grafana.${aws_route53_zone.public_subdomain.name}/login/gitlab\", \"scopes\": \"read_api openid\" }' > ${path.module}/oauth-apps/oauth-app-kubernetes-${var.environment}.json"
   }
 }
 
 data "local_file" "kubernetes-oauth-app" {
-    filename = "${path.module}/oauth-apps/oauth-app-kubernetes-${var.environment}.json"
-    depends_on = [null_resource.oauth-app]
+  filename   = "${path.module}/oauth-apps/oauth-app-kubernetes-${var.environment}.json"
+  depends_on = [null_resource.oauth-app]
 }
 
 resource "null_resource" "grafana-oauth-app" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command = "curl -v -X POST https://${local.gitlab_hostname}/api/v4/applications -H 'Content-Type: application/json' -H 'PRIVATE-TOKEN: ${local.gitlab_root_token}' -d '{\"name\": \"oauth-app-grafana-${var.environment}\", \"redirect_uri\": \"https://grafana.${aws_route53_zone.public_subdomain.name}/login/gitlab\", \"scopes\": \"read_api\" }' > ${path.module}/oauth-apps/oauth-app-grafana-${var.environment}.json"
+    command     = "curl -v -X POST https://${local.gitlab_hostname}/api/v4/applications -H 'Content-Type: application/json' -H 'PRIVATE-TOKEN: ${local.gitlab_root_token}' -d '{\"name\": \"oauth-app-grafana-${var.environment}\", \"redirect_uri\": \"https://grafana.${aws_route53_zone.public_subdomain.name}/login/gitlab\", \"scopes\": \"read_api\" }' > ${path.module}/oauth-apps/oauth-app-grafana-${var.environment}.json"
   }
 }
 
 data "local_file" "grafana-oauth-app" {
-    filename = "${path.module}/oauth-apps/oauth-app-grafana-${var.environment}.json"
-    depends_on = [null_resource.grafana-oauth-app]
+  filename   = "${path.module}/oauth-apps/oauth-app-grafana-${var.environment}.json"
+  depends_on = [null_resource.grafana-oauth-app]
 }
 
 resource "null_resource" "vault-oauth-app" {
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
-    command = "curl -v -X POST https://${local.gitlab_hostname}/api/v4/applications -H 'Content-Type: application/json' -H 'PRIVATE-TOKEN: ${local.gitlab_root_token}' -d '{\"name\": \"oauth-app-vault-${var.environment}\", \"redirect_uri\": \"https://vault.${aws_route53_zone.public_subdomain.name}/ui/vault/auth/oidc/oidc/callback\", \"scopes\": \"openid\" }' > ${path.module}/oauth-apps/oauth-app-vault-${var.environment}.json"
+    command     = "curl -v -X POST https://${local.gitlab_hostname}/api/v4/applications -H 'Content-Type: application/json' -H 'PRIVATE-TOKEN: ${local.gitlab_root_token}' -d '{\"name\": \"oauth-app-vault-${var.environment}\", \"redirect_uri\": \"https://vault.${aws_route53_zone.public_subdomain.name}/ui/vault/auth/oidc/oidc/callback\", \"scopes\": \"openid\" }' > ${path.module}/oauth-apps/oauth-app-vault-${var.environment}.json"
   }
 }
 
 data "local_file" "vault-oauth-app" {
-    filename = "${path.module}/oauth-apps/oauth-app-vault-${var.environment}.json"
-    depends_on = [null_resource.vault-oauth-app]
+  filename   = "${path.module}/oauth-apps/oauth-app-vault-${var.environment}.json"
+  depends_on = [null_resource.vault-oauth-app]
 }
 
 #creating nexus entries json file for kubespray execution (requires bootstrap version >= v0.5.3)
 resource "local_file" "kubespray_extra_vars" {
-  content         = templatefile("${path.module}/templates/extra-vars.json.tpl", {
-    nexus_ip = local.nexus_fqdn 
-    nexus_port = local.nexus_docker_repo_listening_port
+  content = templatefile("${path.module}/templates/extra-vars.json.tpl", {
+    nexus_ip                           = local.nexus_fqdn
+    nexus_port                         = local.nexus_docker_repo_listening_port
     apiserver_loadbalancer_domain_name = aws_lb.internal-lb.dns_name
-    kube_oidc_enabled = "true"
-    kube_oidc_client_id = local.oauth_app_id
-    kube_oidc_url = "https://${local.gitlab_hostname}"
-    groups_name = "groups_direct"
+    kube_oidc_enabled                  = "true"
+    kube_oidc_client_id                = local.oauth_app_id
+    kube_oidc_url                      = "https://${local.gitlab_hostname}"
+    groups_name                        = "groups_direct"
   })
-  filename        = "${path.module}/extra-vars.json"
+  filename = "${path.module}/extra-vars.json"
 }
 
 data "aws_vpc" "selected" {
@@ -87,7 +87,7 @@ module "aws-iam" {
 
 resource "aws_route53_zone" "main_private" {
   name = "${var.environment}.${local.private_subdomain}"
-
+  force_destroy = var.route53_zone_force_destroy
   vpc {
     vpc_id = data.aws_vpc.selected.id
   }
@@ -103,7 +103,7 @@ resource "aws_route53_zone" "main_private" {
 }
 
 resource "aws_route53_zone" "public_subdomain" {
-  name = "${var.environment}.${local.public_subdomain}"
+  name          = "${var.environment}.${local.public_subdomain}"
   force_destroy = var.route53_zone_force_destroy
   tags = {
     "ProductDomain" = local.public_subdomain

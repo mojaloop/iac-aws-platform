@@ -63,7 +63,7 @@ ingress:
     #    hosts:
     #      - kratos-admin.local
   public:
-    enabled: true
+    enabled: false
     className: ""
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /$2

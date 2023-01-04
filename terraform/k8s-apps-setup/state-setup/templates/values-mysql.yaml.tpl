@@ -174,7 +174,9 @@ primary:
     ##     app: my-app
     ##
     selector: {}
-
+  service:
+    ports:
+      mysql: ${service_port}
 ## @section MySQL Secondary parameters
 
 secondary:

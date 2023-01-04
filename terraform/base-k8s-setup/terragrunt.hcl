@@ -72,4 +72,5 @@ inputs = {
   public_subdomain = dependency.baseinfra.outputs.public_subdomain
   external_load_balancer_dns = dependency.baseinfra.outputs.external_load_balancer_dns
   internal_load_balancer_dns = dependency.baseinfra.outputs.internal_load_balancer_dns
+  available_zones = dependency.baseinfra.outputs.available_zones
 }

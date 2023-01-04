@@ -1,14 +1,15 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 ARG TERRAFORM_VERSION=1.1.8
-ARG K8S_VERSION=v1.21.6
-ARG HELM_VERSION=v3.8.1
+ARG K8S_VERSION=v1.24.6
+ARG HELM_VERSION=v3.9.4
 ARG HELM_FILENAME=helm-${HELM_VERSION}-linux-amd64.tar.gz
-ARG KUBESPRAY_VERSION=2.17.1
+ARG KUBESPRAY_VERSION=2.20.0
 ARG NEWMAN_VERSION=5.0.0
 ARG TERRAGRUNT_VERSION=0.36.7
 
 # Update apt and Install dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y \
+    tzdata \
     curl \
     dnsutils \
     git \
