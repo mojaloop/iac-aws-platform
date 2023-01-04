@@ -93,6 +93,7 @@ locals {
     server_cert_secret_name = var.vault-certman-secretname
     server_cert_secret_namespace = kubernetes_namespace.wso2.metadata[0].name
     switch_domain        = var.public_subdomain
+    ingress_class        = "nginx-ext"
   }
 }
 

@@ -127,6 +127,19 @@ variable "grafana_external_whitelist" {
   default = "0.0.0.0/0"
 }
 
+variable "iskm_helm_chart_version" {
+  description = "version of wso2 iskm helm chart to deploy"
+  type        = string
+}
+variable "extgw_helm_chart_version" {
+  description = "version of wso2 extgw helm chart to deploy"
+  type        = string
+}
+variable "intgw_helm_chart_version" {
+  description = "version of wso2 intgw helm chart to deploy"
+  type        = string
+}
+
 variable "kubeconfig_location" {
   description = "file location of kubeconfig"
   type = string
@@ -195,6 +208,7 @@ variable "stateful_resources" {
         storage_size = string
         architecture = string
         replica_count = number
+        service_port = number
       })
       mongodb_data = object({
         root_password = string
@@ -202,9 +216,19 @@ variable "stateful_resources" {
         user_password = string
         database_name = string
         storage_size = string
+        service_port = number
       })
       kafka_data = object({
         storage_size = string
+        service_port = number
+      })
+      redis_data = object({
+        user_password = string
+        user = string
+        storage_size = string
+        architecture = string
+        replica_count = number
+        service_port = number
       })
     }) 
   }))

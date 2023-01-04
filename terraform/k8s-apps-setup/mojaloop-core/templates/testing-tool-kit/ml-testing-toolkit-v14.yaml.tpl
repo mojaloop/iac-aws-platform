@@ -29,7 +29,7 @@ ml-testing-toolkit:
           "currency": "${ttk_test_currency1}",
           "currency2": "${ttk_test_currency2}",
           "cgscurrency": "${ttk_test_currency3}",
-          "SIMPLE_ROUTING_MODE_ENABLED": true,
+          "SIMPLE_ROUTING_MODE_ENABLED": ${quoting_service_simple_routing_mode_enabled},
           "ON_US_TRANSFERS_ENABLED": false,
           "NET_DEBIT_CAP": "10000000",
           "accept": "application/vnd.interoperability.parties+json;version=1.1",

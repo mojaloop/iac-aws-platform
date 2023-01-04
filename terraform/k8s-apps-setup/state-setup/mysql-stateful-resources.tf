@@ -17,6 +17,7 @@ resource "helm_release" "mysql" {
       name_override       = each.value.resource_name
       architecture        = each.value.local_resource.mysql_data.architecture
       replica_count       = each.value.local_resource.mysql_data.replica_count
+      service_port        = each.value.local_resource.mysql_data.service_port
     })
   ]
   provider = helm.helm-main

@@ -80,11 +80,11 @@ ui:
 
 ingress:
   enabled: true
+  className: ${ingress_class}
   host: ${mcm_public_fqdn}
   tls:
     - hosts:
       - "*.${mcm_public_fqdn}"
   annotations:
-    kubernetes.io/ingress.class: nginx-ext
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"

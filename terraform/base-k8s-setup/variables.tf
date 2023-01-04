@@ -146,3 +146,6 @@ variable "static_files_path_location" {
   description = "static_files_path_location"
   type        = string
 }
+variable "available_zones" {
+  description = "available zones"
+}

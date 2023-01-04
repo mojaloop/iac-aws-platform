@@ -16,8 +16,6 @@ output "pm4ml_onboarding_secret_name" {
 output "fsp_onboarding_secret_name" {
   value = "${var.onboarding_secret_name_prefix}_fsps"
 }
-
-
 output "helm_mojaloop_version" {
   value       = var.helm_mojaloop_version
   description = "Helm Mojaloop Version"

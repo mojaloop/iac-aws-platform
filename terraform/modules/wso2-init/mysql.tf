@@ -9,7 +9,7 @@ resource "kubernetes_job" "mysql_int" {
       spec {
         container {
           name    = "mysql-init-int"
-          image   = "mysql:5.7"
+          image   = "mysql:5.7-debian"
           command = ["/bin/bash", "-c", "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29 && apt update && apt install git -y && git clone -b ${var.wso2_mysql_repo_version} https://github.com/mojaloop/wso2-mysql.git && cd wso2-mysql && ./mysql-init.sh -h ${var.db_host} -u root -p ${var.db_root_password} -l int -r 260 -d y"]
         }
         restart_policy = "Never"
@@ -35,7 +35,7 @@ resource "kubernetes_job" "mysql_ext" {
       spec {
         container {
           name    = "mysql-init-ext"
-          image   = "mysql:5.7"
+          image   = "mysql:5.7-debian"
           command = ["/bin/bash", "-c", "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29 && apt update && apt install git -y && git clone -b ${var.wso2_mysql_repo_version} https://github.com/mojaloop/wso2-mysql.git && cd wso2-mysql && ./mysql-init.sh -h ${var.db_host} -u root -p ${var.db_root_password} -l ext -r 260 -d y"]
         }
         restart_policy = "Never"

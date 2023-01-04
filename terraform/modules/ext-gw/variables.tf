@@ -138,3 +138,7 @@ variable "storage_class_name" {
   type        = string
   default     = "longhorn"
 }
+variable "helm_chart_version" {
+  description = "version of helm chart to deploy"
+  type        = string
+}

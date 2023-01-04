@@ -98,3 +98,7 @@ variable "int_ingress_controller_name" {
   type = string
   default = "nginx"
 }
+variable "helm_chart_version" {
+  description = "version of helm chart to deploy"
+  type        = string
+}
