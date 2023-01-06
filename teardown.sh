@@ -1,9 +1,9 @@
 #!/bin/sh
 
 set -e
-export DYNAMO_TABLE_NAME=$(echo $bucket | sed 's/-state/-lock/g') 
+export DYNAMO_TABLE_NAME=$(echo $bucket | sed 's/-state/-lock/g')
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/k8s-apps-setup/post-config/terraform.tfstate ]; then
+if [ -f ${ENV_S3_DIR}/k8s-apps-setup/post-config/terraform.tfstate ]; then
   cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/post-config
   terragrunt init
   terragrunt validate
@@ -14,7 +14,7 @@ else
   echo "k8s-apps-setup/post-config/terraform.tfstate not found. Skipping k8s-apps-setup/post-config ..."
 fi
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/k8s-apps-setup/mojaloop-core/mojaloop-roles/terraform.tfstate ]; then
+if [ -f ${ENV_S3_DIR}/k8s-apps-setup/mojaloop-core/mojaloop-roles/terraform.tfstate ]; then
   cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/mojaloop-core/mojaloop-roles
   terragrunt init
   terragrunt validate
@@ -25,7 +25,7 @@ else
   echo "k8s-apps-setup/mojaloop-core/mojaloop-roles/terraform.tfstate not found. Skipping k8s-apps-setup/mojaloop-core/mojaloop-roles ..."
 fi
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/k8s-apps-setup/mojaloop-core/terraform.tfstate ]; then
+if [ -f ${ENV_S3_DIR}/k8s-apps-setup/mojaloop-core/terraform.tfstate ]; then
   cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/mojaloop-core
   terragrunt init
   terragrunt validate
@@ -38,8 +38,10 @@ else
   echo "k8s-apps-setup/mojaloop-core/terraform.tfstate  not found. Skipping k8s-apps-setup/mojaloop-core ..."
 fi
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/k8s-apps-setup/support-svcs/terraform.tfstate ]; then
+if [ -f ${ENV_S3_DIR}/k8s-apps-setup/support-svcs/terraform.tfstate ]; then
   cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/support-svcs
+  mkdir -p ./oauth-apps
+  cp $ENV_S3_DIR/oauth-apps/* ./oauth-apps/ || true
   terragrunt init
   terragrunt validate
   terragrunt destroy -auto-approve
@@ -49,7 +51,7 @@ else
   echo "k8s-apps-setup/support-svcs/terraform.tfstate not found. Skipping k8s-apps-setup/support-svcs ..."
 fi
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/k8s-apps-setup/state-setup/terraform.tfstate ]; then
+if [ -f ${ENV_S3_DIR}/k8s-apps-setup/state-setup/terraform.tfstate ]; then
   cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/state-setup
   terragrunt init
   terragrunt validate
@@ -60,7 +62,7 @@ else
   echo "k8s-apps-setup/state-setup/terraform.tfstate not found. Skipping k8s-apps-setup/state-setup..."
 fi
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/base-k8s-setup/terraform.tfstate ]; then
+if [ -f ${ENV_S3_DIR}/base-k8s-setup/terraform.tfstate ]; then
   cd $CI_IMAGE_PROJECT_DIR/terraform/base-k8s-setup
   cp $ENV_S3_DIR/vault/vault_seal_key $CI_IMAGE_PROJECT_DIR/static_files/ || true
   terragrunt init
@@ -74,15 +76,17 @@ else
   echo "base-k8s-setup/terraform.tfstate not found. Skipping base-k8s-setup ..."
 fi
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/base-infra-aws/terraform.tfstate ]; then
+if [ -f ${ENV_S3_DIR}/base-infra-aws/terraform.tfstate ]; then
   cd $CI_IMAGE_PROJECT_DIR/terraform/base-infra-aws
+  mkdir -p ./oauth-apps
+  cp $ENV_S3_DIR/oauth-apps/* ./oauth-apps/ || true
   terragrunt init
   terragrunt validate
   terragrunt destroy -auto-approve
   aws s3 rm s3://$bucket/$environment/base-infra-aws/terraform.tfstate
   aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$bucket/$environment'/base-infra-aws/terraform.tfstate-md5"}}' --return-values ALL_OLD
 else
-  echo "terraform.tfstate not found. Skipping terraform ..."
+  echo "base-infra-aws/terraform.tfstate not found. Skipping base-infra-aws ..."
 fi
 
 echo "Clearing remaining volumes"
