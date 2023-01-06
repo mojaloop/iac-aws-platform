@@ -92,15 +92,7 @@ Destroy Post Config:
     - cd terraform/k8s-apps-setup/post-config
     - terragrunt init
     - terragrunt destroy -auto-approve
-    - aws s3 rm --recursive s3://$bucket/$environment/k8s-cluster/sim_tests
-  when: manual
-
-Destroy of Internal PM4MLs Setup:
-  stage: Destroy
-  script:
-    - cd terraform/k8s-apps-setup/pm4mls
-    - terragrunt init
-    - terragrunt destroy -auto-approve
+    - aws s3 rm --recursive s3://$bucket/$environment/tests
     - aws s3 rm s3://$bucket/$environment/k3saddons/ansible_internal_pm4ml_output.yaml
     - aws s3 rm s3://$bucket/$environment/k3saddons/onboarding_internal_pm4ml_output.json
     - aws s3 rm s3://$bucket/$environment/k3saddons/ansible_external_pm4ml_output.yaml
@@ -373,20 +365,22 @@ Create Gateway Cluster:
     - *deploy_mojaloop_apps
   when: manual
 
-.deploy_post_install: &deploy_post_install
-  - cd terraform/k8s-apps-setup/pm4mls
+.deploy_post_config: &deploy_post_config
+  - cd terraform/k8s-apps-setup/post-config
   - terragrunt init
   - terragrunt apply -auto-approve
   - aws s3 cp ./ansible_internal_pm4ml_output.yaml s3://${bucket}/${environment}/k3saddons/ --sse
   - aws s3 cp ./onboarding_internal_pm4ml_output.json s3://${bucket}/${environment}/k3saddons/ --sse
   - aws s3 cp ./ansible_external_pm4ml_output.yaml s3://${bucket}/${environment}/k3saddons/ --sse
   - aws s3 cp ./onboarding_external_pm4ml_output.json s3://${bucket}/${environment}/k3saddons/ --sse
-  - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/post-install/sim_tests s3://$bucket/$environment/k8s-cluster/sim_tests --sse
+  - aws s3 cp ./Lab.postman_environment.json s3://${bucket}/${environment}/tests/ --sse
+  - aws s3 cp ./test_cert_list.json s3://${bucket}/${environment}/tests/ --sse
 
-4. Deploy Post Install:
+
+4. Deploy Post Config:
   stage: "Deploy Platform"
   script: 
-    - *deploy_post_install
+    - *deploy_post_config
   when: manual
 
 .install_internal_pm4mls: &install_internal_pm4mls

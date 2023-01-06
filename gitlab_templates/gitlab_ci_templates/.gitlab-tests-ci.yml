@@ -6,10 +6,10 @@ variables:
 #job template for 1. Run PM4ML GP Tests	  
 .Run PM4ML GP Tests-job-template:
   script:
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-    #- aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-    - aws s3 cp s3://${BUCKET}/${environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - cd sim_tests
+    - aws s3 sync s3://$bucket/$environment/tests/ $CI_IMAGE_PROJECT_DIR/tests --sse
+    #- aws s3 sync s3://$bucket/$environment/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+    - aws s3 cp s3://$bucket/$environment/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/tests
+    - cd tests
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopHub_Setup.postman_collection.json --insecure -e Lab.postman_environment.json
     #- newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopSims_Onboarding.postman_collection.json --ssl-client-cert-list test_cert_list.json --insecure -e Lab.postman_environment.json || true
@@ -46,20 +46,11 @@ variables:
     variables:
       - $SCHEDULE_PM4ML == "PM4ML_GP"
 
-2. Run Finance Portal V2 UI Tests:
+2. Run PM4ML UI Tests:
   stage: "Run Tests"
   allow_failure: true
   when: manual
   script:
-#    - if [ -f terraform-k8s.tfstate ]; then export fin_portal_users=$(terraform output -json -state=terraform-k8s.tfstate finance_portal_users); else ls -la .; fi 
-#    - if [ -f terraform-k8s.tfstate ]; then export fin_portal_url=$(terraform output -state=terraform-k8s.tfstate finance-portal-url); else ls -la .; fi 
-#    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ ${CI_IMAGE_PROJECT_DIR}/sim_tests --sse
-#    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ ${CI_IMAGE_PROJECT_DIR}/secrets_chart --sse
-#    - aws s3 cp s3://${BUCKET}/${environment}/k3saddons/onboarding_internal_pm4ml_output.json ${CI_IMAGE_PROJECT_DIR}/sim_tests
-#    - cd ${CI_IMAGE_PROJECT_DIR}/sim_tests
-#    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
-#    - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopHub_Setup.postman_collection.json --insecure -e Lab.postman_environment.json
-#    - newman run https://raw.githubusercontent.com/mojaloop/postman/${TAG_ML_GP}/MojaloopSims_Onboarding.postman_collection.json --ssl-client-cert-list test_cert_list.json --insecure -e Lab.postman_environment.json || true
     - git clone -b MBP-137 https://github.com/pm4ml/mojaloop-payment-manager-ui.git ${CI_IMAGE_PROJECT_DIR}/mojaloop-payment-manager-ui
     - exit_code=0
     - cd ${CI_IMAGE_PROJECT_DIR}/mojaloop-payment-manager-ui/ui-tests/tests
@@ -71,10 +62,6 @@ variables:
     - apt-get install -y google-chrome-stable
     - npm ci
     - ENV="other" PM4ML_ENDPOINT=${PM4ML_ENDPOINT} SIM_CORE_CONNECTOR_ENDPOINT=${SIM_CORE_CONNECTOR_ENDPOINT} npm run test:headless | tee report.log || exit_code=$?
-#    - echo $fin_portal_users | jq -r '"ADMIN_USER_NAME=\(.portaladmin.username)\nADMIN_PASSWORD=\(.portaladmin.user_pass)\nUSER_NAME=\(.portaluser.username)\nPASSWORD=\(.portaluser.user_pass)"' > .env
-#    - echo "FINANCE_PORTAL_ENDPOINT=$fin_portal_url" >> .env
-#    - npm i
-#    - npm run test:headless || true
     - cp ${CI_IMAGE_PROJECT_DIR}/mojaloop-payment-manager-ui/ui-tests/tests/report.log ${CI_PROJECT_DIR}/mojaloop-payment-manager-ui_report.log
   after_script:
     - curl https://slack.com/api/files.upload
@@ -88,60 +75,60 @@ variables:
       - mojaloop-payment-manager-ui_report.log
       - exit $exit_code
 
-#job template for 4. Run Platform GP Tests:
-.Run Platform GP Tests-job-template:
-  script:
-    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-    - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-    - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - cp $CI_PROJECT_DIR/tests/Myanmar-Golden-Path.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - cd sim_tests
-    - jq -s '[.[][]]' onboarding_external_pm4ml_output.json onboarding_internal_pm4ml_output.json > /tmp/onboarding_pm4ml_output.json
-    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
-    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
-    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Registration.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json || true
-    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Setup.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
-    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Sim_Backend.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
-    - newman run Myanmar-Golden-Path.postman_collection.json --ssl-client-cert-list test_cert_list.json --folder feature-tests --insecure -e Lab.postman_environment.json --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/Platform_report.html --reporter-junit-export ${CI_PROJECT_DIR}/alias_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
-  after_script:
-    - curl https://slack.com/api/files.upload
-      -F file=@"Platform_report.html"
-      -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}"
-      -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
-      -F title="Myanmar Goldenpath Test (Postman) Results"
-      -F filetype="html"
-  artifacts:
-    paths:
-      - Platform_report.html
+# #job template for 4. Run Platform GP Tests:
+# .Run Platform GP Tests-job-template:
+#   script:
+#     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+#     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+#     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+#     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+#     - cp $CI_PROJECT_DIR/tests/Myanmar-Golden-Path.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests
+#     - cd sim_tests
+#     - jq -s '[.[][]]' onboarding_external_pm4ml_output.json onboarding_internal_pm4ml_output.json > /tmp/onboarding_pm4ml_output.json
+#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
+#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
+#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Registration.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json || true
+#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Setup.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
+#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Sim_Backend.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
+#     - newman run Myanmar-Golden-Path.postman_collection.json --ssl-client-cert-list test_cert_list.json --folder feature-tests --insecure -e Lab.postman_environment.json --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/Platform_report.html --reporter-junit-export ${CI_PROJECT_DIR}/alias_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
+#   after_script:
+#     - curl https://slack.com/api/files.upload
+#       -F file=@"Platform_report.html"
+#       -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}"
+#       -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
+#       -F title="Myanmar Goldenpath Test (Postman) Results"
+#       -F filetype="html"
+#   artifacts:
+#     paths:
+#       - Platform_report.html
       
-#    - curl https://slack.com/api/files.upload
-#     -F file=@"alias_report.html"
-#      -F channels="${SLACK_GITLABCI_GP_REPORTS_CHANNEL_NAME}"
-#      -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
-#      -F title="Alias Goldenpath Test (Postman) Results.'${ENVIRONMENT}'-$(date +\"%Y-%m-%d-%H:%M:%S\")"
-#      -F filetype="html"
-#  artifacts:
-#    reports:
-#      junit: alias_report.xml
+# #    - curl https://slack.com/api/files.upload
+# #     -F file=@"alias_report.html"
+# #      -F channels="${SLACK_GITLABCI_GP_REPORTS_CHANNEL_NAME}"
+# #      -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
+# #      -F title="Alias Goldenpath Test (Postman) Results.'${ENVIRONMENT}'-$(date +\"%Y-%m-%d-%H:%M:%S\")"
+# #      -F filetype="html"
+# #  artifacts:
+# #    reports:
+# #      junit: alias_report.xml
 
 
-3. Manual Run Platform GP Tests:
-  stage: "Run Tests"
-  extends: .Run Platform GP Tests-job-template
-  when: manual
-  except:
-    - schedules
+# 3. Manual Run Platform GP Tests:
+#   stage: "Run Tests"
+#   extends: .Run Platform GP Tests-job-template
+#   when: manual
+#   except:
+#     - schedules
 
-3. Scheduled Run Platform GP Tests:
-  stage: "Run Tests"
-  allow_failure: true
-  extends: .Run Platform GP Tests-job-template
-  only:
-    refs:
-      - schedules
-    variables:
-      - $SCHEDULE_PLATFORM == "PLAT_GP"
+# 3. Scheduled Run Platform GP Tests:
+#   stage: "Run Tests"
+#   allow_failure: true
+#   extends: .Run Platform GP Tests-job-template
+#   only:
+#     refs:
+#       - schedules
+#     variables:
+#       - $SCHEDULE_PLATFORM == "PLAT_GP"
 
 .ttk-snippets:
   # image: &ttk-snippets-image
@@ -151,14 +138,14 @@ variables:
     # - export GLIBC_VER=2.34-r0
     # - apk --no-cache add binutils curl jq && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk && apk add --no-cache glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip && unzip awscliv2.zip && aws/install && rm -rf awscliv2.zip aws /usr/local/aws-cli/v2/*/dist/aws_completer /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index /usr/local/aws-cli/v2/*/dist/awscli/examples glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk /var/cache/apk/*
     # - wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/bin/ && rm /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-    - export BUCKET=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - export bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - export TTK_TESTCASES_VERSION=${TAG_TTK_TEST}
     - export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
     - export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION=${region}
-    - aws s3 sync s3://$BUCKET/$environment ./k8ss3/ --sse || true
+    - aws s3 sync s3://$bucket/$environment ./k8ss3/ --sse || true
     - export private_subdomain=$(terraform output -state=k8ss3/terraform.tfstate private_subdomain | tr -d '"')
     - export ttkBackendUrl=http://ttkbackend.${private_subdomain};
     - npm install @mojaloop/ml-testing-toolkit-client-lib --global
@@ -222,33 +209,33 @@ variables:
 #   script:
 #     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
 #     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-#     - helm --kubeconfig=admin-gateway.conf test ${helm_mojaloop_release_name} -n mojaloop || true
-#     - kubectl --kubeconfig=admin-gateway.conf -n mojaloop logs ${helm_mojaloop_release_name}-ml-ttk-test-val-gp
-#     - exit `kubectl --kubeconfig=admin-gateway.conf -n mojaloop get pod ${helm_mojaloop_release_name}-ml-ttk-test-val-gp --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+#     - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  test ${helm_mojaloop_release_name} -n mojaloop || true
+#     - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop logs ${helm_mojaloop_release_name}-ml-ttk-test-val-gp
+#     - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop get pod ${helm_mojaloop_release_name}-ml-ttk-test-val-gp --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
 #   when: manual
 
 5. Run RBAC Tests:
   stage: "Run Tests"
   script:
-    - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-rbac-tests -n mojaloop || true
-    - kubectl --kubeconfig=admin-gateway.conf -n mojaloop logs bof-rbac-tests
-    - exit `kubectl --kubeconfig=admin-gateway.conf -n mojaloop get pod bof-rbac-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+    - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf test bof --filter name=bof-rbac-tests -n mojaloop || true
+    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop logs bof-rbac-tests
+    - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop get pod bof-rbac-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
 6. Run Report Tests:
   stage: "Run Tests"
   script:
-    - helm --kubeconfig=admin-gateway.conf test bof --filter name=bof-report-tests -n mojaloop || true
-    - kubectl --kubeconfig=admin-gateway.conf -n mojaloop logs bof-report-tests
-    - exit `kubectl --kubeconfig=admin-gateway.conf -n mojaloop get pod bof-report-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+    - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  test bof --filter name=bof-report-tests -n mojaloop || true
+    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop logs bof-report-tests
+    - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop get pod bof-report-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
 7. Run MCM Tests:
   stage: "Run Tests"
   script:
-    - helm --kubeconfig=admin-gateway.conf test connection-manager -n mcm || true
-    - kubectl --kubeconfig=admin-gateway.conf -n mcm logs connection-manager-api-test
-    - exit `kubectl --kubeconfig=admin-gateway.conf -n mcm get pod connection-manager-api-test --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+    - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  test connection-manager -n mcm || true
+    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mcm logs connection-manager-api-test
+    - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mcm get pod connection-manager-api-test --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
 8. Run PM4ML TTK Tests:
@@ -268,10 +255,10 @@ variables:
     - |
       cd /tmp;
       export pm4mlgoldenPathTestCasesPathInZip=pm4ml-test-scripts-${ttk_pm4ml_gp_version}/ttk/collections/feature_tests;
-      # ml-ttk-cli -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://${BUCKET}/${environment}/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=https://hooks.slack.com/services/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 --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
+      # ml-ttk-cli -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://$bucket/$environment/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=https://hooks.slack.com/services/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 --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
       ml-ttk-cli -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-report.html --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
       # Use the following syntax instead of the above line for slack notification and comment out artifacts. We can not have both with the current TTK CLI options.
-      # ml-ttk-cli -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://${BUCKET}/${environment}/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=${SLACK_WEBHOOK_URL_HERE} --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
+      # ml-ttk-cli -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://$bucket/$environment/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=${SLACK_WEBHOOK_URL_HERE} --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
       echo "Done";
   artifacts: &ttk-snippets-artifacts
     when: always

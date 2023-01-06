@@ -194,7 +194,7 @@ resource "kubernetes_ingress_v1" "kratos-public" {
   spec {
     ingress_class_name = "nginx"
     rule {
-      host = "${var.bofportal_name}.${data.terraform_remote_state.infrastructure.outputs.public_subdomain}"
+      host = "${var.bofportal_name}.${var.public_subdomain}"
       http {
         path {
           backend {
@@ -213,6 +213,6 @@ resource "kubernetes_ingress_v1" "kratos-public" {
       hosts = ["${var.bofportal_name}.${var.public_subdomain}"]
     }
   }
-  provider   = kubernetes.k8s-gateway
+  provider   = kubernetes.k8s-main
   depends_on = [helm_release.kratos]
 }

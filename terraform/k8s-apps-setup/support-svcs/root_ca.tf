@@ -12,8 +12,8 @@ resource tls_private_key ca_key {
 }
 
 # This is a highly sensitive output of this process.
-resource local_file private_key {
-  sensitive_content = tls_private_key.ca_key.private_key_pem
+resource local_sensitive_file private_key {
+  content = tls_private_key.ca_key.private_key_pem
   filename          = "${path.root}/output/root_ca/ca_key.pem"
   file_permission   = "0400"
 }
@@ -37,14 +37,14 @@ resource tls_self_signed_cert ca_cert {
   is_ca_certificate = true
 }
 
-resource local_file ca_file {
-  sensitive_content = tls_self_signed_cert.ca_cert.cert_pem
+resource local_sensitive_file ca_file {
+  content = tls_self_signed_cert.ca_cert.cert_pem
   filename          = "${path.root}/output/root_ca/ca_cert.pem"
   file_permission   = "0400"
 }
 
-resource local_file ca_pem_bundle {
-  sensitive_content = "${tls_private_key.ca_key.private_key_pem}${tls_self_signed_cert.ca_cert.cert_pem}"
+resource local_sensitive_file ca_pem_bundle {
+  content = "${tls_private_key.ca_key.private_key_pem}${tls_self_signed_cert.ca_cert.cert_pem}"
   filename          = "${path.root}/output/root_ca/ca_cert_key_bundle.pem"
   file_permission   = "0400"
 }
@@ -52,5 +52,5 @@ resource local_file ca_pem_bundle {
 resource "vault_pki_secret_backend_config_ca" "ca_config" {
   depends_on = [vault_mount.root, tls_private_key.ca_key]
   backend    = vault_mount.root.path
-  pem_bundle = local_file.ca_pem_bundle.sensitive_content
+  pem_bundle = local_sensitive_file.ca_pem_bundle.content
 }

@@ -6,25 +6,24 @@ variables:
 1. Run External PM4ML Onboarding:
   stage: "Maintain Platform"
   script:
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-    - aws s3 cp s3://${BUCKET}/${environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - cd sim_tests
+    - aws s3 sync s3://$bucket/$environment/tests/ $CI_IMAGE_PROJECT_DIR/tests --sse
+    - aws s3 cp s3://$bucket/$environment/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/tests
+    - cd tests
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json -d onboarding_external_pm4ml_output.json
   when: manual
 
 2. Update oathkeeper rules:
   stage: "Maintain Platform"
   script:
-    - export public_subdomain=$(terraform output -state=terraform.tfstate public_subdomain | tr -d '"')
-    - helm -n mojaloop -i --kubeconfig=admin-gateway.conf --set-string base_domain=${public_subdomain} --set-string bof_release_name=bof --set-string moja_release_name=moja upgrade bof-oathkeeper-rules $CI_IMAGE_PROJECT_DIR/bof-custom-resources/oathkeeper-rules
+    - export public_subdomain=$(terraform output -state=$ENV_S3_DIR/base-infra-aws/terraform.tfstate public_subdomain | tr -d '"')
+    - helm -n mojaloop -i --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  --set-string base_domain=${public_subdomain} --set-string bof_release_name=bof --set-string moja_release_name=moja upgrade bof-oathkeeper-rules $CI_IMAGE_PROJECT_DIR/bof-custom-resources/oathkeeper-rules
   when: manual
 
 3. Update mojaloop roles:
   stage: "Maintain Platform"
   script:
     - |
-      public_subdomain=$(terraform output -state=terraform.tfstate public_subdomain | tr -d '"');
+      public_subdomain=$(terraform output -state=$ENV_S3_DIR/base-infra-aws/terraform.tfstate public_subdomain | tr -d '"');
       validation_api_url=https://bofapi.${public_subdomain}/operator/validate/role-permissions;
       echo ${validation_api_url};
       mojaloop_roles=`cat ./bof-custom-resources/role-permissions/mojaloop-roles.json`;
@@ -32,26 +31,24 @@ variables:
       request_body='{ "rolePermissions":'${mojaloop_roles}',"permissionExclusions":'${permission_exclusions}'}';
       response_code=$(curl -s -X POST ${validation_api_url} -H 'Content-Type: application/json' -d "${request_body}" -w "%{http_code}" -o response_body.txt);
       if [ $response_code != 200 ]; then echo "VALIDATION FAILED"; cat response_body.txt; exit 1; else echo "VALIDATION PASSED"; fi;
-    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-roles
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/mojaloop-core/mojaloop-roles
+    - terragrunt init
+    - terragrunt apply -auto-approve
   when: manual
 
 4. Update custom reports:
   stage: "Maintain Platform"
   script:
-    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-custom-reports
-    - terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-    - terraform apply -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
+    - cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/mojaloop-core/mojaloop-custom-reports
+    - terragrunt init
+    - terragrunt apply -auto-approve
   when: manual
 
-11. Gateway K8S Cluster Deployments:
-  stage: "Run Tests"
+11. K8S Cluster Deployments:
+  stage: "Maintain Platform"
   script:
-    - aws s3 cp s3://${BUCKET}/${environment}/admin-gateway.conf ${CI_IMAGE_PROJECT_DIR}/reports/admin-gateway.conf
     - cd ${CI_IMAGE_PROJECT_DIR}/reports
-    - export KUBECONFIG=admin-gateway.conf
-    - export REPORT_NAME=GW_K8S_CLUSTER_$(date +"%Y-%m-%d-%M").csv
+    - export KUBECONFIG=$ENV_S3_DIR/k8s/admin.conf
     - echo "Namespace,Helm Chart,Deployment Name,Docker image,Creation Timestamp,Number of Available Replicas,Available Status Change Timestamp,Is Available?" > ${CI_PROJECT_DIR}/gw-cluster-report.csv
     - kubectl get deployments --all-namespaces -o=jsonpath="{range .items[*]}{.metadata.namespace}{','}{.metadata.labels.chart}{','}{.metadata.name}{','}{.spec.template.spec.containers..image}{','}{.metadata.creationTimestamp}{','}{.status.availableReplicas}{','}{.status.conditions[?(@.type=='Available')].lastUpdateTime}{','}{.status.conditions[?(@.type=='Available')].status}{'\n'}{end}" >> ${CI_PROJECT_DIR}/gw-cluster-report.csv
 #    - curl -F file=@"GW_K8S_CLUSTER_${REPORT_DATE}.csv" -F channels="${SLACK_CHANNEL}" -F token="${SLACK_API_TOKEN}" -F title="k8s Deployment Report for ${K8S_CLUSTER_NAME_DMZ_DEV} cluster on ${REPORT_DATE}"  https://slack.com/api/files.upload
@@ -60,52 +57,14 @@ variables:
     paths:
       - gw-cluster-report.csv
 
-12. Add-ons K8S Cluster Deployments:
-  stage: "Run Tests"
-  script:
-    - aws s3 cp s3://${BUCKET}/${environment}/admin-add-ons.conf ${CI_IMAGE_PROJECT_DIR}/reports/admin-add-ons.conf
-    - cd ${CI_IMAGE_PROJECT_DIR}/reports
-    - export KUBECONFIG=admin-add-ons.conf
-    - echo "Namespace,Helm Chart,Deployment Name,Docker image,Creation Timestamp,Number of Available Replicas,Available Status Change Timestamp,Is Available?" > ${CI_PROJECT_DIR}/add-ons-cluster-report.csv
-    - kubectl get deployments --all-namespaces -o=jsonpath="{range .items[*]}{.metadata.namespace}{','}{.metadata.labels.chart}{','}{.metadata.name}{','}{.spec.template.spec.containers..image}{','}{.metadata.creationTimestamp}{','}{.status.availableReplicas}{','}{.status.conditions[?(@.type=='Available')].lastUpdateTime}{','}{.status.conditions[?(@.type=='Available')].status}{'\n'}{end}" >> ${CI_PROJECT_DIR}/add-ons-cluster-report.csv
-#    - curl -F file=@"ADD-ONS_K8S_CLUSTER_${REPORT_DATE}.csv" -F channels="${SLACK_CHANNEL}" -F token="${SLACK_API_TOKEN}" -F title="k8s Deployment Report for ${K8S_CLUSTER_NAME_DMZ_DEV} cluster on ${REPORT_DATE}"  https://slack.com/api/files.upload
-  when: manual
-  artifacts:
-    paths:
-      - add-ons-cluster-report.csv
-
-14. Automated Env Report :
-  stage: "Run Tests"
-  script:
-#    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-    - cd /tmp && git clone https://github.com/ashokalinux/Env-template.git
-    - cd /tmp/Env-template
-    - export
-    - terraform init
-    - terraform plan -out=plan.env
-    - terraform apply "plan.env"
-    - pwd
-    - ls -R
-    - cp ./Auto/Env/Lab.auto_environment.html $CI_IMAGE_PROJECT_DIR
-    - ls -l $CI_IMAGE_PROJECT_DIR
-#    - aws s3 sync $CI_IMAGE_PROJECT_DIR/terraform/Auto s3://${BUCKET}/${environment}/Auto --sse
-    - aws s3 cp $CI_IMAGE_PROJECT_DIR/Lab.auto_environment.html s3://${BUCKET}/${environment}/Auto/Env/Lab.auto_environment.html --sse
-  when: manual
-  artifacts:
-    paths:
-      - Lab.auto_environment.html
-
-
 
 1. Setup MFI oracle:
   stage: "Maintain Platform"
   script:
-    - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-  #  - aws s3 sync s3://${BUCKET}/${environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-    - aws s3 cp s3://${BUCKET}/${environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-    - cd sim_tests
+    - aws s3 sync s3://$bucket/$environment/tests/ $CI_IMAGE_PROJECT_DIR/tests --sse
+    - aws s3 cp s3://$bucket/$environment/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/tests
+    - cd tests
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Registration.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json || true
     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Setup.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
-#    - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json -d onboarding_internal_pm4ml_output.json
   when: manual

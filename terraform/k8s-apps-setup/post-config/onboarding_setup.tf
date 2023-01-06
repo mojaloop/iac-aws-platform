@@ -1,4 +1,4 @@
-resource "local_file" "gp_postman_pm4ml_certlist_file" {
+resource "local_sensitive_file" "gp_postman_pm4ml_certlist_file" {
   content = templatefile("${path.module}/templates/test_cert_list.json.tpl", {
     LAB_DOMAIN                     = var.public_subdomain,
     PM4ML_DOMAIN                = "${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${var.public_subdomain}",
@@ -11,10 +11,10 @@ resource "local_file" "gp_postman_pm4ml_certlist_file" {
     DEMOWALLET_CERT_FILENAME    = "../secrets_chart/demowallet/tls/demowallet_client.crt",
     DEMOMFI_CERT_FILENAME       = "../secrets_chart/demomfi/tls/demomfi_client.crt"
   })
-  filename   = "${path.root}/sim_tests/test_cert_list.json"
+  filename   = "${path.root}/test_cert_list.json"
 }
 
-resource "local_file" "gp_postman_environment_file" {
+resource "local_sensitive_file" "gp_postman_environment_file" {
   content = templatefile("${path.module}/templates/Lab.postman_environment.json.tpl", {
     LAB_DOMAIN                         = var.public_subdomain,
     CURRENCY_CODE                      = var.hub_currency_code,
@@ -51,6 +51,6 @@ resource "local_file" "gp_postman_environment_file" {
     MOJALOOP_RELEASE                   = var.helm_mojaloop_release_name
     MCM_FQDN                           = var.mcm_fqdn
   })
-  filename   = "${path.root}/sim_tests/Lab.postman_environment.json"
+  filename   = "${path.root}/Lab.postman_environment.json"
   depends_on = [module.provision_accounts_to_wso2]
 }
