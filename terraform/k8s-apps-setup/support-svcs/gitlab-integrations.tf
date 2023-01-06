@@ -79,19 +79,19 @@ resource "kubernetes_cluster_role_binding" "oidc-cluster-admin-binding" {
   provider   = kubernetes.k8s-main
 }
 
-data "local_file" "grafana-oauth-app" {
+data "local_sensitive_file" "grafana-oauth-app" {
   filename = "${path.module}/oauth-apps/oauth-app-grafana-${var.environment}.json"
 }
 
-data "local_file" "vault-oauth-app" {
+data "local_sensitive_file" "vault-oauth-app" {
   filename = "${path.module}/oauth-apps/oauth-app-vault-${var.environment}.json"
 }
 
 locals {
-  vault_oauth_app_client_id = jsondecode(data.local_file.vault-oauth-app.content)["application_id"]
-  vault_oauth_app_client_secret = jsondecode(data.local_file.vault-oauth-app.content)["secret"]
-  grafana_oauth_app_client_id = jsondecode(data.local_file.grafana-oauth-app.content)["application_id"]
-  grafana_oauth_app_client_secret = jsondecode(data.local_file.grafana-oauth-app.content)["secret"]
+  vault_oauth_app_client_id = jsondecode(data.local_sensitive_file.vault-oauth-app.content)["application_id"]
+  vault_oauth_app_client_secret = jsondecode(data.local_sensitive_file.vault-oauth-app.content)["secret"]
+  grafana_oauth_app_client_id = jsondecode(data.local_sensitive_file.grafana-oauth-app.content)["application_id"]
+  grafana_oauth_app_client_secret = jsondecode(data.local_sensitive_file.grafana-oauth-app.content)["secret"]
   gitlab_admin_group_name = "tenant-admins"
 }
 

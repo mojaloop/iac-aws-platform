@@ -148,4 +148,5 @@ variable "static_files_path_location" {
 }
 variable "available_zones" {
   description = "available zones"
+  type        = list(string)
 }
