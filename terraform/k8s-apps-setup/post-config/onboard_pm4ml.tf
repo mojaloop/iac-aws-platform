@@ -17,7 +17,7 @@ locals {
     pm4ml_config.DFSP_NAME => {
       sim_name              = pm4ml_config.DFSP_NAME
       sim_password          = "${pm4ml_config.DFSP_NAME}123"
-      sim_callback_url      = "https://haproxy-callback.wso2.svc.cluster.local/sim/${pm4ml_config.DFSP_NAME}/inbound"
+      sim_callback_url      = "https://haproxy-callback.wso2.svc.cluster.local/fsp/${pm4ml_config.DFSP_NAME}/inbound"
       subscribe_to_api_list = "FSPIOP"
     }
   }

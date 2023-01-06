@@ -59,7 +59,7 @@ Destroy AWS:
   stage: Destroy
   script:
     - cd terraform/base-infra-aws
-    - aws s3 sync s3://${bucket}/$environment/oauth-apps/ ./oauth-apps/ || true
+    - aws s3 sync s3://$bucket/$environment/oauth-apps/ ./oauth-apps/ || true
     - terragrunt init
     - terragrunt validate
     - terragrunt destroy -auto-approve -refresh=false
@@ -139,7 +139,6 @@ Destroy Environment:
   stage: Destroy
   script:
     - aws s3 sync s3://${client}$environmentk3s-pm4mladdons-state/k3s ./k3sstate --sse || true
-    - aws s3 sync s3://$bucket/$environment/terraform/oauth-apps/ ./oauth-apps/ || true
     - cp $CI_PROJECT_DIR/teardown.sh $CI_IMAGE_PROJECT_DIR/teardown.sh || true
     - $CI_IMAGE_PROJECT_DIR/teardown.sh
   when: manual
@@ -179,8 +178,8 @@ Destroy k3s Cluster:
     - make backend -- -auto-approve || true
     - make destroy -- -auto-approve || true 
     - aws s3 rm --recursive s3://$bucket/$environment/k3saddons || true 
-    - aws s3 rm --recursive s3://${client}$environmentk3s-pm4mladdons-state/k3s || true
-    - $CI_IMAGE_PROJECT_DIR/delete_int_k3s_db_row.sh ${client}$environmentk3s-pm4mladdons-lock ${client}$environmentk3s-pm4mladdons-state/k3s $region
+    - aws s3 rm --recursive s3://${client}${environment}k3s-pm4mladdons-state/k3s || true
+    - $CI_IMAGE_PROJECT_DIR/delete_int_k3s_db_row.sh ${client}${environment}k3s-pm4mladdons-lock ${client}${environment}k3s-pm4mladdons-state/k3s $region
   when: manual
 
 Undeploy PM4ML Charts:
@@ -217,8 +216,6 @@ Undeploy PM4ML Charts:
     - sed -i "s/##environment##/${environment}/g" .env
     - sed -i "s/##region##/${region}/g" .env
     - sed -i "s/##peer_vpc_id##/${peer_vpc_id}/g" .env
-    #TODO: static value needs addressing
-    - sed -i "s/##pm4ml_client_cert_local_dir##/\/k3s-boot\/pm4ml-certoutput\//g" .env
     - aws s3 cp s3://$bucket/$environment/k3saddons/ansible_internal_pm4ml_output.yaml ./ansible_pm4ml_output.yaml --sse
     - make backend -- -auto-approve || true
     - make apply -- -auto-approve || true
@@ -233,10 +230,10 @@ Undeploy PM4ML Charts:
   - terragrunt init
   - terragrunt apply -auto-approve
   - export inventory_location=$(terragrunt output inventory_file_location | tr -d '"')
-  - aws s3 cp ${inventory_location} s3://${bucket}/$environment/ansible/ --sse || true
-  - aws s3 cp ssh_provisioner_key s3://${bucket}/$environment/ansible/ --sse || true
-  - aws s3 cp extra-vars.json s3://${bucket}/$environment/ansible/ --sse || true
-  - aws s3 sync ./oauth-apps s3://${bucket}/$environment/oauth-apps/ --sse || true
+  - aws s3 cp ${inventory_location} s3://$bucket/$environment/ansible/ --sse || true
+  - aws s3 cp ssh_provisioner_key s3://$bucket/$environment/ansible/ --sse || true
+  - aws s3 cp extra-vars.json s3://$bucket/$environment/ansible/ --sse || true
+  - aws s3 sync ./oauth-apps s3://$bucket/$environment/oauth-apps/ --sse || true
 
 Deploy AWS Infrastructure:
   stage: "Deploy Infrastructure"
@@ -273,7 +270,7 @@ Deploy AWS Infrastructure:
     - cd /k3s-boot
     - sed -i "s/##client##/${client}/g" .env
     - sed -i "s/##domain##/${domain}/g" .env
-    - sed -i "s/##environment##/$environment/g" .env
+    - sed -i "s/##environment##/${environment}/g" .env
     - sed -i "s/##region##/${region}/g" .env
     - sed -i "s/##peer_vpc_id##/${peer_vpc_id}/g" .env
     - make backend -- -auto-approve
@@ -296,15 +293,15 @@ Create k3s Cluster:
   <<: *create_k3s_cluster
   when: manual
 
-.create_gw_cluster: &create_gw_cluster
+.create_main_cluster: &create_main_cluster
   - cd /kubespray
   - ansible-playbook -i $ENV_S3_DIR/ansible/inventory -e @$ENV_S3_DIR/ansible/extra-vars.json ./cluster.yml $ANSIBLE_FEATURE_TOGGLES
   - aws s3 cp inventory/artifacts/cluster/admin.conf s3://$bucket/$environment/k8s/admin.conf --sse
 
-Create Gateway Cluster:
+Create Main Cluster:
   stage: "Deploy Infrastructure"
   script: 
-    - *create_gw_cluster
+    - *create_main_cluster
   when: manual
 
 
@@ -313,7 +310,7 @@ Create Gateway Cluster:
   - cp $ENV_S3_DIR/vault/vault_seal_key $CI_IMAGE_PROJECT_DIR/static_files/ || true
   - terragrunt init
   - terragrunt apply -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" || true
-  - aws s3 cp $CI_IMAGE_PROJECT_DIR/static_files/vault_seal_key s3://${bucket}/${environment}/vault/ --sse
+  - aws s3 cp $CI_IMAGE_PROJECT_DIR/static_files/vault_seal_key s3://$bucket/$environment/vault/ --sse
 
 1. Deploy Base Services:
   stage: "Deploy Platform"
@@ -369,12 +366,12 @@ Create Gateway Cluster:
   - cd terraform/k8s-apps-setup/post-config
   - terragrunt init
   - terragrunt apply -auto-approve
-  - aws s3 cp ./ansible_internal_pm4ml_output.yaml s3://${bucket}/${environment}/k3saddons/ --sse
-  - aws s3 cp ./onboarding_internal_pm4ml_output.json s3://${bucket}/${environment}/k3saddons/ --sse
-  - aws s3 cp ./ansible_external_pm4ml_output.yaml s3://${bucket}/${environment}/k3saddons/ --sse
-  - aws s3 cp ./onboarding_external_pm4ml_output.json s3://${bucket}/${environment}/k3saddons/ --sse
-  - aws s3 cp ./Lab.postman_environment.json s3://${bucket}/${environment}/tests/ --sse
-  - aws s3 cp ./test_cert_list.json s3://${bucket}/${environment}/tests/ --sse
+  - aws s3 cp ./ansible_internal_pm4ml_output.yaml s3://$bucket/$environment/k3saddons/ --sse
+  - aws s3 cp ./onboarding_internal_pm4ml_output.json s3://$bucket/$environment/k3saddons/ --sse
+  - aws s3 cp ./ansible_external_pm4ml_output.yaml s3://$bucket/$environment/k3saddons/ --sse
+  - aws s3 cp ./onboarding_external_pm4ml_output.json s3://$bucket/$environment/k3saddons/ --sse
+  - aws s3 cp ./Lab.postman_environment.json s3://$bucket/$environment/tests/ --sse
+  - aws s3 cp ./test_cert_list.json s3://$bucket/$environment/tests/ --sse
 
 
 4. Deploy Post Config:
@@ -415,8 +412,6 @@ Create Gateway Cluster:
     - sed -i "s/##environment##/${environment}/g" .env
     - sed -i "s/##region##/${region}/g" .env
     - sed -i "s/##peer_vpc_id##/${peer_vpc_id}/g" .env
-    #TODO: static value needs addressing
-    - sed -i "s/##pm4ml_client_cert_local_dir##/\/k3s-boot\/pm4ml-certoutput\//g" .env
     - aws s3 cp s3://$bucket/$environment/k3saddons/ansible_internal_pm4ml_output.yaml ./ansible_pm4ml_output.yaml --sse
     - make backend -- -auto-approve
     - make apply -- -auto-approve
@@ -431,7 +426,7 @@ Create Gateway Cluster:
   script:
     - *deploy_aws_infra
     - sleep 10
-    - *create_gw_cluster
+    - *create_main_cluster
     - sleep 10
     - *deploy_base_services
     - sleep 10
