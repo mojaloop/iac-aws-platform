@@ -441,7 +441,7 @@ Create Gateway Cluster:
     - sleep 10
     - *deploy_mojaloop_apps
     - sleep 10
-    - *deploy_post_install
+    - *deploy_post_config
 
 Deploy IaC:
   stage: "Deploy All"
