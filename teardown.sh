@@ -1,117 +1,99 @@
 #!/bin/sh
 
 set -e
-if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-k8s-postinstall.tfstate ]; then
-  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/addons
-  terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  terraform validate
-  terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-  aws s3 rm s3://$BUCKET/$ENVIRONMENT/terraform-k8s-postinstall.tfstate
-  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
-  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform-k8s-postinstall.tfstate-md5"}}' --return-values ALL_OLD
+export DYNAMO_TABLE_NAME=$(echo $bucket | sed 's/-state/-lock/g') 
+
+if [ -f ${CI_IMAGE_PROJECT_DIR}/k8s-apps-setup/post-config/terraform.tfstate ]; then
+  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/post-config
+  terragrunt init
+  terragrunt validate
+  terragrunt destroy -auto-approve
+  aws s3 rm s3://$bucket/$environment/k8s-apps-setup/post-config/terraform.tfstate
+  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$bucket/$environment'/k8s-apps-setup/post-config/terraform.tfstate-md5"}}' --return-values ALL_OLD
 else
-  echo "terraform-k8s-postinstall.tfstate not found. Skipping terraform/k8s-setup/addons ..."
+  echo "k8s-apps-setup/post-config/terraform.tfstate not found. Skipping k8s-apps-setup/post-config ..."
 fi
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-k8s-pm4mls.tfstate ]; then
-  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/pm4mls
-  terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  terraform validate
-  terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-  aws s3 rm s3://$BUCKET/$ENVIRONMENT/terraform-k8s-pm4mls.tfstate
-  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
-  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform-k8s-pm4mls.tfstate-md5"}}' --return-values ALL_OLD
+if [ -f ${CI_IMAGE_PROJECT_DIR}/k8s-apps-setup/mojaloop-core/mojaloop-roles/terraform.tfstate ]; then
+  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/mojaloop-core/mojaloop-roles
+  terragrunt init
+  terragrunt validate
+  terragrunt destroy -auto-approve
+  aws s3 rm s3://$bucket/$environment/k8s-apps-setup/mojaloop-core/mojaloop-roles/terraform.tfstate
+  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$bucket/$environment'/k8s-apps-setup/mojaloop-core/mojaloop-roles/terraform.tfstate-md5"}}' --return-values ALL_OLD
 else
-  echo "terraform-k8s-pm4mls.tfstate not found. Skipping terraform/k8s-setup/pm4mls ..."
+  echo "k8s-apps-setup/mojaloop-core/mojaloop-roles/terraform.tfstate not found. Skipping k8s-apps-setup/mojaloop-core/mojaloop-roles ..."
 fi
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-k8s-mojaloop-roles.tfstate ]; then
-  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/mojaloop-roles
-  terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  terraform validate
-  terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-  aws s3 rm s3://$BUCKET/$ENVIRONMENT/terraform-k8s-mojaloop-roles.tfstate
-  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
-  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform-k8s-mojaloop-roles.tfstate-md5"}}' --return-values ALL_OLD
+if [ -f ${CI_IMAGE_PROJECT_DIR}/k8s-apps-setup/mojaloop-core/terraform.tfstate ]; then
+  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/mojaloop-core
+  terragrunt init
+  terragrunt validate
+  terragrunt destroy -auto-approve
+  aws s3 rm s3://$bucket/$environment/k8s-apps-setup/mojaloop-core/terraform.tfstate
+  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$bucket/$environment'/k8s-apps-setup/mojaloop-core/terraform.tfstate-md5"}}' --return-values ALL_OLD
+  aws s3 rm --recursive s3://$bucket/$environment/k8s-apps-setup/apps/wso2
+  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$bucket/$environment'/k8s-apps-setup/apps/wso2/config/terraform.tfstate-md5"}}' --return-values ALL_OLD
 else
-  echo "terraform-k8s-mojaloop-roles.tfstate not found. Skipping terraform/k8s-setup/mojaloop-roles ..."
+  echo "k8s-apps-setup/mojaloop-core/terraform.tfstate  not found. Skipping k8s-apps-setup/mojaloop-core ..."
 fi
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-k8s.tfstate ]; then
-  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup
-  terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  terraform validate
-  #making sure to avoid failure on vault bug
-  terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
-  aws s3 rm s3://$BUCKET/$ENVIRONMENT/terraform-k8s.tfstate
-  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
-  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform-k8s.tfstate-md5"}}' --return-values ALL_OLD
-  aws s3 rm --recursive s3://$BUCKET/$ENVIRONMENT/wso2/
-  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
-  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/wso2/extgw/terraform.tfstate-md5"}}' --return-values ALL_OLD
+if [ -f ${CI_IMAGE_PROJECT_DIR}/k8s-apps-setup/support-svcs/terraform.tfstate ]; then
+  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/support-svcs
+  terragrunt init
+  terragrunt validate
+  terragrunt destroy -auto-approve
+  aws s3 rm s3://$bucket/$environment/k8s-apps-setup/support-svcs/terraform.tfstate
+  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$bucket/$environment'/k8s-apps-setup/support-svcs/terraform.tfstate-md5"}}' --return-values ALL_OLD
 else
-  echo "terraform-k8s.tfstate not found. Skipping terraform/k8s-setup ..."
+  echo "k8s-apps-setup/support-svcs/terraform.tfstate not found. Skipping k8s-apps-setup/support-svcs ..."
 fi
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-suppsvcs.tfstate ]; then
-  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/support-svcs
-  terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  terraform validate
-  #making sure to avoid failure on vault bug
-  terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
-  aws s3 rm s3://$BUCKET/$ENVIRONMENT/terraform-suppsvcs.tfstate
-  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
-  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform-suppsvcs.tfstate-md5"}}' --return-values ALL_OLD
+if [ -f ${CI_IMAGE_PROJECT_DIR}/k8s-apps-setup/state-setup/terraform.tfstate ]; then
+  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-apps-setup/state-setup
+  terragrunt init
+  terragrunt validate
+  terragrunt destroy -auto-approve
+  aws s3 rm s3://$bucket/$environment/k8s-apps-setup/state-setup/terraform.tfstate
+  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$bucket/$environment'/k8s-apps-setup/state-setup/terraform.tfstate-md5"}}' --return-values ALL_OLD
 else
-  echo "terraform-suppsvcs.tfstate not found. Skipping terraform/terraform-suppsvcs.tfstate ..."
+  echo "k8s-apps-setup/state-setup/terraform.tfstate not found. Skipping k8s-apps-setup/state-setup..."
 fi
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-state-setup.tfstate ]; then
-  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/state-setup
-  terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  terraform validate
-  #making sure to avoid failure on vault bug
-  terraform destroy -auto-approve -var="project_root_path=$CI_IMAGE_PROJECT_DIR" || true
-  aws s3 rm s3://$BUCKET/$ENVIRONMENT/terraform-state-setup.tfstate
-  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
-  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform-state-setup.tfstate-md5"}}' --return-values ALL_OLD
+if [ -f ${CI_IMAGE_PROJECT_DIR}/base-k8s-setup/terraform.tfstate ]; then
+  cd $CI_IMAGE_PROJECT_DIR/terraform/base-k8s-setup
+  cp $ENV_S3_DIR/vault/vault_seal_key $CI_IMAGE_PROJECT_DIR/static_files/ || true
+  terragrunt init
+  terragrunt validate
+  terragrunt destroy -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID"
+  aws s3 rm s3://$bucket/$environment/vault/vault_seal_key
+  aws s3 rm s3://$bucket/$environment/base-k8s-setup/terraform.tfstate
+  
+  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$bucket/$environment'/base-k8s-setup/terraform.tfstate-md5"}}' --return-values ALL_OLD
 else
-  echo "terraform-state-setup.tfstate not found. Skipping terraform/terraform-state-setup.tfstate ..."
+  echo "base-k8s-setup/terraform.tfstate not found. Skipping base-k8s-setup ..."
 fi
 
-if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform-vault.tfstate ]; then
-  cd $CI_IMAGE_PROJECT_DIR/terraform/k8s-setup/vault-deploy
-  terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  terraform validate
-  terraform destroy -auto-approve -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="project_root_path=$CI_IMAGE_PROJECT_DIR"
-  aws s3 rm s3://$BUCKET/$ENVIRONMENT/terraform-vault.tfstate
-  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
-  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform-vault.tfstate-md5"}}' --return-values ALL_OLD
-else
-  echo "terraform-vault.tfstate not found. Skipping terraform/k8s-setup/vault-deploy ..."
-fi
-
-if [ -f ${CI_IMAGE_PROJECT_DIR}/terraform.tfstate ]; then
-  cd $CI_IMAGE_PROJECT_DIR/terraform
-  terraform init -backend-config ${CI_PROJECT_DIR}/backend.hcl
-  terraform validate
-  terraform destroy -auto-approve
-  aws s3 rm s3://$BUCKET/$ENVIRONMENT/terraform.tfstate
-  export DYNAMO_TABLE_NAME=$(echo $BUCKET | sed 's/-state/-lock/g')  
-  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$BUCKET/$ENVIRONMENT'/terraform.tfstate-md5"}}' --return-values ALL_OLD
+if [ -f ${CI_IMAGE_PROJECT_DIR}/base-infra-aws/terraform.tfstate ]; then
+  cd $CI_IMAGE_PROJECT_DIR/terraform/base-infra-aws
+  terragrunt init
+  terragrunt validate
+  terragrunt destroy -auto-approve
+  aws s3 rm s3://$bucket/$environment/base-infra-aws/terraform.tfstate
+  aws --region $region dynamodb delete-item --table-name $DYNAMO_TABLE_NAME --key '{"LockID": {"S": '\"$bucket/$environment'/base-infra-aws/terraform.tfstate-md5"}}' --return-values ALL_OLD
 else
   echo "terraform.tfstate not found. Skipping terraform ..."
 fi
 
 echo "Clearing remaining volumes"
-for vol in $(aws ec2 describe-volumes --filters "Name=tag:kubernetes.io/cluster/${client}-${ENVIRONMENT}-mojaloop,Values=owned" --query "Volumes[*].{id:VolumeId}" --region $region | jq -r '.[].id'); do
+for vol in $(aws ec2 describe-volumes --filters "Name=tag:kubernetes.io/cluster/${client}-${environment}-mojaloop,Values=owned" --query "Volumes[*].{id:VolumeId}" --region $region | jq -r '.[].id'); do
   echo "  > deleting ${vol}"
   aws ec2 delete-volume --volume-id $vol --region $region
 done
-echo "Clearing Terraform state"
-for item in $(terraform state list); do
-  terraform state rm -state=$item
-done
+# echo "Clearing Terraform state"
+# for item in $(terraform state list); do
+#   terraform state rm -state=$item
+# done
 
-aws s3 rm s3://$BUCKET/$ENVIRONMENT/ --recursive
-echo "ENVIRONMENT $ENVIRONMENT DESTROYED"
+aws s3 rm s3://$bucket/$environment/ --recursive
+echo "environment $environment DESTROYED"
