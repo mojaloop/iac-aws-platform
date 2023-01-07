@@ -194,7 +194,7 @@
       },
       "local_resource": {
         "override_service_name": "thirdparty-auth-svc-redis-master",
-        "resource_helm_repo": "https://charts.bitnami.com/bitnami",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "redis",
         "resource_helm_chart_version": "17.3.7",
         "resource_helm_values_ref": "values-redis.yaml.tpl",
@@ -227,7 +227,7 @@
       },
       "local_resource": {
         "override_service_name": null,
-        "resource_helm_repo": "https://charts.bitnami.com/bitnami",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
         "resource_helm_chart_version": "8.8.23",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
@@ -262,7 +262,7 @@
       },
       "local_resource": {
         "override_service_name": null,
-        "resource_helm_repo": "https://charts.bitnami.com/bitnami",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
         "resource_helm_chart_version": "8.8.23",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
@@ -297,7 +297,7 @@
       },
       "local_resource": {
         "override_service_name": null,
-        "resource_helm_repo": "https://charts.bitnami.com/bitnami",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
         "resource_helm_chart_version": "8.8.23",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
@@ -367,7 +367,7 @@
       },
       "local_resource": {
         "override_service_name": "account-lookup-db-primary",
-        "resource_helm_repo": "https://charts.bitnami.com/bitnami",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
         "resource_helm_chart_version": "8.8.23",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
@@ -402,7 +402,7 @@
       },
       "local_resource": {
         "override_service_name": "central-ledger-db-primary",
-        "resource_helm_repo": "https://charts.bitnami.com/bitnami",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
         "resource_helm_chart_version": "8.8.23",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
@@ -437,7 +437,7 @@
       },
       "local_resource": {
         "override_service_name": null,
-        "resource_helm_repo": "https://charts.bitnami.com/bitnami",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
         "resource_helm_chart_version": "8.8.23",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
@@ -472,7 +472,7 @@
       },
       "local_resource": {
         "override_service_name": null,
-        "resource_helm_repo": "https://charts.bitnami.com/bitnami",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
         "resource_helm_chart_version": "8.8.23",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
@@ -507,7 +507,7 @@
       },
       "local_resource": {
         "override_service_name": null,
-        "resource_helm_repo": "https://charts.bitnami.com/bitnami",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mongodb",
         "resource_helm_chart_version": "11.0.3",
         "resource_helm_values_ref": "values-mongodb.yaml.tpl",
@@ -540,7 +540,7 @@
       },
       "local_resource": {
         "override_service_name": null,
-        "resource_helm_repo": "https://charts.bitnami.com/bitnami",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mongodb",
         "resource_helm_chart_version": "11.0.3",
         "resource_helm_values_ref": "values-mongodb.yaml.tpl",
@@ -573,7 +573,7 @@
       },
       "local_resource": {
         "override_service_name": null,
-        "resource_helm_repo": "https://charts.bitnami.com/bitnami",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mongodb",
         "resource_helm_chart_version": "11.0.3",
         "resource_helm_values_ref": "values-mongodb.yaml.tpl",
@@ -603,7 +603,7 @@
       },
       "local_resource": {
         "override_service_name": null,
-        "resource_helm_repo": "https://charts.bitnami.com/bitnami",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "kafka",
         "resource_helm_chart_version": "15.2.1",
         "resource_helm_values_ref": "values-kafka.yaml.tpl",
