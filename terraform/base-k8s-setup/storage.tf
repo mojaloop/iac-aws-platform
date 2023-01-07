@@ -8,9 +8,13 @@ resource "aws_iam_access_key" "longhorn-backup" {
 
 resource "aws_s3_bucket" "longhorn-backups" {
   bucket = "${var.environment}-${var.client}-lhbck"
-  acl    = "private"
   force_destroy = var.longhorn_backup_s3_destroy
   tags = merge({ Name = "${var.environment}-${var.client}-longhorn-backups" }, local.default_tags)
+}
+
+resource "aws_s3_bucket_acl" "longhorn-backups-acl" {
+  bucket = aws_s3_bucket.longhorn-backups.id
+  acl    = "private"
 }
 
 resource "aws_iam_user_policy" "longhorn-backups" {

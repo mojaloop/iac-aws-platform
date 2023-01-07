@@ -204,16 +204,6 @@ variables:
   artifacts: *ttk-snippets-artifacts
   when: manual
 
-# 4. Run TTK Tests:
-#   stage: "Run Tests"
-#   script:
-#     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-#     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-#     - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  test ${helm_mojaloop_release_name} -n mojaloop || true
-#     - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop logs ${helm_mojaloop_release_name}-ml-ttk-test-val-gp
-#     - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop get pod ${helm_mojaloop_release_name}-ml-ttk-test-val-gp --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
-#   when: manual
-
 5. Run RBAC Tests:
   stage: "Run Tests"
   script:
