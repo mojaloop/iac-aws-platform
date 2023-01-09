@@ -3,8 +3,8 @@ default:
     name: ghcr.io/mojaloop/iac-aws-platform:$PLATFORM_IAC_IMAGE_VERSION
   before_script:
     - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
-    - export bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - export bucket=$REMOTE_STATE_BUCKET
+    - export TF_VAR_bucket=$REMOTE_STATE_BUCKET
     - aws s3 sync s3://$bucket/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/iac-run-dir
     - export ENV_S3_DIR=$CI_IMAGE_PROJECT_DIR/envs3
@@ -148,8 +148,8 @@ Destroy k3s Cluster:
   image: 
     name: ghcr.io/pm4ml/k3sbootstrap:$K3S_IAC_IMAGE_VERSION
   before_script:
-    - export bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"')
+    - export bucket=$REMOTE_STATE_BUCKET
+    - export TF_VAR_bucket=$REMOTE_STATE_BUCKET
     - aws s3 sync s3://$bucket/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
@@ -187,8 +187,8 @@ Undeploy PM4ML Charts:
   image: 
     name: ghcr.io/pm4ml/k3sbootstrap:$K3S_IAC_IMAGE_VERSION
   before_script:
-    - export bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - export bucket=$REMOTE_STATE_BUCKET
+    - export TF_VAR_bucket=$REMOTE_STATE_BUCKET
     - aws s3 sync s3://$bucket/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
@@ -245,8 +245,8 @@ Deploy AWS Infrastructure:
   image: 
     name: ghcr.io/pm4ml/k3sbootstrap:$K3S_IAC_IMAGE_VERSION
   before_script:
-    - export bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - export bucket=$REMOTE_STATE_BUCKET
+    - export TF_VAR_bucket=$REMOTE_STATE_BUCKET
     - aws s3 sync s3://$bucket/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
@@ -384,8 +384,8 @@ Create Main Cluster:
   image: 
     name: ghcr.io/pm4ml/k3sbootstrap:$K3S_IAC_IMAGE_VERSION
   before_script:
-    - export bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
-    - export TF_VAR_bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - export bucket=$REMOTE_STATE_BUCKET
+    - export TF_VAR_bucket=$REMOTE_STATE_BUCKET
     - aws s3 sync s3://$bucket/bootstrap ./k8ss3bootstrap/ --sse || true
     - export CI_IMAGE_PROJECT_DIR=/k3s-boot
     - export peer_vpc_id=$(terraform output -state=k8ss3bootstrap/terraform.tfstate vpc_id | tr -d '"')
