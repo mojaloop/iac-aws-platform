@@ -3,6 +3,7 @@ include:
   - remote: 'https://raw.githubusercontent.com/mojaloop/iac-aws-platform/v3.0.1/gitlab_templates/gitlab_ci_templates/.gitlab-ops-ci.yml'
   - remote: 'https://raw.githubusercontent.com/mojaloop/iac-aws-platform/v3.0.1/gitlab_templates/gitlab_ci_templates/.gitlab-tests-ci.yml'
 
+
 variables:
   GIT_SSL_NO_VERIFY: "true"
   PLATFORM_IAC_IMAGE_VERSION: "3.0.1"
