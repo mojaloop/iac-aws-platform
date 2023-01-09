@@ -138,7 +138,7 @@ variables:
     # - export GLIBC_VER=2.34-r0
     # - apk --no-cache add binutils curl jq && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk && apk add --no-cache glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip && unzip awscliv2.zip && aws/install && rm -rf awscliv2.zip aws /usr/local/aws-cli/v2/*/dist/aws_completer /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index /usr/local/aws-cli/v2/*/dist/awscli/examples glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk /var/cache/apk/*
     # - wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/bin/ && rm /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-    - export bucket=$(grep bucket backend.hcl | cut -f2 -d '=' | tr -d '"' | xargs)
+    - export bucket=$REMOTE_STATE_BUCKET
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - export TTK_TESTCASES_VERSION=${TAG_TTK_TEST}
