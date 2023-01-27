@@ -31,7 +31,7 @@ data "vault_generic_secret" "mcm_db_password" {
 
 resource "helm_release" "mcm-connection-manager" {
   name       = "connection-manager"
-  repository = "https://modusbox.github.io/helm"
+  repository = "https://pm4ml.github.io/helm"
   chart      = "connection-manager"
   version    = var.helm_mcm_connection_manager_version
   namespace  = kubernetes_namespace.mcm.metadata[0].name

@@ -7,5 +7,6 @@
   "kube_oidc_auth": "${kube_oidc_enabled}",
   "kube_oidc_url": "${kube_oidc_url}",
   "kube_oidc_client_id": "${kube_oidc_client_id}",
-  "kube_oidc_groups_claim": "${groups_name}"
+  "kube_oidc_groups_claim": "${groups_name}",
+  "argocd_enabled": "false"
 }
