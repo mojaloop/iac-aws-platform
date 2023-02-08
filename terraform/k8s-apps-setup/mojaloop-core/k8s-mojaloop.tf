@@ -120,6 +120,21 @@ resource "helm_release" "mojaloop" {
   provider = helm.helm-main
 
 }
+
+resource "helm_release" "redis" {
+  name       = "ttksims-redis"
+  count      = var.ttksims_enabled == "yes" ? 1 : 0
+  repository = "https://charts.bitnami.com/bitnami"
+  chart      = "redis"
+  version    = "17.3.7"
+  namespace  = "mojaloop"
+  create_namespace = true
+  values = [
+    templatefile("${path.module}/templates/values-ttksims-redis.yaml.tpl", {})
+  ]
+  provider = helm.helm-main
+}
+
 data "vault_generic_secret" "mojaloop_als_db_password" {
   path = "${var.stateful_resources[local.ml_als_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/account-lookup-db"
 }
@@ -205,6 +220,8 @@ locals {
     third_party_auth_db_database                = var.stateful_resources[local.third_party_auth_db_resource_index].local_resource.mysql_data.database_name
     third_party_auth_redis_host                 = "${var.stateful_resources[local.third_party_redis_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
     third_party_auth_redis_port                 = var.stateful_resources[local.third_party_redis_resource_index].logical_service_port
+    ttksims_redis_host                          = "ttksims-redis-master"
+    ttksims_redis_port                          = "6379"
     elasticsearch_url                           = "http://localhost"
     kibana_url                                  = "http://localhost"
     wso2is_host                                 = "https://iskm.${var.public_subdomain}"
@@ -215,6 +232,7 @@ locals {
     internal_sim_enabled                        = var.internal_sim_enabled
     mojaloop_thirdparty_support_enabled         = var.third_party_enabled
     bulk_enabled                                = var.bulk_enabled
+    ttksims_enabled                             = var.ttksims_enabled
     storage_class_name                          = var.storage_class_name
     jws_signing_priv_key                        = var.switch_jws_private_key
     ingress_class_name                          = "nginx"

@@ -372,6 +372,12 @@ variable "bulk_enabled" {
   default = false
 }
 
+variable "ttksims_enabled" {
+  description = "whether ttksims are enabled or not"
+  type = bool
+  default = false
+}
+
 variable "quoting_service_simple_routing_mode_enabled" {
   description = "whether buquoting_service_simple_routing_mode_enabled is enabled or not"
   type = bool
