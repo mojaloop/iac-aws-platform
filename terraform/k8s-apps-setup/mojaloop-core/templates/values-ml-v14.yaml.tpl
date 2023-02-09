@@ -447,6 +447,8 @@ mojaloop-ttk-simulators:
     enabled: true
     sdk-scheme-adapter: &MOJA_TTK_SIM_SDK
       sdk-scheme-adapter-api-svc:
+        ingress:
+          enabled: false
         kafka:
           host: *MOJA_TTK_SIM_KAFKA_HOST
           port: *MOJA_TTK_SIM_KAFKA_PORT

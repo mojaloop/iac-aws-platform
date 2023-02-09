@@ -184,6 +184,18 @@ variables:
       export bulkTransfersTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/other_tests/bulk_transfers;
       ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$bulkTransfersTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html;
       echo "Done";
+  execute-sdk-bulk-setup-collection: &ttk-snippets-execute-sdk-bulk-setup-collection
+    - |
+      cd /tmp;
+      export sdkBulkSetupTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/provisioning_sdkbulk;
+      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$sdkBulkSetupTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-sdk-bulk-setup-report.html || true;
+      echo "Done";
+  execute-sdk-bulk-validation-collection: &ttk-snippets-execute-sdk-bulk-validation-collection
+    - |
+      cd /tmp;
+      export sdkBulkValTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/sdk-bulk;
+      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$sdkBulkValTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-sdk-bulk-val-report.html;
+      echo "Done";
   artifacts: &ttk-snippets-artifacts
     when: always
     paths:
@@ -271,5 +283,26 @@ variables:
     - *ttk-snippets-download-default-env
     - *ttk-snippets-execute-provisioning-collection
     - *ttk-snippets-execute-bulk-transfers-collection
-  artifacts: *ttk-snippets-artifacts
+  artifacts: &ttk-snippets-artifacts
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html
+  when: manual
+
+10. Run TTK SDK Bulk Tests:
+  stage: "Run Tests"
+  # image: *ttk-snippets-image
+  before_script:
+    - echo "running with testing toolkit image"
+  script:
+    - *ttk-snippets-set-env-vars
+    - *ttk-snippets-download-ttk-test-cases
+    - *ttk-snippets-download-default-env
+    - *ttk-snippets-execute-sdk-bulk-setup-collection
+    - *ttk-snippets-execute-sdk-bulk-validation-collection
+  artifacts: &ttk-snippets-artifacts
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ttk-sdk-bulk-setup-report.html
+      - ${CI_PROJECT_DIR}/ttk-sdk-bulk-setup-report.html
   when: manual

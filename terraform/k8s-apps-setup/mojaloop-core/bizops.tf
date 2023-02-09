@@ -190,6 +190,9 @@ resource "kubernetes_ingress_v1" "kratos-public" {
   metadata {
     name      = "kratos-public"
     namespace = "mojaloop"
+    annotations = {
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/$2"
+    }
   }
   spec {
     ingress_class_name = "nginx"

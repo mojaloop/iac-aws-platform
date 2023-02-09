@@ -118,12 +118,12 @@ resource "helm_release" "mojaloop" {
   ]
  
   provider = helm.helm-main
-
+  depends_on = [helm_release.ttksimsredis]
 }
 
-resource "helm_release" "redis" {
+resource "helm_release" "ttksimsredis" {
   name       = "ttksims-redis"
-  count      = var.ttksims_enabled == "yes" ? 1 : 0
+  count      = var.ttksims_enabled ? 1 : 0
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "redis"
   version    = "17.3.7"
