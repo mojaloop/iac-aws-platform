@@ -41,7 +41,11 @@ CONFIG:
   third_party_auth_redis_port: &THIRD_PTY_AUTH_REDIS_PORT ${third_party_auth_redis_port}
   objstore_uri: &OBJSTORE_URI 'mongodb://${cl_mongodb_user}:${cl_mongodb_pass}@${cl_mongodb_host}:${cl_mongodb_port}/${cl_mongodb_database}'
   ingress_class: &INGRESS_CLASS "${ingress_class_name}"
-
+  ## MOJALOOP-TTK-SIMULATORS Backend
+  moja_ttk_sim_kafka_host: &MOJA_TTK_SIM_KAFKA_HOST "${kafka_host}"
+  moja_ttk_sim_kafka_port: &MOJA_TTK_SIM_KAFKA_PORT ${kafka_port}
+  moja_ttk_sim_redis_host: &MOJA_TTK_SIM_REDIS_HOST "${ttksims_redis_host}"
+  moja_ttk_sim_redis_port: &MOJA_TTK_SIM_REDIS_PORT ${ttksims_redis_port}
 global:
   config:
     forensicloggingsidecar_disabled: true
@@ -435,3 +439,109 @@ ml-ttk-test-setup-tp:
 ml-ttk-test-val-tp:
   tests:
     enabled: true
+
+mojaloop-ttk-simulators:
+  enabled: ${ttksims_enabled}
+
+  mojaloop-ttk-sim1-svc:
+    enabled: true
+    sdk-scheme-adapter: &MOJA_TTK_SIM_SDK
+      sdk-scheme-adapter-api-svc:
+        ingress:
+          enabled: false
+        kafka:
+          host: *MOJA_TTK_SIM_KAFKA_HOST
+          port: *MOJA_TTK_SIM_KAFKA_PORT
+
+        redis:
+          host: *MOJA_TTK_SIM_REDIS_HOST
+          port: *MOJA_TTK_SIM_REDIS_PORT
+
+      sdk-scheme-adapter-dom-evt-handler:
+        kafka:
+          host: *MOJA_TTK_SIM_KAFKA_HOST
+          port: *MOJA_TTK_SIM_KAFKA_PORT
+
+        redis:
+          host: *MOJA_TTK_SIM_REDIS_HOST
+          port: *MOJA_TTK_SIM_REDIS_PORT
+
+      sdk-scheme-adapter-cmd-evt-handler:
+        kafka:
+          host: *MOJA_TTK_SIM_KAFKA_HOST
+          port: *MOJA_TTK_SIM_KAFKA_PORT
+
+        redis:
+          host: *MOJA_TTK_SIM_REDIS_HOST
+          port: *MOJA_TTK_SIM_REDIS_PORT
+
+    ml-testing-toolkit:
+      ml-testing-toolkit-backend:
+        ingress:
+          enabled: true
+          hosts:
+            specApi:
+              host: ttksim1-specapi.${private_subdomain}
+            adminApi:
+              host: ttksim1.${private_subdomain}
+
+        extraEnvironments:
+          hub-k8s-default-environment.json: &ttksim1InputValues {
+            "inputValues": {
+              "TTKSIM1_CURRENCY": "${ttk_test_currency1}",
+              "TTKSIM2_CURRENCY": "${ttk_test_currency1}",
+              "TTKSIM3_CURRENCY": "${ttk_test_currency1}"
+            }
+          }
+      ml-testing-toolkit-frontend:
+        ingress:
+          enabled: true
+          hosts:
+            ui:
+              host: ttksim1.${private_subdomain}
+        config:
+          API_BASE_URL: http://ttksim1.${private_subdomain}
+
+  mojaloop-ttk-sim2-svc:
+    enabled: true
+    sdk-scheme-adapter: *MOJA_TTK_SIM_SDK
+    ml-testing-toolkit:
+      ml-testing-toolkit-backend:
+        ingress:
+          enabled: true
+          hosts:
+            specApi:
+              host: ttksim2-specapi.${private_subdomain}
+            adminApi:
+              host: ttksim2.${private_subdomain}
+
+      ml-testing-toolkit-frontend:
+        ingress:
+          enabled: true
+          hosts:
+            ui:
+              host: ttksim2.${private_subdomain}s
+        config:
+          API_BASE_URL: http://ttksim2.${private_subdomain}
+
+  mojaloop-ttk-sim3-svc:
+    enabled: true
+    sdk-scheme-adapter: *MOJA_TTK_SIM_SDK
+    ml-testing-toolkit:
+      ml-testing-toolkit-backend:
+        ingress:
+          enabled: true
+          hosts:
+            specApi:
+              host: ttksim3-specapi.${private_subdomain}
+            adminApi:
+              host: ttksim3.${private_subdomain}
+
+      ml-testing-toolkit-frontend:
+        ingress:
+          enabled: true
+          hosts:
+            ui:
+              host: ttksim3.${private_subdomain}
+        config:
+          API_BASE_URL: http://ttksim3.${private_subdomain}

@@ -62,6 +62,7 @@
   "iskm_helm_chart_version": "2.3.0",
   "third_party_enabled": "true",
   "bulk_enabled": "true",
+  "ttksims_enabled": "true",
   "quoting_service_simple_routing_mode_enabled": "false",
   "internal_pm4ml_configs": [
     {
