@@ -185,6 +185,14 @@ variables:
       export bulkTransfersTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/other_tests/bulk_transfers;
       ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$bulkTransfersTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html;
       echo "Done";
+  download-ttksim1-env: &ttk-snippets-download-ttksim1-env
+    - |
+      echo "Downloading the default environment file...";
+      cd /tmp;
+      wget -O user_config.json $ttkSim1TtkBackendUrl/api/config/user;
+      defaultEnvFileName=`node -pe 'JSON.parse(process.argv[1]).runtime.DEFAULT_ENVIRONMENT_FILE_NAME' "$(cat user_config.json)"`;
+      wget -O environment_http_response.json $ttkSim1TtkBackendUrl/api/samples/loadFolderWise?environment=examples/environments/$defaultEnvFileName;
+      node -pe 'JSON.stringify({inputValues: JSON.parse(process.argv[1]).body.environment})' "$(cat environment_http_response.json)" > cli-ttksim1-environment.json;
   execute-sdk-bulk-setup-collection: &ttk-snippets-execute-sdk-bulk-setup-collection
     - |
       cd /tmp;
@@ -195,7 +203,7 @@ variables:
     - |
       cd /tmp;
       export sdkBulkValTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/sdk-bulk;
-      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$sdkBulkValTestCasesPathInZip -u $ttkSim1TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-sdk-bulk-val-report.html;
+      ml-ttk-cli -e cli-ttksim1-environment.json -i tmp_test_cases/$sdkBulkValTestCasesPathInZip -u $ttkSim1TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-sdk-bulk-val-report.html;
       echo "Done";
   artifacts: &ttk-snippets-artifacts
     when: always
@@ -299,6 +307,7 @@ variables:
     - *ttk-snippets-set-env-vars
     - *ttk-snippets-download-ttk-test-cases
     - *ttk-snippets-download-default-env
+    - *ttk-snippets-download-ttksim1-env
     - *ttk-snippets-execute-sdk-bulk-setup-collection
     - *ttk-snippets-execute-sdk-bulk-validation-collection
   artifacts: &ttk-snippets-artifacts
