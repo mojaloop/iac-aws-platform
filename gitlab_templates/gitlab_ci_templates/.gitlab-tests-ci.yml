@@ -314,5 +314,5 @@ variables:
     when: always
     paths:
       - ${CI_PROJECT_DIR}/ttk-sdk-bulk-setup-report.html
-      - ${CI_PROJECT_DIR}/ttk-sdk-bulk-setup-report.html
+      - ${CI_PROJECT_DIR}/ttk-sdk-bulk-val-report.html
   when: manual
