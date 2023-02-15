@@ -233,7 +233,7 @@ variables:
       unzip -d tmp_test_cases -o downloaded-test-collections.zip;
     - |
       cd /tmp;
-      export pm4mlGoldenPathTestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/feature_tests/golden_path;
+      export pm4mlGoldenPathTestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/golden_path;
       export pm4mlProvisioningSim2TestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/provisioning/pm4mlttksim2.json;
       export pm4mlProvisioningSim3TestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/provisioning/pm4mlttksim3.json;
       ml-ttk-cli -e $CI_IMAGE_PROJECT_DIR/tests/pm4ml_ttk_environment.json -i tmp_test_cases/$pm4mlProvisioningSim2TestCasesPathInZip -u $pm4mlTtkSim2TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksim2-report.html --extra-summary-information="Test Suite:PM4ML TTKSIM2 Provisioning,Job ID: $CI_JOB_ID"  || true;
