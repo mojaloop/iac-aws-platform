@@ -148,11 +148,12 @@ variables:
     - export AWS_DEFAULT_REGION=${region}
     - aws s3 sync s3://$bucket/$environment ./k8ss3/ --sse || true
     - export private_subdomain=$(terraform output -state=k8ss3/base-infra-aws/terraform.tfstate private_subdomain | tr -d '"')
+    - export public_subdomain=$(terraform output -state=k8ss3/base-infra-aws/terraform.tfstate public_subdomain | tr -d '"')
     - export ttkBackendUrl=http://ttkbackend.${private_subdomain};
     - export ttkSim1TtkBackendUrl=http://ttksim1.${private_subdomain};
-    - export pm4mlTtkSim1TtkBackendUrl=http://ttk.pm4mlttksim1.labssandboxk3s.${private_subdomain};
-    - export pm4mlTtkSim2TtkBackendUrl=http://ttk.pm4mlttksim2.labssandboxk3s.${private_subdomain};
-    - export pm4mlTtkSim3TtkBackendUrl=http://ttk.pm4mlttksim3.labssandboxk3s.${private_subdomain};
+    - export pm4mlTtkSim1TtkBackendUrl=http://ttk.pm4mlttksim1.${client}${environment}k3s.${public_subdomain};
+    - export pm4mlTtkSim2TtkBackendUrl=http://ttk.pm4mlttksim2.${client}${environment}k3s.${public_subdomain};
+    - export pm4mlTtkSim3TtkBackendUrl=http://ttk.pm4mlttksim3.${client}${environment}k3s.${public_subdomain};
     - npm install @mojaloop/ml-testing-toolkit-client-lib --global
   download-ttk-test-cases: &ttk-snippets-download-ttk-test-cases
     - |
