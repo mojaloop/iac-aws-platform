@@ -151,6 +151,8 @@ variables:
     - export ttkBackendUrl=http://ttkbackend.${private_subdomain};
     - export ttkSim1TtkBackendUrl=http://ttksim1.${private_subdomain};
     - export pm4mlTtkSim1TtkBackendUrl=http://ttk.pm4mlttksim1.labssandboxk3s.${private_subdomain};
+    - export pm4mlTtkSim2TtkBackendUrl=http://ttk.pm4mlttksim2.labssandboxk3s.${private_subdomain};
+    - export pm4mlTtkSim3TtkBackendUrl=http://ttk.pm4mlttksim3.labssandboxk3s.${private_subdomain};
     - npm install @mojaloop/ml-testing-toolkit-client-lib --global
   download-ttk-test-cases: &ttk-snippets-download-ttk-test-cases
     - |
@@ -230,15 +232,19 @@ variables:
       unzip -d tmp_test_cases -o downloaded-test-collections.zip;
     - |
       cd /tmp;
-      export pm4mlgoldenPathTestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/feature_tests;
-      ml-ttk-cli -e $CI_IMAGE_PROJECT_DIR/tests/pm4ml_ttk_environment.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $pm4mlTtkSim1TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-report.html --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
-      # Use the following syntax instead of the above line for slack notification and comment out artifacts. We can not have both with the current TTK CLI options.
-      # ml-ttk-cli -e $CI_IMAGE_PROJECT_DIR/tests/pm4ml_ttk_environment.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $pm4mlTtkSim1TtkBackendUrl --report-format html --report-target s3://$bucket/$environment/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=${SLACK_WEBHOOK_URL_HERE} --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
+      export pm4mlGoldenPathTestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/feature_tests/golden_path;
+      export pm4mlProvisioningSim2TestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/provisioning/pm4mlttksim2.json;
+      export pm4mlProvisioningSim3TestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/provisioning/pm4mlttksim3.json;
+      ml-ttk-cli -e $CI_IMAGE_PROJECT_DIR/tests/pm4ml_ttk_environment.json -i tmp_test_cases/$pm4mlProvisioningSim2TestCasesPathInZip -u $pm4mlTtkSim2TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksim2-report.html --extra-summary-information="Test Suite:PM4ML TTKSIM2 Provisioning,Job ID: $CI_JOB_ID"  || true;
+      ml-ttk-cli -e $CI_IMAGE_PROJECT_DIR/tests/pm4ml_ttk_environment.json -i tmp_test_cases/$pm4mlProvisioningSim3TestCasesPathInZip -u $pm4mlTtkSim3TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksim3-report.html --extra-summary-information="Test Suite:PM4ML TTKSIM2 Provisioning,Job ID: $CI_JOB_ID"  || true;
+      ml-ttk-cli -e $CI_IMAGE_PROJECT_DIR/tests/pm4ml_ttk_environment.json -i tmp_test_cases/$pm4mlGoldenPathTestCasesPathInZip -u $pm4mlTtkSim1TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-gp-report.html --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
       echo "Done";
   artifacts: &ttk-snippets-artifacts
     when: always
     paths:
-      - ${CI_PROJECT_DIR}/ttk-pm4ml-report.html
+      - ${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksim2-report.html
+      - ${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksim3-report.html
+      - ${CI_PROJECT_DIR}/ttk-pm4ml-gp-report.html
 #  artifacts:
 #    when: always
 #    paths:
