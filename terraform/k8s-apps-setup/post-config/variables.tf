@@ -73,6 +73,8 @@ variable "internal_pm4ml_configs" {
     PARTY_MIDDLE_NAME = string
     PARTY_DOB = string
     INITIAL_FUNDING_AMOUNT = number
+    TTK_ENABLED = string
+    USE_TTK_AS_BACKEND_SIMULATOR = string
   }))
   default = []
 }
@@ -87,6 +89,8 @@ variable "external_pm4ml_configs" {
     DFSP_NOTIFICATION_EMAIL = string
     DFSP_SUBDOMAIN = string
     INITIAL_FUNDING_AMOUNT = number
+    TTK_ENABLED = string
+    USE_TTK_AS_BACKEND_SIMULATOR = string
   }))
   default = []
 }

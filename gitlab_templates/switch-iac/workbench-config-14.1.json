@@ -79,7 +79,9 @@
       "PARTY_FIRST_NAME": "PM4MLReceiverFirst",
       "PARTY_MIDDLE_NAME": "PM4MLReceiverMiddle",
       "PARTY_DOB": "2010-10-10",
-      "INITIAL_FUNDING_AMOUNT": "10"
+      "INITIAL_FUNDING_AMOUNT": "10",
+      "TTK_ENABLED": "no",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no"
     },
     {
       "DFSP_NAME": "pm4mlsenderfsp",
@@ -95,7 +97,9 @@
       "PARTY_FIRST_NAME": "PM4MLSenderFirst",
       "PARTY_MIDDLE_NAME": "PM4MLSenderMiddle",
       "PARTY_DOB": "2010-10-10",
-      "INITIAL_FUNDING_AMOUNT": "10"
+      "INITIAL_FUNDING_AMOUNT": "10",
+      "TTK_ENABLED": "no",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no"
     },
     {
       "DFSP_NAME": "demowallet",
@@ -111,7 +115,9 @@
       "PARTY_FIRST_NAME": "DemoWalletFirst",
       "PARTY_MIDDLE_NAME": "DemoWalletMiddle",
       "PARTY_DOB": "2010-10-10",
-      "INITIAL_FUNDING_AMOUNT": "10"
+      "INITIAL_FUNDING_AMOUNT": "10",
+      "TTK_ENABLED": "no",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no"
     },
     {
       "DFSP_NAME": "demomfi",
@@ -127,7 +133,9 @@
       "PARTY_FIRST_NAME": "DemoMFIFirst",
       "PARTY_MIDDLE_NAME": "DemoMFItMiddle",
       "PARTY_DOB": "2010-10-10",
-      "INITIAL_FUNDING_AMOUNT": "10"
+      "INITIAL_FUNDING_AMOUNT": "10",
+      "TTK_ENABLED": "no",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no"
     }
   ],
   "external_pm4ml_configs": [],
@@ -211,7 +219,7 @@
           "replica_count": 0,
           "service_port": 6379
         }
-      } 
+      }
     },
     {
       "enabled": true,
@@ -246,7 +254,7 @@
         "mongodb_data": null,
         "kafka_data": null,
         "redis_data": null
-      } 
+      }
     },
     {
       "enabled": true,
@@ -281,7 +289,7 @@
         "mongodb_data": null,
         "kafka_data": null,
         "redis_data": null
-      } 
+      }
     },
     {
       "enabled": true,
@@ -316,7 +324,7 @@
         "mongodb_data": null,
         "kafka_data": null,
         "redis_data": null
-      } 
+      }
     },
     {
       "enabled": true,
@@ -351,7 +359,7 @@
         "mongodb_data": null,
         "kafka_data": null,
         "redis_data": null
-      } 
+      }
     },
     {
       "enabled": true,
@@ -386,7 +394,7 @@
         "mongodb_data": null,
         "kafka_data": null,
         "redis_data": null
-      } 
+      }
     },
     {
       "enabled": true,
@@ -421,7 +429,7 @@
         "mongodb_data": null,
         "kafka_data": null,
         "redis_data": null
-      } 
+      }
     },
     {
       "enabled": true,
@@ -456,7 +464,7 @@
         "mongodb_data": null,
         "kafka_data": null,
         "redis_data": null
-      } 
+      }
     },
     {
       "enabled": true,
@@ -491,7 +499,7 @@
         "mongodb_data": null,
         "kafka_data": null,
         "redis_data": null
-      } 
+      }
     },
     {
       "enabled": true,
@@ -524,7 +532,7 @@
         },
         "kafka_data": null,
         "redis_data": null
-      } 
+      }
     },
     {
       "enabled": true,
@@ -557,7 +565,7 @@
         },
         "kafka_data": null,
         "redis_data": null
-      } 
+      }
     },
     {
       "enabled": true,
@@ -590,7 +598,7 @@
         },
         "kafka_data": null,
         "redis_data": null
-      } 
+      }
     },
     {
       "enabled": true,
@@ -616,7 +624,7 @@
           "service_port": 9092
         },
         "redis_data": null
-      } 
+      }
     }
   ]
 }
