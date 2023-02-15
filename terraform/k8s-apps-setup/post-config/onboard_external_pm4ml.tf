@@ -33,7 +33,8 @@ locals {
       "extgw_fqdn"           = "extgw-data.${var.public_subdomain}"
       "mcm_host_url"         = "mcm.${var.public_subdomain}"
       "helm_release_name"    = pm4ml_config.DFSP_NAME
-      "ttk_enabled"          = pm4ml_config.USE_TTK_BACKEND
+      "ttk_enabled"          = pm4ml_config.TTK_ENABLED
+      "use_ttk_as_backend_simulator" = pm4ml_config.USE_TTK_AS_BACKEND_SIMULATOR
       "extgw_client_key"     = module.external_provision_pm4ml_to_wso2.client-ids[pm4ml_config.DFSP_NAME]
       "extgw_client_secret"  = module.external_provision_pm4ml_to_wso2.client-secrets[pm4ml_config.DFSP_NAME]
       "OAUTH_TOKEN_ENDPOINT" = "https://extgw-data.${var.public_subdomain}:443/oauth2/token"

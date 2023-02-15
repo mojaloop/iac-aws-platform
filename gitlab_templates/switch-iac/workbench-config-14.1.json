@@ -80,7 +80,8 @@
       "PARTY_MIDDLE_NAME": "PM4MLReceiverMiddle",
       "PARTY_DOB": "2010-10-10",
       "INITIAL_FUNDING_AMOUNT": "10",
-      "USE_TTK_BACKEND": "no"
+      "TTK_ENABLED": "no",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no"
     },
     {
       "DFSP_NAME": "pm4mlsenderfsp",
@@ -97,7 +98,8 @@
       "PARTY_MIDDLE_NAME": "PM4MLSenderMiddle",
       "PARTY_DOB": "2010-10-10",
       "INITIAL_FUNDING_AMOUNT": "10",
-      "USE_TTK_BACKEND": "no"
+      "TTK_ENABLED": "no",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no"
     },
     {
       "DFSP_NAME": "demowallet",
@@ -114,7 +116,8 @@
       "PARTY_MIDDLE_NAME": "DemoWalletMiddle",
       "PARTY_DOB": "2010-10-10",
       "INITIAL_FUNDING_AMOUNT": "10",
-      "USE_TTK_BACKEND": "no"
+      "TTK_ENABLED": "no",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no"
     },
     {
       "DFSP_NAME": "demomfi",
@@ -131,7 +134,8 @@
       "PARTY_MIDDLE_NAME": "DemoMFItMiddle",
       "PARTY_DOB": "2010-10-10",
       "INITIAL_FUNDING_AMOUNT": "10",
-      "USE_TTK_BACKEND": "no"
+      "TTK_ENABLED": "no",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no"
     }
   ],
   "external_pm4ml_configs": [],
