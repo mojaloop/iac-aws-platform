@@ -23,7 +23,7 @@ locals {
   }
   internal_pm4ml_output = {
     for pm4ml_config in var.internal_pm4ml_configs :
-    pm4ml_config.DFSP_NAME => {      
+    pm4ml_config.DFSP_NAME => {
       "pm4ml_instance_name"  = pm4ml_config.DFSP_NAME
       "pm4ml_subdomain"      = "${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${var.public_subdomain}"
       "mcm_auth_enabled"     = true
@@ -33,7 +33,7 @@ locals {
       "extgw_fqdn"           = "extgw-data.${var.public_subdomain}"
       "mcm_host_url"         = "mcm.${var.public_subdomain}"
       "helm_release_name"    = pm4ml_config.DFSP_NAME
-      "ttk_enabled"          = false
+      "ttk_enabled"          = pm4ml_config.USE_TTK_BACKEND
       "extgw_client_key"     = module.internal_provision_pm4ml_to_wso2.client-ids[pm4ml_config.DFSP_NAME]
       "extgw_client_secret"  = module.internal_provision_pm4ml_to_wso2.client-secrets[pm4ml_config.DFSP_NAME]
       "OAUTH_TOKEN_ENDPOINT" = "https://extgw-data.${var.public_subdomain}:443/oauth2/token"
