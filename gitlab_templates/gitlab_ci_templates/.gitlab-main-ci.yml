@@ -371,6 +371,7 @@ Create Main Cluster:
   - aws s3 cp ./ansible_external_pm4ml_output.yaml s3://$bucket/$environment/k3saddons/ --sse
   - aws s3 cp ./onboarding_external_pm4ml_output.json s3://$bucket/$environment/k3saddons/ --sse
   - aws s3 cp ./Lab.postman_environment.json s3://$bucket/$environment/tests/ --sse
+  - aws s3 cp ./pm4ml_ttk_environment.json s3://$bucket/$environment/tests/ --sse
   - aws s3 cp ./test_cert_list.json s3://$bucket/$environment/tests/ --sse
 
 
