@@ -81,7 +81,8 @@
       "PARTY_DOB": "2010-10-10",
       "INITIAL_FUNDING_AMOUNT": "10",
       "TTK_ENABLED": "no",
-      "USE_TTK_AS_BACKEND_SIMULATOR": "no"
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no",
+      "ENABLE_SDK_BULK_TRANSACTION_SUPPORT": "no"
     },
     {
       "DFSP_NAME": "pm4mlsenderfsp",
@@ -99,7 +100,8 @@
       "PARTY_DOB": "2010-10-10",
       "INITIAL_FUNDING_AMOUNT": "10",
       "TTK_ENABLED": "no",
-      "USE_TTK_AS_BACKEND_SIMULATOR": "no"
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no",
+      "ENABLE_SDK_BULK_TRANSACTION_SUPPORT": "no"
     },
     {
       "DFSP_NAME": "demowallet",
@@ -117,7 +119,8 @@
       "PARTY_DOB": "2010-10-10",
       "INITIAL_FUNDING_AMOUNT": "10",
       "TTK_ENABLED": "no",
-      "USE_TTK_AS_BACKEND_SIMULATOR": "no"
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no",
+      "ENABLE_SDK_BULK_TRANSACTION_SUPPORT": "no"
     },
     {
       "DFSP_NAME": "demomfi",
@@ -135,7 +138,8 @@
       "PARTY_DOB": "2010-10-10",
       "INITIAL_FUNDING_AMOUNT": "10",
       "TTK_ENABLED": "no",
-      "USE_TTK_AS_BACKEND_SIMULATOR": "no"
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no",
+      "ENABLE_SDK_BULK_TRANSACTION_SUPPORT": "no"
     }
   ],
   "external_pm4ml_configs": [],
