@@ -23,6 +23,7 @@
         "TTKSIM3_MSISDN_2_FIRST_NAME": "ReceiverFirst",
         "TTKSIM3_MSISDN_2_LAST_NAME": "ReceiverLast",
         "TTKSIM3_CURRENCY": "${CURRENCY_CODE}",
+        "TTKSIM1_MSISDN_PREFIX": "23451",
         "TTKSIM2_MSISDN_PREFIX": "24561",
         "TTKSIM3_MSISDN_PREFIX": "25671",
         "TRANSFER_AMOUNT": "10",
