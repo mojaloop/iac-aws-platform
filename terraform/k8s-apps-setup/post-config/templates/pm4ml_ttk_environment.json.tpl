@@ -25,6 +25,8 @@
         "TTKSIM3_CURRENCY": "${CURRENCY_CODE}",
         "TTKSIM2_MSISDN_PREFIX": "24561",
         "TTKSIM3_MSISDN_PREFIX": "25671",
-        "TRANSFER_AMOUNT": "10"
+        "TRANSFER_AMOUNT": "10",
+        "HOST_CENTRAL_LEDGER": "http://${MOJALOOP_RELEASE}-centralledger-service",
+        "HOST_ACCOUNT_LOOKUP_SERVICE": "http://${MOJALOOP_RELEASE}-account-lookup-service"
     }
 }

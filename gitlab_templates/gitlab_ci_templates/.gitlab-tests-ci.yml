@@ -152,8 +152,6 @@ variables:
     - export ttkBackendUrl=http://ttkbackend.${private_subdomain};
     - export ttkSim1TtkBackendUrl=http://ttksim1.${private_subdomain};
     - export pm4mlTtkSim1TtkBackendUrl=http://ttk.pm4mlttksim1.${client}${environment}k3s.${public_subdomain};
-    - export pm4mlTtkSim2TtkBackendUrl=http://ttk.pm4mlttksim2.${client}${environment}k3s.${public_subdomain};
-    - export pm4mlTtkSim3TtkBackendUrl=http://ttk.pm4mlttksim3.${client}${environment}k3s.${public_subdomain};
     - npm install @mojaloop/ml-testing-toolkit-client-lib --global
   download-ttk-test-cases: &ttk-snippets-download-ttk-test-cases
     - |
@@ -234,17 +232,16 @@ variables:
     - |
       cd /tmp;
       export pm4mlGoldenPathTestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/golden_path;
-      export pm4mlProvisioningSim2TestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/provisioning/pm4mlttksim2.json;
-      export pm4mlProvisioningSim3TestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/provisioning/pm4mlttksim3.json;
-      ml-ttk-cli -e $CI_IMAGE_PROJECT_DIR/tests/pm4ml_ttk_environment.json -i tmp_test_cases/$pm4mlProvisioningSim2TestCasesPathInZip -u $pm4mlTtkSim2TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksim2-report.html --extra-summary-information="Test Suite:PM4ML TTKSIM2 Provisioning,Job ID: $CI_JOB_ID"  || true;
-      ml-ttk-cli -e $CI_IMAGE_PROJECT_DIR/tests/pm4ml_ttk_environment.json -i tmp_test_cases/$pm4mlProvisioningSim3TestCasesPathInZip -u $pm4mlTtkSim3TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksim3-report.html --extra-summary-information="Test Suite:PM4ML TTKSIM2 Provisioning,Job ID: $CI_JOB_ID"  || true;
+      export pm4mlProvisioningTtkSimsTestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/provisioning;
+      ## For adding MSISDNs in oracle and fundIn operations, executing provisioning collection from the ttk backend of the switch
+      ml-ttk-cli -e $CI_IMAGE_PROJECT_DIR/tests/pm4ml_ttk_environment.json -i tmp_test_cases/$pm4mlProvisioningTtkSimsTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksims-report.html --extra-summary-information="Test Suite:PM4ML TTKSIM2 and TTKSIM3 Provisioning,Job ID: $CI_JOB_ID"  || true;
+      ## For testing transfers, executing pm4ml ttk golden path collection from pm4mlttksim1
       ml-ttk-cli -e $CI_IMAGE_PROJECT_DIR/tests/pm4ml_ttk_environment.json -i tmp_test_cases/$pm4mlGoldenPathTestCasesPathInZip -u $pm4mlTtkSim1TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-gp-report.html --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
       echo "Done";
   artifacts: &ttk-snippets-artifacts
     when: always
     paths:
-      - ${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksim2-report.html
-      - ${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksim3-report.html
+      - ${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksims-report.html
       - ${CI_PROJECT_DIR}/ttk-pm4ml-gp-report.html
 #  artifacts:
 #    when: always
