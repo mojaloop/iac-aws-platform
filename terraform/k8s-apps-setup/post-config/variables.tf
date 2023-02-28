@@ -75,6 +75,7 @@ variable "internal_pm4ml_configs" {
     INITIAL_FUNDING_AMOUNT = number
     TTK_ENABLED = string
     USE_TTK_AS_BACKEND_SIMULATOR = string
+    ENABLE_SDK_BULK_TRANSACTION_SUPPORT = string
   }))
   default = []
 }
@@ -91,6 +92,7 @@ variable "external_pm4ml_configs" {
     INITIAL_FUNDING_AMOUNT = number
     TTK_ENABLED = string
     USE_TTK_AS_BACKEND_SIMULATOR = string
+    ENABLE_SDK_BULK_TRANSACTION_SUPPORT = string
   }))
   default = []
 }
