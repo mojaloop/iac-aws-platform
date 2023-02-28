@@ -142,7 +142,7 @@ variables:
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - export TTK_TESTCASES_VERSION=${TAG_TTK_TEST}
-    - export PM4ML_TTK_TESTCASES_VERSION=1.4.0-snapshot.1
+    - export PM4ML_TTK_TESTCASES_VERSION=${TAG_PM4ML_TTK_TEST}
     - export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
     - export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION=${region}

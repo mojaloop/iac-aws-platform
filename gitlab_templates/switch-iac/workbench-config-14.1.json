@@ -40,6 +40,7 @@
   "grafana_slack_notifier_url": "https://hooks.slack.com/services/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",
   "TAG_ML_GP": "v12.0.4",
   "TAG_TTK_TEST": "14.1.0",
+  "TAG_PM4ML_TTK_TEST": "1.4.0",
   "k8s_api_version": "1.24.6",
   "helm_haproxy_version": "1.7.2",
   "helm_keycloak_version": "6.0.0",
