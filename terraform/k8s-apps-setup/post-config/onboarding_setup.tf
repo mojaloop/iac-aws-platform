@@ -54,3 +54,14 @@ resource "local_sensitive_file" "gp_postman_environment_file" {
   filename   = "${path.root}/Lab.postman_environment.json"
   depends_on = [module.provision_accounts_to_wso2]
 }
+
+resource "local_sensitive_file" "pm4ml_ttk_environment_file" {
+  content = templatefile("${path.module}/templates/pm4ml_ttk_environment.json.tpl", {
+    LAB_DOMAIN                         = var.public_subdomain,
+    CURRENCY_CODE                      = var.hub_currency_code,
+    PM4ML_DOMAIN                       = "${replace(var.client, "-", "")}${replace(var.environment, "-", "")}k3s.${var.public_subdomain}",
+    MOJALOOP_RELEASE                   = var.helm_mojaloop_release_name
+  })
+  filename   = "${path.root}/pm4ml_ttk_environment.json"
+  depends_on = [module.provision_accounts_to_wso2]
+}

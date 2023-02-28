@@ -142,13 +142,16 @@ variables:
     - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
     - export TTK_TESTCASES_VERSION=${TAG_TTK_TEST}
+    - export PM4ML_TTK_TESTCASES_VERSION=${TAG_PM4ML_TTK_TEST}
     - export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
     - export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION=${region}
     - aws s3 sync s3://$bucket/$environment ./k8ss3/ --sse || true
     - export private_subdomain=$(terraform output -state=k8ss3/base-infra-aws/terraform.tfstate private_subdomain | tr -d '"')
+    - export public_subdomain=$(terraform output -state=k8ss3/base-infra-aws/terraform.tfstate public_subdomain | tr -d '"')
     - export ttkBackendUrl=http://ttkbackend.${private_subdomain};
     - export ttkSim1TtkBackendUrl=http://ttksim1.${private_subdomain};
+    - export pm4mlTtkSim1TtkBackendUrl=http://ttk.pm4mlttksim1.${client}${environment}k3s.${public_subdomain};
     - npm install @mojaloop/ml-testing-toolkit-client-lib --global
   download-ttk-test-cases: &ttk-snippets-download-ttk-test-cases
     - |
@@ -211,6 +214,41 @@ variables:
       - ${CI_PROJECT_DIR}/ttk-provisioning-report.html
       - ${CI_PROJECT_DIR}/ttk-goldenpath-report.html
 
+3. Run PM4ML TTK Tests:
+  stage: "Run Tests"
+  # image: *ttk-snippets-image
+  before_script:
+    - echo "running pm4ml TTK tests"
+  script:
+    - *ttk-snippets-set-env-vars
+    - aws s3 sync s3://$bucket/$environment/tests/ $CI_IMAGE_PROJECT_DIR/tests --sse
+    - |
+      echo "Downloading the test collection...";
+      cd /tmp;
+      export testCasesZipUrl=https://github.com/pm4ml/pm4ml-test-scripts/archive/refs/tags/v${PM4ML_TTK_TESTCASES_VERSION}.zip;
+      wget $testCasesZipUrl -O downloaded-test-collections.zip;
+      mkdir tmp_test_cases;
+      unzip -d tmp_test_cases -o downloaded-test-collections.zip;
+    - |
+      cd /tmp;
+      export pm4mlGoldenPathTestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/golden_path;
+      export pm4mlProvisioningTtkSimsTestCasesPathInZip=pm4ml-test-scripts-${PM4ML_TTK_TESTCASES_VERSION}/ttk/collections/provisioning;
+      ## For adding MSISDNs in oracle and fundIn operations, executing provisioning collection from the ttk backend of the switch
+      ml-ttk-cli -e $CI_IMAGE_PROJECT_DIR/tests/pm4ml_ttk_environment.json -i tmp_test_cases/$pm4mlProvisioningTtkSimsTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksims-report.html --extra-summary-information="Test Suite:PM4ML TTKSIM2 and TTKSIM3 Provisioning,Job ID: $CI_JOB_ID"  || true;
+      ## For testing transfers, executing pm4ml ttk golden path collection from pm4mlttksim1
+      ml-ttk-cli -e $CI_IMAGE_PROJECT_DIR/tests/pm4ml_ttk_environment.json -i tmp_test_cases/$pm4mlGoldenPathTestCasesPathInZip -u $pm4mlTtkSim1TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-gp-report.html --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
+      echo "Done";
+  artifacts: &ttk-snippets-artifacts
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ttk-pm4ml-provisioning-ttksims-report.html
+      - ${CI_PROJECT_DIR}/ttk-pm4ml-gp-report.html
+#  artifacts:
+#    when: always
+#    paths:
+#      - ${CI_PROJECT_DIR}/pm4ml-ttk-goldenpath-report.html
+  when: manual
+
 4. Run TTK Tests:
   stage: "Run Tests"
   # image: *ttk-snippets-image
@@ -247,38 +285,6 @@ variables:
     - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  test connection-manager -n mcm || true
     - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mcm logs connection-manager-api-test
     - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mcm get pod connection-manager-api-test --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
-  when: manual
-
-8. Run PM4ML TTK Tests:
-  stage: "Run Tests"
-  # image: *ttk-snippets-image
-  before_script:
-    - echo "running with testing toolkit image"
-  script:
-    - *ttk-snippets-set-env-vars
-    - |
-      echo "Downloading the test collection...";
-      cd /tmp;
-      export testCasesZipUrl=https://github.com/pm4ml/pm4ml-test-scripts/archive/refs/tags/v${TTK_TESTCASES_VERSION}.zip;
-      wget $testCasesZipUrl -O downloaded-test-collections.zip;
-      mkdir tmp_test_cases;
-      unzip -d tmp_test_cases -o downloaded-test-collections.zip;
-    - |
-      cd /tmp;
-      export pm4mlgoldenPathTestCasesPathInZip=pm4ml-test-scripts-${ttk_pm4ml_gp_version}/ttk/collections/feature_tests;
-      # ml-ttk-cli -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://$bucket/$environment/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=https://hooks.slack.com/services/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 --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
-      ml-ttk-cli -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-pm4ml-report.html --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
-      # Use the following syntax instead of the above line for slack notification and comment out artifacts. We can not have both with the current TTK CLI options.
-      # ml-ttk-cli -e $CI_PROJECT_DIR/tests/ttk-prod-dev-env.json -i tmp_test_cases/$pm4mlgoldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target s3://$bucket/$environment/pm4ml-ttk-goldenpath-report.html --slack-webhook-url=${SLACK_WEBHOOK_URL_HERE} --extra-summary-information="Test Suite:PM4ML GP TTK,Job ID: $CI_JOB_ID";
-      echo "Done";
-  artifacts: &ttk-snippets-artifacts
-    when: always
-    paths:
-      - ${CI_PROJECT_DIR}/ttk-pm4ml-report.html
-#  artifacts:
-#    when: always
-#    paths:
-#      - ${CI_PROJECT_DIR}/pm4ml-ttk-goldenpath-report.html
   when: manual
 
 9. Run TTK Bulk Tests:
