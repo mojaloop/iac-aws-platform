@@ -1,55 +1,84 @@
-# Mojaloop Platform IaC
+# Deploying a Mojaloop Environment
 
-![mojaloopIaC banner](./documents/readme_images/000-banner.png)
+## Pre-Requisites (before deploying an environment)
 
-Welcome to release v1.0.0 of the mojaloop-IaC.
+ mojaloop-bootstrap v2.2.2 should already be deployed
 
-## Before Deployment - bootstrap
+For mojaloop-bootstrap:
+<https://github.com/mojaloop/iac-aws-bootstrap#readme>
 
-mojaloop-IAC is designed to run as a subset of the ["mojaloop-bootstrap for AWS"](https://github.com/mojaloop/iac-aws-bootstrap)
+When the bootstrap code is run, you specify the environments that you wish to provision in a list.  For each of these environments, the following functionality is enabled:
 
-mojaloop-bootstrap is used to define the client or *tenancy* (these terms are used interchangeably throughout documentation and TF code)  and therefor the supporting IAM, network, routing, and code repository to allow each environment to be deployed programatically:
+1. The subnets/security groups/etc are created for the environment cloud elements to be installed into.
+2. A blank repo is created in the tenancy gitlab instance named the same as the env name and with the correct group settings for successful AWS provisioning.
+3. The group settings will also allow for the env IaC code to create the correct OIDC applications in gitlab to allow for admin/users to access vault/grafana/kube-api.
 
-![mojaloop tenancy](./documents/readme_images/010-tenancy.png)
 
-This model has two objectives:
+## 1. Preparation
 
-1. To allow the mojaloop-IaC to be deployed as repeatably as possible through multiple pipelines.
-2. To allow the mojaloop-IaC to be 'abstracted' in a future release, allowing the same IaC code to be consumed in AWS, Azure or OnPremises by simply selecting an appropriate bootstrap.
+### Creating a Slack Channel with WebHooks
 
-For more information on this structure see <https://modusbox.atlassian.net/wiki/spaces/MIT/pages/484376623/IaC+Design>
+Create a webhook for slack notifications on this page: <https://api.slack.com/apps/A019UEZ37MW/incoming-webhooks>
 
-For more information, see <https://modusbox.atlassian.net/wiki/spaces/CK/pages/610796145/Creating+a+Mojaloop+platform+for+a+client>
+If the notification channel for this env doesn’t exist, create the channel in the slack along this format:
 
-## How To Deploy
+grafana-alerts-${`env.name`}-${`tenancy.name`}
 
-The following included guide indicates how to deploy this release into an existing bootstrap.
+Create a webhook and associate it with the new channel above.
+Keep a copy of the WebHook URL.     You will need it in the next section.
 
-[Deploying a mojaloop Environment into a Tenancy](./documents/d20.deploy_into_tenancy.md)
+### Clone Environment Repository
 
-## Known Issues
+* Clone the environment repo from tenancy gitlab
 
-[PSOINFRA-409](https://modusbox.atlassian.net/browse/PSOINFRA-409)
-Pipeline jobs under "Run Kubespray" will occasionally fail with random errors, but succeed on 2nd or 3rd attempt.
+* Grab the switch-iac directory from the gitlab_templates directory of the present repo, copy the appropriate version of the workbench config file and rename to workbench-config.json.  Copy the backend.hcl file that was used for the bootstrap to the root of the gitlab repo and push those changes to gitlab.
 
-[PSOINFRA-410](https://modusbox.atlassian.net/browse/PSOINFRA-410) After a successful WSO2 password reset, WSO continues to issue the now-invalidated token until it ages-out (~10 minutes.)
+* Edit the `workbench-config.json` as required. At the very least you need to edit the following fields:
 
-[PSOINFRA-377](https://modusbox.atlassian.net/browse/PSOINFRA-377?atlOrigin=eyJpIjoiYjg3ZTY5ZjA3ZTY2NDg4YjlmYzhhZjVkMzIzNjA3OWUiLCJwIjoiaiJ9)  WSO2 redeployment can cause SIMS to fail silently.
+|         field                                  |        Notes                                       |
+|------------------------------------------------|----------------------------------------------------|
+| `“client": ”<placeholder>”`                    |  The Client name - usually the DNS name of the TENANT |
+| `“environment": ”<placeholder>”`               |  The environment name: dev, qa, prod etc |
+| `“region": ”eu-west-1”`                    |  If you need to edit region you __must__ also edit the aws_ami field below  |
+| `"grafana_slack_notifier_url": "\<placeholder>"` |  Use the WebHook URL from Step 1                    |
+| `"hub_currency_code": "USD"`                    |  If the deployment requires a currency other than USD it should be set here |
+---
 
-[PSOINFRA-439](https://modusbox.atlassian.net/browse/PSOINFRA-439)
-"The Six Assertions" : Pipeline job 'Prepare Tests FXP Onboarding'  succeeds, but reports six assertion failures.    The error can be ignored, but causes the pipeline job to show as "Failed".
 
-[PSOINFRA-440](https://modusbox.atlassian.net/browse/PSOINFRA-440)
-Trying to run FXP tests requires some manual processing.
+## 2. Running the CI/CD jobs to create the environment
 
-[PSOINFRA-441](https://modusbox.atlassian.net/browse/PSOINFRA-441) SDK deploymnents require the VM SSH Key to be added to the project folder before running the "SDK Installation" job.
+Most of the time we will start from this step (Because we are not destroying Gitlab)
+> :warning: CAUTION: GitLab provides a “Cancel” button for jobs running within the CI/CD pipeline. It is STONGLY advised that you do not cancel a CICD job - it is generally simpler to allow it to fail naturally (or complete) and clean up any damage, rather than dealing with the consequences of cancelling a job, which can include issues with Terraform State locks, and potentially inconsistent state. You have been warned.
 
-## Improvements
+Once the Validate and Plan job completes all the other jobs become available. To deploy the environment you must run the Deploy AWS Infrastructure, Run Kubespray, Deploy Vault and Deploy Mojaloop pipelines in that order.
 
-[PSOINFRA-382](https://modusbox.atlassian.net/browse/PSOINFRA-382?atlOrigin=eyJpIjoiODJlNmY1MTE2ODZjNDk0Njk1N2IwZjgyNjJlNTM0NTkiLCJwIjoiaiJ9) PVCs now alert at 25% remaining, as opposed to 75%.  Threshold is now consistant across clusters.
+### PIPELINE ORDERING
 
-[PSOINFRA-389 - SDK Deployment optional](https://modusbox.atlassian.net/browse/PSOINFRA-389?atlOrigin=eyJpIjoiNTQ4ZDY0YThjNjc0NDQyNWFmYWYxNjIxM2ZlMTllOWIiLCJwIjoiaiJ9) Deployment of the SDK is now optional.
+You can run the Deploy All job in order to run all steps in order for a new installation.  If you want to run each of these manually, you can run through the following order:
 
-## Additional Reading
+#### Creating the infrastructure:
+1. Run **Deploy AWS Infrastructure** This creates the load-balancing, ec2 instances and route53 entities needed for the kubernetes cluster.
+2. Run **Create Create Gateway Cluster and k3s Cluster** in parallel.  These jobs create the switch kubernetes cluster (via kubespray) and the internal k3s cluster for running the internal pm4mls for testing end to end.
+3. Run **Deploy Base Services**  This step installs the base services (vault, cert-manager, external-dns, longhorn storage, nginx ingress controllers)
+4. Run **Deploy Stateful Services** This step installs the stateful resources services (mysql, mongodb, kafka, etc)
+5. Run **Deploy Support Services** This step installs support services including wso2 and other security elements (connection manager, haproxy forward proxy, loki stack, etc)
+6. Run **Deploy Mojaloop Apps** This job installs mojalooop and bizops framework, it also configures the wso2 gateway with the mojaloop APIs.
+7. Run **Deploy Post Install** This job will provision DFSPs and create admin accounts.
+8. Run **Install Internal PM4MLs** This will install the internal pm4mls into the k3s cluster.
 
-[Some notes on Vault](./documents/d90.vault.md)
+
+#### Run Tests:
+1. Run **Run TTK Tests** runs ttk-based tests using internal sims
+2. Run **Manual Run PM4ML GP Tests** runs GP tests using internal pm4mls (end to end with full security)
+
+
+#### Portal Access:
+OIDC access has been automated to allow appropriate gitlab users to access administrative consoles including vault, grafana and the kubeapi.  In order to access these resources, you will need to be connected to the wireguard instance of the tenancy.  See the bootstrap documentation for those details.
+Once you are on the vpn, you can access those consoles here:
+
+https://vault.<<env-name>>.<<tenancy-domain>>
+https://grafana.<<env-name>>.<<tenancy-domain>>
+
+When connecting to vault, select the OIDC option from the drop down, in the Role text box, type: techops-admin and then click Sign in with GitLab.  You will be presented with an option to approve the request in gitlab.  Then you will be redirected back to vault.
+
+For grafana, you will see an option at the bottom that says: Sign in with GitLab.  Click this and you will be redirected to gitlab and then after approving, you get redirected back to grafana. 
