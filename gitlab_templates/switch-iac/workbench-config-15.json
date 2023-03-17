@@ -1,0 +1,660 @@
+{
+  "client": "labs",
+  "environment": "sandbox",
+  "region": "eu-west-1",
+  "AWS_DEFAULT_REGION": "eu-west-1",
+  "wso2_mysql_repo_version": "v1.0.0",
+  "helm_esp_version": "11.0.1",
+  "helm_mcm_connection_manager_version": "0.6.1",
+  "helm_nginx_version": "4.3.0",
+  "helm_mojaloop_version": "15.0.0",
+  "helm_mojaloop_simulator_version": "12.0.0",
+  "helm_mojaloop_release_name": "moja",
+  "helm_prometheus_version": "11.11.1",
+  "helm_grafana_version": "5.0.9",
+  "helm_kafka_version": "0.21.2",
+  "helm_oathkeeper_version": "0.19.6",
+  "helm_keto_version": "0.19.6",
+  "helm_kratos_version": "0.14.1",
+  "helm_bof_version": "2.4.4",
+  "hub_currency_code": "USD",
+  "iac_post_init_version": "v1.0.0",
+  "storage_class_name": "longhorn",
+  "longhorn_backup_s3_destroy": "true",
+  "route53_zone_force_destroy": "true",
+  "wso2_namespace": "wso2",
+  "kubernetes_auth_path": "kubernetes-gateway",
+  "helm_longhorn_version": "1.2.4",
+  "helm_consul_version": "0.35.0",
+  "helm_vault_version": "0.19.0",
+  "helm_certmanager_version": "1.6.1",
+  "helm_external_dns_version": "6.7.2",
+  "helm_loki_stack_version": "2.8.3",
+  "helm_alias_oracle_version": "1.4.2",
+  "use_alias_oracle_endpoint": "no",
+  "helm_mfi_account_oracle_version": "2.0.7",
+  "use_mfi_account_oracle_endpoint": "yes",
+  "helm_mfi_p2p_oracle_version": "2.0.7",
+  "use_mfi_p2p_oracle_endpoint": "yes",
+  "helm_mojaloop_reporting_service_version": "10.5.0",
+  "grafana_slack_notifier_url": "https://hooks.slack.com/services/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",
+  "TAG_ML_GP": "v12.0.4",
+  "TAG_TTK_TEST": "15.0.0",
+  "TAG_PM4ML_TTK_TEST": "1.4.1",
+  "k8s_api_version": "1.24.6",
+  "helm_haproxy_version": "1.7.2",
+  "helm_keycloak_version": "6.0.0",
+  "helm_oauth2_proxy_version": "5.0.6",
+  "TAG_PM4ML_GP": "v1.3.7",
+  "internal_ttk_enabled": "true",
+  "ttk_pm4ml_gp_version": "1.3.5",
+  "ttk_test_currency1": "EUR",
+  "ttk_test_currency2": "GBP",
+  "ttk_test_currency3": "CAD",
+  "internal_sim_enabled": "true",
+  "cert_man_vault_cluster_issuer_name": "vault-issuer-int",
+  "cert_man_letsencrypt_cluster_issuer_name": "letsencrypt",
+  "grafana_external_access": "true",
+  "grafana_external_whitelist": "0.0.0.0/0",
+  "kube_worker_size": "m5.2xlarge",
+  "kube_worker_num": "3",
+  "intgw_helm_chart_version": "2.3.0",
+  "extgw_helm_chart_version": "2.3.0",
+  "iskm_helm_chart_version": "2.3.0",
+  "third_party_enabled": "true",
+  "bulk_enabled": "true",
+  "ttksims_enabled": "true",
+  "quoting_service_simple_routing_mode_enabled": "false",
+  "internal_pm4ml_configs": [
+    {
+      "DFSP_NAME": "pm4mlreceiverfsp",
+      "DFSP_CURRENCY": "USD",
+      "DFSP_PREFIX": "256",
+      "DFSP_P2P_PREFIX": "111",
+      "DFSP_MSISDN": "25633333333",
+      "DFSP_ALIAS_ID": "11125633333333",
+      "DFSP_ACCOUNT_ID": "36722222222",
+      "DFSP_SUB_ID": "0922222222",
+      "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com",
+      "PARTY_LAST_NAME": "PM4MLReceiverLast",
+      "PARTY_FIRST_NAME": "PM4MLReceiverFirst",
+      "PARTY_MIDDLE_NAME": "PM4MLReceiverMiddle",
+      "PARTY_DOB": "2010-10-10",
+      "INITIAL_FUNDING_AMOUNT": "10",
+      "TTK_ENABLED": "no",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no",
+      "ENABLE_SDK_BULK_TRANSACTION_SUPPORT": "no"
+    },
+    {
+      "DFSP_NAME": "pm4mlsenderfsp",
+      "DFSP_CURRENCY": "USD",
+      "DFSP_PREFIX": "145",
+      "DFSP_P2P_PREFIX": "222",
+      "DFSP_MSISDN": "25644444444",
+      "DFSP_ALIAS_ID": "22225644444444",
+      "DFSP_ACCOUNT_ID": "36744444444",
+      "DFSP_SUB_ID": "0944444444",
+      "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com",
+      "PARTY_LAST_NAME": "PM4MLSenderLast",
+      "PARTY_FIRST_NAME": "PM4MLSenderFirst",
+      "PARTY_MIDDLE_NAME": "PM4MLSenderMiddle",
+      "PARTY_DOB": "2010-10-10",
+      "INITIAL_FUNDING_AMOUNT": "10",
+      "TTK_ENABLED": "no",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no",
+      "ENABLE_SDK_BULK_TRANSACTION_SUPPORT": "no"
+    },
+    {
+      "DFSP_NAME": "demowallet",
+      "DFSP_CURRENCY": "USD",
+      "DFSP_PREFIX": "367",
+      "DFSP_P2P_PREFIX": "333",
+      "DFSP_MSISDN": "25611111111",
+      "DFSP_ALIAS_ID": "33325611111111",
+      "DFSP_ACCOUNT_ID": "36711111111",
+      "DFSP_SUB_ID": "0911111111",
+      "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com",
+      "PARTY_LAST_NAME": "DemoWalletLast",
+      "PARTY_FIRST_NAME": "DemoWalletFirst",
+      "PARTY_MIDDLE_NAME": "DemoWalletMiddle",
+      "PARTY_DOB": "2010-10-10",
+      "INITIAL_FUNDING_AMOUNT": "10",
+      "TTK_ENABLED": "no",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no",
+      "ENABLE_SDK_BULK_TRANSACTION_SUPPORT": "no"
+    },
+    {
+      "DFSP_NAME": "demomfi",
+      "DFSP_CURRENCY": "USD",
+      "DFSP_PREFIX": "478",
+      "DFSP_P2P_PREFIX": "444",
+      "DFSP_MSISDN": "25622222222",
+      "DFSP_ALIAS_ID": "44425622222222",
+      "DFSP_ACCOUNT_ID": "47822222222",
+      "DFSP_SUB_ID": "0922222222",
+      "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com",
+      "PARTY_LAST_NAME": "DemoMFILast",
+      "PARTY_FIRST_NAME": "DemoMFIFirst",
+      "PARTY_MIDDLE_NAME": "DemoMFItMiddle",
+      "PARTY_DOB": "2010-10-10",
+      "INITIAL_FUNDING_AMOUNT": "10",
+      "TTK_ENABLED": "no",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "no",
+      "ENABLE_SDK_BULK_TRANSACTION_SUPPORT": "no"
+    },
+    {
+      "DFSP_NAME": "pm4mlttksim1",
+      "DFSP_CURRENCY": "USD",
+      "DFSP_PREFIX": "345",
+      "DFSP_P2P_PREFIX": "555",
+      "DFSP_MSISDN": "23451000001",
+      "DFSP_ALIAS_ID": "55523451000001",
+      "DFSP_ACCOUNT_ID": "23451000001",
+      "DFSP_SUB_ID": "0944444444",
+      "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com",
+      "PARTY_LAST_NAME": "PM4MLTTKSim1Last",
+      "PARTY_FIRST_NAME": "PM4MLTTKSim1First",
+      "PARTY_MIDDLE_NAME": "PM4MLTTKSim1Middle",
+      "PARTY_DOB": "2010-10-10",
+      "INITIAL_FUNDING_AMOUNT": "10",
+      "TTK_ENABLED": "yes",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "yes",
+      "ENABLE_SDK_BULK_TRANSACTION_SUPPORT": "yes"
+    },
+    {
+      "DFSP_NAME": "pm4mlttksim2",
+      "DFSP_CURRENCY": "USD",
+      "DFSP_PREFIX": "456",
+      "DFSP_P2P_PREFIX": "666",
+      "DFSP_MSISDN": "24561000001",
+      "DFSP_ALIAS_ID": "66624561000001",
+      "DFSP_ACCOUNT_ID": "24561000001",
+      "DFSP_SUB_ID": "0944444444",
+      "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com",
+      "PARTY_LAST_NAME": "PM4MLTTKSim2Last",
+      "PARTY_FIRST_NAME": "PM4MLTTKSim2First",
+      "PARTY_MIDDLE_NAME": "PM4MLTTKSim2Middle",
+      "PARTY_DOB": "2010-10-10",
+      "INITIAL_FUNDING_AMOUNT": "10",
+      "TTK_ENABLED": "yes",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "yes",
+      "ENABLE_SDK_BULK_TRANSACTION_SUPPORT": "no"
+    },
+    {
+      "DFSP_NAME": "pm4mlttksim3",
+      "DFSP_CURRENCY": "USD",
+      "DFSP_PREFIX": "567",
+      "DFSP_P2P_PREFIX": "777",
+      "DFSP_MSISDN": "25671000001",
+      "DFSP_ALIAS_ID": "77725671000001",
+      "DFSP_ACCOUNT_ID": "25671000001",
+      "DFSP_SUB_ID": "0944444444",
+      "DFSP_NOTIFICATION_EMAIL": "test@modusbox.com",
+      "PARTY_LAST_NAME": "PM4MLTTKSim3Last",
+      "PARTY_FIRST_NAME": "PM4MLTTKSim3First",
+      "PARTY_MIDDLE_NAME": "PM4MLTTKSim3Middle",
+      "PARTY_DOB": "2010-10-10",
+      "INITIAL_FUNDING_AMOUNT": "10",
+      "TTK_ENABLED": "yes",
+      "USE_TTK_AS_BACKEND_SIMULATOR": "yes",
+      "ENABLE_SDK_BULK_TRANSACTION_SUPPORT": "no"
+    }
+  ],
+  "external_pm4ml_configs": [],
+  "bizops_portal_users": [
+    {
+      "username" : "test1",
+      "email" : "test1@test.com"
+    },
+    {
+      "username" : "test2",
+      "email" : "test2@test.com"
+    }
+  ],
+  "custom_tags": {
+    "mojaloop/cost_center":  "mlf-iac-sandbox",
+    "mojaloop/env": "sandbox",
+    "mojaloop/owner": "Samuel-Kummary",
+    "hibernation": "no"
+  },
+  "stateful_resources": [
+    {
+      "enabled": true,
+      "resource_name": "thirdparty-auth-svc-redis",
+      "resource_namespace": "thirdparty-db",
+      "logical_service_port": 6379,
+      "logical_service_name": "thirdparty-auth-redis",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/thirdparty-auth-svc-redis/password",
+          "root_password_path_prefix": "secret/thirdparty-auth-svc-redis/mysqlrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": "thirdparty-auth-svc-redis-master",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "redis",
+        "resource_helm_chart_version": "17.3.7",
+        "resource_helm_values_ref": "values-redis.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": null,
+        "mongodb_data": null,
+        "kafka_data": null,
+        "redis_data": {
+          "user": "consent-oracle",
+          "user_password": null,
+          "storage_size": "8Gi",
+          "architecture": "standalone",
+          "replica_count": 0,
+          "service_port": 6379
+        }
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "thirdparty-auth-svc-db",
+      "resource_namespace": "thirdparty-db",
+      "logical_service_port": 3306,
+      "logical_service_name": "thirdparty-auth-db",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/thirdparty-auth/mysqlpassword",
+          "root_password_path_prefix": "secret/thirdparty-auth/mysqlrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": null,
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "mysql",
+        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_values_ref": "values-mysql.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": {
+          "root_password": null,
+          "user": "auth-svc",
+          "user_password": null,
+          "database_name": "auth-svc",
+          "storage_size": "8Gi",
+          "architecture": "standalone",
+          "replica_count": 0,
+          "service_port": 3306
+        },
+        "mongodb_data": null,
+        "kafka_data": null,
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "mysql-consent-oracle-db",
+      "resource_namespace": "thirdparty-db",
+      "logical_service_port": 3306,
+      "logical_service_name": "mysql-consent-oracle",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/thirdparty-consent-oracle/mysqlpassword",
+          "root_password_path_prefix": "secret/thirdparty-consent-oracle/mysqlrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": null,
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "mysql",
+        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_values_ref": "values-mysql.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": {
+          "root_password": null,
+          "user": "consent-oracle",
+          "user_password": null,
+          "database_name": "consent-oracle",
+          "storage_size": "8Gi",
+          "architecture": "standalone",
+          "replica_count": 0,
+          "service_port": 3306
+        },
+        "mongodb_data": null,
+        "kafka_data": null,
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "mcm-db",
+      "resource_namespace": "mcm-db",
+      "logical_service_port": 3306,
+      "logical_service_name": "mcm-db-svc",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/mcm/mysqlpassword",
+          "root_password_path_prefix": "secret/mcm/mysqlrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": null,
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "mysql",
+        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_values_ref": "values-mysql.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": {
+          "root_password": null,
+          "user": "devdat1asql1",
+          "user_password": null,
+          "database_name": "mcm",
+          "storage_size": "8Gi",
+          "architecture": "standalone",
+          "replica_count": 0,
+          "service_port": 3306
+        },
+        "mongodb_data": null,
+        "kafka_data": null,
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "wso2-db",
+      "resource_namespace": "wso2-db",
+      "logical_service_port": 3306,
+      "logical_service_name": "wso2-db-svc",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/wso2/mysqlpassword",
+          "root_password_path_prefix": "secret/wso2/mysqlrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": null,
+        "resource_helm_repo": "https://charts.helm.sh/stable",
+        "resource_helm_chart": "mysql",
+        "resource_helm_chart_version": "1.6.9",
+        "resource_helm_values_ref": "values-mysql-legacy.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": {
+          "root_password": null,
+          "user": "wso2",
+          "user_password": null,
+          "database_name": "wso2",
+          "storage_size": "8Gi",
+          "architecture": "na",
+          "replica_count": 0,
+          "service_port": 3306
+        },
+        "mongodb_data": null,
+        "kafka_data": null,
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "account-lookup-db",
+      "resource_namespace": "mojaloop-db",
+      "logical_service_port": 3306,
+      "logical_service_name": "account-lookup-db-svc",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/mojaloop/als/mysqlpassword",
+          "root_password_path_prefix": "secret/mojaloop/als/mysqlrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": "account-lookup-db-primary",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "mysql",
+        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_values_ref": "values-mysql.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": {
+          "root_password": null,
+          "user": "account_lookup",
+          "user_password": null,
+          "database_name": "account_lookup",
+          "storage_size": "8Gi",
+          "architecture": "replication",
+          "replica_count": 2,
+          "service_port": 3306
+        },
+        "mongodb_data": null,
+        "kafka_data": null,
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "central-ledger-db",
+      "resource_namespace": "mojaloop-db",
+      "logical_service_port": 3306,
+      "logical_service_name": "central-ledger-db-svc",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/mojaloop/cl/mysqlpassword",
+          "root_password_path_prefix": "secret/mojaloop/cl/mysqlrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": "central-ledger-db-primary",
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "mysql",
+        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_values_ref": "values-mysql.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": {
+          "root_password": null,
+          "user": "central_ledger",
+          "user_password": null,
+          "database_name": "central_ledger",
+          "storage_size": "8Gi",
+          "architecture": "replication",
+          "replica_count": 2,
+          "service_port": 3306
+        },
+        "mongodb_data": null,
+        "kafka_data": null,
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "keto-db",
+      "resource_namespace": "mojaloop",
+      "logical_service_port": 3306,
+      "logical_service_name": "keto-db-svc",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/mojaloop/keto/mysqlpassword",
+          "root_password_path_prefix": "secret/mojaloop/keto/mysqlrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": null,
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "mysql",
+        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_values_ref": "values-mysql.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": {
+          "root_password": null,
+          "user": "keto",
+          "user_password": null,
+          "database_name": "keto",
+          "storage_size": "8Gi",
+          "architecture": "standalone",
+          "replica_count": 0,
+          "service_port": 3306
+        },
+        "mongodb_data": null,
+        "kafka_data": null,
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "kratos-db",
+      "resource_namespace": "mojaloop",
+      "logical_service_port": 3306,
+      "logical_service_name": "kratos-db-svc",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/mojaloop/kratos/mysqlpassword",
+          "root_password_path_prefix": "secret/mojaloop/kratos/mysqlrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": null,
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "mysql",
+        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_values_ref": "values-mysql.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": {
+          "root_password": null,
+          "user": "kratos",
+          "user_password": null,
+          "database_name": "kratos",
+          "storage_size": "8Gi",
+          "architecture": "standalone",
+          "replica_count": 0,
+          "service_port": 3306
+        },
+        "mongodb_data": null,
+        "kafka_data": null,
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "bulk-mongodb",
+      "resource_namespace": "mojaloop",
+      "logical_service_port": 27017,
+      "logical_service_name": "bulk-mongodb-svc",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/mojaloop/bulk/mongodbpassword",
+          "root_password_path_prefix": "secret/mojaloop/bulk/mongodbrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": null,
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "mongodb",
+        "resource_helm_chart_version": "11.0.3",
+        "resource_helm_values_ref": "values-mongodb.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": null,
+        "mongodb_data": {
+          "root_password": null,
+          "user": "mojaloop",
+          "user_password": null,
+          "database_name": "mlos",
+          "storage_size": "8Gi",
+          "service_port": 27017
+        },
+        "kafka_data": null,
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "cep-mongodb",
+      "resource_namespace": "mojaloop",
+      "logical_service_port": 27017,
+      "logical_service_name": "cep-mongodb-svc",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/mojaloop/cep/mongodbpassword",
+          "root_password_path_prefix": "secret/mojaloop/cep/mongodbrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": null,
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "mongodb",
+        "resource_helm_chart_version": "11.0.3",
+        "resource_helm_values_ref": "values-mongodb.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": null,
+        "mongodb_data": {
+          "root_password": null,
+          "user": "mojaloop",
+          "user_password": null,
+          "database_name": "mojaloop",
+          "storage_size": "8Gi",
+          "service_port": 27017
+        },
+        "kafka_data": null,
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "reporting-events-mongodb",
+      "resource_namespace": "mojaloop",
+      "logical_service_port": 27017,
+      "logical_service_name": "reporting-events-mongodb-svc",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/mojaloop/reporting-events/mongodbpassword",
+          "root_password_path_prefix": "secret/mojaloop/reporting-events/mongodbrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": null,
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "mongodb",
+        "resource_helm_chart_version": "11.0.3",
+        "resource_helm_values_ref": "values-mongodb.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": null,
+        "mongodb_data": {
+          "root_password": null,
+          "user": "mojaloop",
+          "user_password": null,
+          "database_name": "mojaloop",
+          "storage_size": "8Gi",
+          "service_port": 27017
+        },
+        "kafka_data": null,
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "mojaloop-kafka",
+      "resource_namespace": "mojaloop",
+      "logical_service_port": 9092,
+      "logical_service_name": "mojaloop-kafka-svc",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": null
+      },
+      "local_resource": {
+        "override_service_name": null,
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "kafka",
+        "resource_helm_chart_version": "15.2.1",
+        "resource_helm_values_ref": "values-kafka.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": null,
+        "mongodb_data": null,
+        "kafka_data": {
+          "storage_size": "8Gi",
+          "service_port": 9092
+        },
+        "redis_data": null
+      }
+    }
+  ]
+}
