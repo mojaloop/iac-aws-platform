@@ -150,6 +150,9 @@ data "vault_generic_secret" "mojaloop_cl_root_db_password" {
 data "vault_generic_secret" "bulk_mongodb_password" {
   path = "${var.stateful_resources[local.bulk_mongodb_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/bulk-mongodb"
 }
+data "vault_generic_secret" "ttk_mongodb_password" {
+  path = "${var.stateful_resources[local.ttk_mongodb_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/ttk-mongodb"
+}
 data "vault_generic_secret" "cep_mongodb_password" {
   path = "${var.stateful_resources[local.cep_mongodb_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/cep-mongodb"
 }
@@ -166,6 +169,7 @@ locals {
   ml_als_resource_index                        = index(var.stateful_resources.*.resource_name, "account-lookup-db")
   ml_cl_resource_index                         = index(var.stateful_resources.*.resource_name, "central-ledger-db")
   bulk_mongodb_resource_index                  = index(var.stateful_resources.*.resource_name, "bulk-mongodb")
+  ttk_mongodb_resource_index                   = index(var.stateful_resources.*.resource_name, "ttk-mongodb")
   cep_mongodb_resource_index                   = index(var.stateful_resources.*.resource_name, "cep-mongodb")
   mojaloop_kafka_resource_index                = index(var.stateful_resources.*.resource_name, "mojaloop-kafka")
   third_party_redis_resource_index             = index(var.stateful_resources.*.resource_name, "thirdparty-auth-svc-redis")
@@ -208,6 +212,11 @@ locals {
     cl_mongodb_host                             = "${var.stateful_resources[local.bulk_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
     cl_mongodb_pass                             = data.vault_generic_secret.bulk_mongodb_password.data.value
     cl_mongodb_port                             = var.stateful_resources[local.bulk_mongodb_resource_index].logical_service_port
+    ttk_mongodb_database                        = var.stateful_resources[local.ttk_mongodb_resource_index].local_resource.mongodb_data.database_name
+    ttk_mongodb_user                            = var.stateful_resources[local.ttk_mongodb_resource_index].local_resource.mongodb_data.user
+    ttk_mongodb_host                            = "${var.stateful_resources[local.ttk_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+    ttk_mongodb_pass                            = data.vault_generic_secret.ttk_mongodb_password.data.value
+    ttk_mongodb_port                            = var.stateful_resources[local.ttk_mongodb_resource_index].logical_service_port
     third_party_consent_db_password             = data.vault_generic_secret.third_party_consent_oracle_db_password.data.value
     third_party_consent_db_user                 = var.stateful_resources[local.third_party_consent_oracle_db_resource_index].local_resource.mysql_data.user
     third_party_consent_db_host                 = "${var.stateful_resources[local.third_party_consent_oracle_db_resource_index].logical_service_name}.stateful-services.svc.cluster.local"

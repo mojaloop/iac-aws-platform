@@ -37,17 +37,6 @@ CONFIG:
   #   key: &OBJSTORE_MONGO_SECRET_KEY mongodb-passwords
   obj_mongo_database: &OBJSTORE_MONGO_DATABASE "${cl_mongodb_database}"
 
-  ## TTK MONGODB BACKEND
-  ## TODO: Enable the following section after setting up the TTK mongodb dependency in stateful services
-  # ttk_mongo_host: &TTK_MONGO_HOST "ttk-mongodb"
-  # ttk_mongo_port: &TTK_MONGO_PORT "27017"
-  # ttk_mongo_user: &TTK_MONGO_USER "ttk"
-  # ttk_mongo_password: &TTK_MONGO_PASSWORD ""
-  # ttk_mongo_secret: &TTK_MONGO_SECRET
-  #   name: &TTK_MONGO_SECRET_NAME ttk-mongodb
-  #   key: &TTK_MONGO_SECRET_KEY mongodb-passwords
-  # ttk_mongo_database: &TTK_MONGO_DATABASE "ttk"
-
   ## MOJALOOP-TTK-SIMULATORS BACKEND
   moja_ttk_sim_kafka_host: &MOJA_TTK_SIM_KAFKA_HOST "${kafka_host}"
   moja_ttk_sim_kafka_port: &MOJA_TTK_SIM_KAFKA_PORT ${kafka_port}

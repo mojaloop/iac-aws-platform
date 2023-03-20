@@ -7,7 +7,7 @@
   "helm_esp_version": "11.0.1",
   "helm_mcm_connection_manager_version": "0.6.1",
   "helm_nginx_version": "4.3.0",
-  "helm_mojaloop_version": "15.0.0",
+  "helm_mojaloop_version": "15.0.0-15728.988248e",
   "helm_mojaloop_simulator_version": "12.0.0",
   "helm_mojaloop_release_name": "moja",
   "helm_prometheus_version": "11.11.1",
@@ -623,6 +623,39 @@
           "user": "mojaloop",
           "user_password": null,
           "database_name": "mojaloop",
+          "storage_size": "8Gi",
+          "service_port": 27017
+        },
+        "kafka_data": null,
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "ttk-mongodb",
+      "resource_namespace": "mojaloop",
+      "logical_service_port": 27017,
+      "logical_service_name": "ttk-mongodb-svc",
+      "external_service": null,
+      "vault_credential_paths": {
+        "pw_data": {
+          "user_password_path_prefix": "secret/mojaloop/ttk/mongodbpassword",
+          "root_password_path_prefix": "secret/mojaloop/ttk/mongodbrootpassword"
+        }
+      },
+      "local_resource": {
+        "override_service_name": null,
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "mongodb",
+        "resource_helm_chart_version": "11.0.3",
+        "resource_helm_values_ref": "values-mongodb.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": null,
+        "mongodb_data": {
+          "root_password": null,
+          "user": "ttk",
+          "user_password": null,
+          "database_name": "ttk",
           "storage_size": "8Gi",
           "service_port": 27017
         },

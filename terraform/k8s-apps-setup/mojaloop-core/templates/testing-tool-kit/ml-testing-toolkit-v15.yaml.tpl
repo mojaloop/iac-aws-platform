@@ -1,29 +1,28 @@
 # Custom YAML TEMPLATE Anchors
 CONFIG:
   ## TTK MONGODB BACKEND
-  ## TODO: Enable the following section after setting up the TTK mongodb dependency in stateful services
-  # ttk_mongo_host: &TTK_MONGO_HOST "ttk-mongodb"
-  # ttk_mongo_port: &TTK_MONGO_PORT "27017"
-  # ttk_mongo_user: &TTK_MONGO_USER "ttk"
-  # ttk_mongo_password: &TTK_MONGO_PASSWORD ""
+  ttk_mongo_host: &TTK_MONGO_HOST "${ttk_mongodb_host}"
+  ttk_mongo_port: &TTK_MONGO_PORT ${ttk_mongodb_port}
+  ttk_mongo_user: &TTK_MONGO_USER "${ttk_mongodb_user}"
+  ttk_mongo_password: &TTK_MONGO_PASSWORD "${ttk_mongodb_pass}"
+  ## TODO: Enable the following secret file and remove the above plain text password
   # ttk_mongo_secret: &TTK_MONGO_SECRET
   #   name: &TTK_MONGO_SECRET_NAME ttk-mongodb
   #   key: &TTK_MONGO_SECRET_KEY mongodb-passwords
-  # ttk_mongo_database: &TTK_MONGO_DATABASE "ttk"
+  ttk_mongo_database: &TTK_MONGO_DATABASE "${ttk_mongodb_database}"
 
 ml-testing-toolkit:
   enabled: ${internal_ttk_enabled}
   ml-testing-toolkit-backend:
     config:
-      ## TODO: Enable the following section after setting up the TTK mongodb dependency in stateful services
-      # mongodb:
-      #   host: *TTK_MONGO_HOST
-      #   port: *TTK_MONGO_PORT
-      #   user: *TTK_MONGO_USER
-      #   password: *TTK_MONGO_PASSWORD
-      #   ## TODO: Enable the following secret file and remove the above plain text password
-      #   # secret: *TTK_MONGO_SECRET
-      #   database: *TTK_MONGO_DATABASE
+      mongodb:
+        host: *TTK_MONGO_HOST
+        port: *TTK_MONGO_PORT
+        user: *TTK_MONGO_USER
+        password: *TTK_MONGO_PASSWORD
+        ## TODO: Enable the following secret file and remove the above plain text password
+        # secret: *TTK_MONGO_SECRET
+        database: *TTK_MONGO_DATABASE
     ingress:
       enabled: true
       hosts:
