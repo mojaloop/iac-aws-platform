@@ -3,6 +3,7 @@ CONFIG:
   ## ACCOUNT-LOOKUP BACKEND
   als_db_database: &ALS_DB_DATABASE "${account_lookup_db_database}"
   als_db_password: &ALS_DB_PASSWORD "${account_lookup_db_password}"
+  als_db_secret: &ALS_DB_SECRET ""
   ## TODO: Enable the following secret file and remove the above plain text password
   # als_db_secret: &ALS_DB_SECRET
   #   name: &ALS_DB_SECRET_NAME mysqldb
@@ -14,6 +15,7 @@ CONFIG:
   ## CENTRAL-LEDGER BACKEND
   cl_db_database: &CL_DB_DATABASE "${central_ledger_db_database}"
   cl_db_password: &CL_DB_PASSWORD "${central_ledger_db_password}"
+  cl_db_secret: &CL_DB_SECRET ""
   ## TODO: Enable the following secret file and remove the above plain text password
   # cl_db_secret: &CL_DB_SECRET
   #   name: &CL_DB_SECRET_NAME mysqldb
@@ -31,6 +33,7 @@ CONFIG:
   obj_mongo_port: &OBJSTORE_MONGO_PORT ${cl_mongodb_port}
   obj_mongo_user: &OBJSTORE_MONGO_USER "${cl_mongodb_user}"
   obj_mongo_password: &OBJSTORE_MONGO_PASSWORD "${cl_mongodb_pass}"
+  obj_mongo_secret: &OBJSTORE_MONGO_SECRET ""
   ## TODO: Enable the following secret file and remove the above plain text password
   # obj_mongo_secret: &OBJSTORE_MONGO_SECRET
   #   name: &OBJSTORE_MONGO_SECRET_NAME cl-mongodb
@@ -46,6 +49,7 @@ CONFIG:
   ## THIRDPARTY AUTH-SVC BACKEND
   tp_auth_svc_db_database: &TP_AUTH_SVC_DB_DATABASE "${third_party_auth_db_database}"
   tp_auth_svc_db_password: &TP_AUTH_SVC_DB_PASSWORD "${third_party_auth_db_password}"
+  tp_auth_svc_db_secret: &TP_AUTH_SVC_DB_SECRET ""
   ## TODO: Enable the following secret file and remove the above plain text password
   # tp_auth_svc_db_secret: &TP_AUTH_SVC_DB_SECRET
   #   name: &TP_AUTH_SVC_DB_SECRET_NAME mysqldb
@@ -59,6 +63,7 @@ CONFIG:
   ## THIRDPARTY ALS_CONSENT-SVC BACKEND
   tp_als_consent_svc_db_database: &TP_ALS_CONSENT_SVC_DB_DATABASE "${third_party_consent_db_database}"
   tp_als_consent_svc_db_password: &TP_ALS_CONSENT_SVC_DB_PASSWORD "${third_party_consent_db_password}"
+  tp_als_consent_svc_db_secret: &TP_ALS_CONSENT_SVC_DB_SECRET ""
   ## TODO: Enable the following secret file and remove the above plain text password
   # tp_als_consent_svc_db_secret: &TP_ALS_CONSENT_SVC_DB_SECRET
   #   name: &TP_ALS_CONSENT_SVC_DB_SECRET_NAME mysqldb
@@ -71,6 +76,7 @@ CONFIG:
   ## CENTRAL-SETTLEMENT BACKEND
   cs_db_host: &CS_DB_HOST "${central_settlement_db_host}"
   cs_db_password: &CS_DB_PASSWORD "${central_settlement_db_password}"
+  cs_db_secret: &CS_DB_SECRET ""
   ## TODO: Enable the following secret file and remove the above plain text password
   # cs_db_secret: &CS_DB_SECRET
   #   name: &CS_DB_SECRET_NAME mysqldb
@@ -82,6 +88,7 @@ CONFIG:
   ## QUOTING BACKEND
   quoting_db_host: &QUOTING_DB_HOST "${quoting_db_host}"
   quoting_db_password: &QUOTING_DB_PASSWORD "${quoting_db_password}"
+  quoting_db_secret: &QUOTING_DB_SECRET ""
   ## TODO: Enable the following secret file and remove the above plain text password
   # quoting_db_secret: &QUOTING_DB_SECRET
   #   name: &QUOTING_DB_SECRET_NAME mysqldb
@@ -100,9 +107,7 @@ account-lookup-service:
   account-lookup-service:
     config:
       db_password: *ALS_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *ALS_DB_SECRET
+      db_secret: *ALS_DB_SECRET
       db_host: *ALS_DB_HOST
       db_user: *ALS_DB_USER
       db_port: *ALS_DB_PORT
@@ -119,9 +124,7 @@ account-lookup-service:
   account-lookup-service-admin:
     config:
       db_password: *ALS_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *ALS_DB_SECRET
+      db_secret: *ALS_DB_SECRET
       db_host: *ALS_DB_HOST
       db_user: *ALS_DB_USER
       db_port: *ALS_DB_PORT
@@ -145,9 +148,7 @@ quoting-service:
     log_transport: "console"
     log_level: "debug"
     db_password: *QUOTING_DB_PASSWORD
-    db_secret: null
-    ## TODO: Enable the following secret file and remove the above plain text password
-    # db_secret: *QUOTING_DB_SECRET
+    db_secret: *QUOTING_DB_SECRET
     db_host: *QUOTING_DB_HOST
     db_user: *QUOTING_DB_USER
     db_port: *QUOTING_DB_PORT
@@ -189,9 +190,7 @@ centralledger:
       kafka_host: *KAFKA_HOST
       kafka_port: *KAFKA_PORT
       db_password: *CL_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *CL_DB_SECRET
+      db_secret: *CL_DB_SECRET
       db_host: *CL_DB_HOST
       db_user: *CL_DB_USER
       db_port: *CL_DB_PORT        
@@ -208,9 +207,7 @@ centralledger:
       kafka_host: *KAFKA_HOST
       kafka_port: *KAFKA_PORT
       db_password: *CL_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *CL_DB_SECRET
+      db_secret: *CL_DB_SECRET
       db_host: *CL_DB_HOST
       db_user: *CL_DB_USER
       db_port: *CL_DB_PORT        
@@ -224,9 +221,7 @@ centralledger:
       kafka_host: *KAFKA_HOST
       kafka_port: *KAFKA_PORT
       db_password: *CL_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *CL_DB_SECRET
+      db_secret: *CL_DB_SECRET
       db_host: *CL_DB_HOST
       db_user: *CL_DB_USER
       db_port: *CL_DB_PORT
@@ -240,9 +235,7 @@ centralledger:
       kafka_host: *KAFKA_HOST
       kafka_port: *KAFKA_PORT
       db_password: *CL_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *CL_DB_SECRET
+      db_secret: *CL_DB_SECRET
       db_host: *CL_DB_HOST
       db_user: *CL_DB_USER
       db_port: *CL_DB_PORT
@@ -256,9 +249,7 @@ centralledger:
       kafka_host: *KAFKA_HOST
       kafka_port: *KAFKA_PORT
       db_password: *CL_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *CL_DB_SECRET
+      db_secret: *CL_DB_SECRET
       db_host: *CL_DB_HOST
       db_user: *CL_DB_USER
       db_port: *CL_DB_PORT
@@ -272,9 +263,7 @@ centralledger:
       kafka_host: *KAFKA_HOST
       kafka_port: *KAFKA_PORT
       db_password: *CL_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *CL_DB_SECRET
+      db_secret: *CL_DB_SECRET
       db_host: *CL_DB_HOST
       db_user: *CL_DB_USER
       db_port: *CL_DB_PORT
@@ -288,9 +277,7 @@ centralledger:
       kafka_host: *KAFKA_HOST
       kafka_port: *KAFKA_PORT
       db_password: *CL_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *CL_DB_SECRET
+      db_secret: *CL_DB_SECRET
       db_host: *CL_DB_HOST
       db_user: *CL_DB_USER    
       db_port: *CL_DB_PORT
@@ -313,9 +300,7 @@ centralsettlement:
       kafka_host: *KAFKA_HOST
       kafka_port: *KAFKA_PORT
       db_password: *CS_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *CS_DB_SECRET
+      db_secret: *CS_DB_SECRET
       db_host: *CS_DB_HOST
       db_user: *CS_DB_USER
       db_port: *CS_DB_PORT        
@@ -325,9 +310,7 @@ centralsettlement:
       kafka_host: *KAFKA_HOST
       kafka_port: *KAFKA_PORT
       db_password: *CS_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *CS_DB_SECRET
+      db_secret: *CS_DB_SECRET
       db_host: *CS_DB_HOST
       db_user: *CS_DB_USER
       db_port: *CS_DB_PORT        
@@ -337,9 +320,7 @@ centralsettlement:
       kafka_host: *KAFKA_HOST
       kafka_port: *KAFKA_PORT
       db_password: *CS_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *CS_DB_SECRET
+      db_secret: *CS_DB_SECRET
       db_host: *CS_DB_HOST
       db_user: *CS_DB_USER
       db_port: *CS_DB_PORT        
@@ -349,9 +330,7 @@ centralsettlement:
       kafka_host: *KAFKA_HOST
       kafka_port: *KAFKA_PORT
       db_password: *CS_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: *CS_DB_SECRET
+      db_secret: *CS_DB_SECRET
       db_host: *CS_DB_HOST
       db_user: *CS_DB_USER
       db_port: *CS_DB_PORT        
@@ -372,9 +351,7 @@ thirdparty:
       db_port: *TP_AUTH_SVC_DB_PORT
       db_user: *TP_AUTH_SVC_DB_USER
       db_password: *TP_AUTH_SVC_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: * TP_AUTH_SVC_DB_SECRET
+      db_secret: *TP_AUTH_SVC_DB_SECRET
       db_database: *TP_AUTH_SVC_DB_DATABASE
       redis_host: *TP_AUTH_SVC_REDIS_HOST
       redis_port: *TP_AUTH_SVC_REDIS_PORT
@@ -390,9 +367,7 @@ thirdparty:
       db_port: *TP_ALS_CONSENT_SVC_DB_PORT
       db_user: *TP_ALS_CONSENT_SVC_DB_USER
       db_password: *TP_ALS_CONSENT_SVC_DB_PASSWORD
-      db_secret: null
-      ## TODO: Enable the following secret file and remove the above plain text password
-      # db_secret: * TP_ALS_CONSENT_SVC_DB_SECRET
+      db_secret: *TP_ALS_CONSENT_SVC_DB_SECRET
       db_database: *TP_ALS_CONSENT_SVC_DB_DATABASE
     ingress:
       enabled: true
@@ -426,9 +401,7 @@ mojaloop-bulk:
         mongo_port: *OBJSTORE_MONGO_PORT
         mongo_user: *OBJSTORE_MONGO_USER
         mongo_password: *OBJSTORE_MONGO_PASSWORD
-        mongo_secret: null
-        ## TODO: Enable the following secret file and remove the above plain text password
-        # mongo_secret: *OBJSTORE_MONGO_SECRET
+        mongo_secret: *OBJSTORE_MONGO_SECRET
         mongo_database: *OBJSTORE_MONGO_DATABASE
       ingress:
         enabled: true
@@ -442,9 +415,7 @@ mojaloop-bulk:
         mongo_port: *OBJSTORE_MONGO_PORT
         mongo_user: *OBJSTORE_MONGO_USER
         mongo_password: *OBJSTORE_MONGO_PASSWORD
-        mongo_secret: null
-        ## TODO: Enable the following secret file and remove the above plain text password
-        # mongo_secret: *OBJSTORE_MONGO_SECRET
+        mongo_secret: *OBJSTORE_MONGO_SECRET
         mongo_database: *OBJSTORE_MONGO_DATABASE
   bulk-centralledger:
     cl-handler-bulk-transfer-prepare:
@@ -452,9 +423,7 @@ mojaloop-bulk:
         kafka_host: *KAFKA_HOST
         kafka_port: *KAFKA_PORT
         db_password: *CL_DB_PASSWORD
-        db_secret: null
-        ## TODO: Enable the following secret file and remove the above plain text password
-        # db_secret: *CL_DB_SECRET
+        db_secret: *CL_DB_SECRET
         db_host: *CL_DB_HOST
         db_user: *CL_DB_USER
         db_port: *CL_DB_PORT        
@@ -463,18 +432,14 @@ mojaloop-bulk:
         mongo_port: *OBJSTORE_MONGO_PORT
         mongo_user: *OBJSTORE_MONGO_USER
         mongo_password: *OBJSTORE_MONGO_PASSWORD
-        mongo_secret: null
-        ## TODO: Enable the following secret file and remove the above plain text password
-        # mongo_secret: *OBJSTORE_MONGO_SECRET
+        mongo_secret: *OBJSTORE_MONGO_SECRET
         mongo_database: *OBJSTORE_MONGO_DATABASE
     cl-handler-bulk-transfer-fulfil:
       config:
         kafka_host: *KAFKA_HOST
         kafka_port: *KAFKA_PORT
         db_password: *CL_DB_PASSWORD
-        db_secret: null
-        ## TODO: Enable the following secret file and remove the above plain text password
-        # db_secret: *CL_DB_SECRET
+        db_secret: *CL_DB_SECRET
         db_host: *CL_DB_HOST
         db_user: *CL_DB_USER
         db_port: *CL_DB_PORT        
@@ -483,18 +448,14 @@ mojaloop-bulk:
         mongo_port: *OBJSTORE_MONGO_PORT
         mongo_user: *OBJSTORE_MONGO_USER
         mongo_password: *OBJSTORE_MONGO_PASSWORD
-        mongo_secret: null
-        ## TODO: Enable the following secret file and remove the above plain text password
-        # mongo_secret: *OBJSTORE_MONGO_SECRET
+        mongo_secret: *OBJSTORE_MONGO_SECRET
         mongo_database: *OBJSTORE_MONGO_DATABASE
     cl-handler-bulk-transfer-processing:
       config:
         kafka_host: *KAFKA_HOST
         kafka_port: *KAFKA_PORT
         db_password: *CL_DB_PASSWORD
-        db_secret: null
-        ## TODO: Enable the following secret file and remove the above plain text password
-        # db_secret: *CL_DB_SECRET
+        db_secret: *CL_DB_SECRET
         db_host: *CL_DB_HOST
         db_user: *CL_DB_USER
         db_port: *CL_DB_PORT        
@@ -503,18 +464,14 @@ mojaloop-bulk:
         mongo_port: *OBJSTORE_MONGO_PORT
         mongo_user: *OBJSTORE_MONGO_USER
         mongo_password: *OBJSTORE_MONGO_PASSWORD
-        mongo_secret: null
-        ## TODO: Enable the following secret file and remove the above plain text password
-        # mongo_secret: *OBJSTORE_MONGO_SECRET
+        mongo_secret: *OBJSTORE_MONGO_SECRET
         mongo_database: *OBJSTORE_MONGO_DATABASE
     cl-handler-bulk-transfer-get:
       config:
         kafka_host: *KAFKA_HOST
         kafka_port: *KAFKA_PORT
         db_password: *CL_DB_PASSWORD
-        db_secret: null
-        ## TODO: Enable the following secret file and remove the above plain text password
-        # db_secret: *CL_DB_SECRET
+        db_secret: *CL_DB_SECRET
         db_host: *CL_DB_HOST
         db_user: *CL_DB_USER
         db_port: *CL_DB_PORT        
@@ -523,9 +480,7 @@ mojaloop-bulk:
         mongo_port: *OBJSTORE_MONGO_PORT
         mongo_user: *OBJSTORE_MONGO_USER
         mongo_password: *OBJSTORE_MONGO_PASSWORD
-        mongo_secret: null
-        ## TODO: Enable the following secret file and remove the above plain text password
-        # mongo_secret: *OBJSTORE_MONGO_SECRET
+        mongo_secret: *OBJSTORE_MONGO_SECRET
         mongo_database: *OBJSTORE_MONGO_DATABASE
 
 mojaloop-ttk-simulators:
