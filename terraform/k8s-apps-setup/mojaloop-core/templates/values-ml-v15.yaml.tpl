@@ -2,24 +2,20 @@
 CONFIG:
   ## ACCOUNT-LOOKUP BACKEND
   als_db_database: &ALS_DB_DATABASE "${account_lookup_db_database}"
-  als_db_password: &ALS_DB_PASSWORD "${account_lookup_db_password}"
-  als_db_secret: &ALS_DB_SECRET ""
-  ## TODO: Enable the following secret file and remove the above plain text password
-  # als_db_secret: &ALS_DB_SECRET
-  #   name: &ALS_DB_SECRET_NAME mysqldb
-  #   key: &ALS_DB_SECRET_KEY mysql-password
+  als_db_password: &ALS_DB_PASSWORD ""
+  als_db_secret: &ALS_DB_SECRET
+    name: &ALS_DB_SECRET_NAME "${account_lookup_db_existing_secret}"
+    key: &ALS_DB_SECRET_KEY mysql-password
   als_db_host: &ALS_DB_HOST "${account_lookup_db_host}"
   als_db_port: &ALS_DB_PORT ${account_lookup_db_port}
   als_db_user: &ALS_DB_USER "${account_lookup_db_user}"
 
   ## CENTRAL-LEDGER BACKEND
   cl_db_database: &CL_DB_DATABASE "${central_ledger_db_database}"
-  cl_db_password: &CL_DB_PASSWORD "${central_ledger_db_password}"
-  cl_db_secret: &CL_DB_SECRET ""
-  ## TODO: Enable the following secret file and remove the above plain text password
-  # cl_db_secret: &CL_DB_SECRET
-  #   name: &CL_DB_SECRET_NAME mysqldb
-  #   key: &CL_DB_SECRET_KEY mysql-password
+  cl_db_password: &CL_DB_PASSWORD ""
+  cl_db_secret: &CL_DB_SECRET
+    name: &CL_DB_SECRET_NAME "${central_ledger_db_existing_secret}"
+    key: &CL_DB_SECRET_KEY mysql-password
   cl_db_host: &CL_DB_HOST "${central_ledger_db_host}"
   cl_db_port: &CL_DB_PORT ${central_ledger_db_port}
   cl_db_user: &CL_DB_USER "${central_ledger_db_user}"
@@ -32,12 +28,10 @@ CONFIG:
   obj_mongo_host: &OBJSTORE_MONGO_HOST "${cl_mongodb_host}"
   obj_mongo_port: &OBJSTORE_MONGO_PORT ${cl_mongodb_port}
   obj_mongo_user: &OBJSTORE_MONGO_USER "${cl_mongodb_user}"
-  obj_mongo_password: &OBJSTORE_MONGO_PASSWORD "${cl_mongodb_pass}"
-  obj_mongo_secret: &OBJSTORE_MONGO_SECRET ""
-  ## TODO: Enable the following secret file and remove the above plain text password
-  # obj_mongo_secret: &OBJSTORE_MONGO_SECRET
-  #   name: &OBJSTORE_MONGO_SECRET_NAME cl-mongodb
-  #   key: &OBJSTORE_MONGO_SECRET_KEY mongodb-passwords
+  obj_mongo_password: &OBJSTORE_MONGO_PASSWORD ""
+  obj_mongo_secret: &OBJSTORE_MONGO_SECRET
+    name: &OBJSTORE_MONGO_SECRET_NAME "${cl_mongodb_existing_secret"
+    key: &OBJSTORE_MONGO_SECRET_KEY mongodb-passwords
   obj_mongo_database: &OBJSTORE_MONGO_DATABASE "${cl_mongodb_database}"
 
   ## MOJALOOP-TTK-SIMULATORS BACKEND
@@ -48,12 +42,10 @@ CONFIG:
 
   ## THIRDPARTY AUTH-SVC BACKEND
   tp_auth_svc_db_database: &TP_AUTH_SVC_DB_DATABASE "${third_party_auth_db_database}"
-  tp_auth_svc_db_password: &TP_AUTH_SVC_DB_PASSWORD "${third_party_auth_db_password}"
-  tp_auth_svc_db_secret: &TP_AUTH_SVC_DB_SECRET ""
-  ## TODO: Enable the following secret file and remove the above plain text password
-  # tp_auth_svc_db_secret: &TP_AUTH_SVC_DB_SECRET
-  #   name: &TP_AUTH_SVC_DB_SECRET_NAME mysqldb
-  #   key: &TP_AUTH_SVC_DB_SECRET_KEY mysql-password
+  tp_auth_svc_db_password: &TP_AUTH_SVC_DB_PASSWORD ""
+  tp_auth_svc_db_secret: &TP_AUTH_SVC_DB_SECRET
+    name: &TP_AUTH_SVC_DB_SECRET_NAME "${third_party_auth_db_existing_secret}"
+    key: &TP_AUTH_SVC_DB_SECRET_KEY mysql-password
   tp_auth_svc_db_host: &TP_AUTH_SVC_DB_HOST "${third_party_auth_db_host}"
   tp_auth_svc_db_port: &TP_AUTH_SVC_DB_PORT ${third_party_auth_db_port}
   tp_auth_svc_db_user: &TP_AUTH_SVC_DB_USER "${third_party_auth_db_user}"
@@ -62,37 +54,30 @@ CONFIG:
 
   ## THIRDPARTY ALS_CONSENT-SVC BACKEND
   tp_als_consent_svc_db_database: &TP_ALS_CONSENT_SVC_DB_DATABASE "${third_party_consent_db_database}"
-  tp_als_consent_svc_db_password: &TP_ALS_CONSENT_SVC_DB_PASSWORD "${third_party_consent_db_password}"
-  tp_als_consent_svc_db_secret: &TP_ALS_CONSENT_SVC_DB_SECRET ""
-  ## TODO: Enable the following secret file and remove the above plain text password
-  # tp_als_consent_svc_db_secret: &TP_ALS_CONSENT_SVC_DB_SECRET
-  #   name: &TP_ALS_CONSENT_SVC_DB_SECRET_NAME mysqldb
-  #   key: &TP_ALS_CONSENT_SVC_DB_SECRET_KEY mysql-password
+  tp_als_consent_svc_db_password: &TP_ALS_CONSENT_SVC_DB_PASSWORD ""
+  tp_als_consent_svc_db_secret: &TP_ALS_CONSENT_SVC_DB_SECRET
+    name: &TP_ALS_CONSENT_SVC_DB_SECRET_NAME "${third_party_consent_db_existing_secret}"
+    key: &TP_ALS_CONSENT_SVC_DB_SECRET_KEY mysql-password
   tp_als_consent_svc_db_host: &TP_ALS_CONSENT_SVC_DB_HOST "${third_party_consent_db_host}"
   tp_als_consent_svc_db_port: &TP_ALS_CONSENT_SVC_DB_PORT ${third_party_consent_db_port}
   tp_als_consent_svc_db_user: &TP_ALS_CONSENT_SVC_DB_USER "${third_party_consent_db_user}"
 
-
   ## CENTRAL-SETTLEMENT BACKEND
   cs_db_host: &CS_DB_HOST "${central_settlement_db_host}"
-  cs_db_password: &CS_DB_PASSWORD "${central_settlement_db_password}"
-  cs_db_secret: &CS_DB_SECRET ""
-  ## TODO: Enable the following secret file and remove the above plain text password
-  # cs_db_secret: &CS_DB_SECRET
-  #   name: &CS_DB_SECRET_NAME mysqldb
-  #   key: &CS_DB_SECRET_KEY mysql-password
+  cs_db_password: &CS_DB_PASSWORD ""
+  cs_db_secret: &CS_DB_SECRET
+    name: &CS_DB_SECRET_NAME mysqldb
+    key: &CS_DB_SECRET_KEY mysql-password
   cs_db_user: &CS_DB_USER "${central_settlement_db_user}"
   cs_db_port: &CS_DB_PORT ${central_settlement_db_port}
   cs_db_database: &CS_DB_DATABASE "${central_settlement_db_database}"
 
   ## QUOTING BACKEND
   quoting_db_host: &QUOTING_DB_HOST "${quoting_db_host}"
-  quoting_db_password: &QUOTING_DB_PASSWORD "${quoting_db_password}"
-  quoting_db_secret: &QUOTING_DB_SECRET ""
-  ## TODO: Enable the following secret file and remove the above plain text password
-  # quoting_db_secret: &QUOTING_DB_SECRET
-  #   name: &QUOTING_DB_SECRET_NAME mysqldb
-  #   key: &QUOTING_DB_SECRET_KEY mysql-password
+  quoting_db_password: &QUOTING_DB_PASSWORD ""
+  quoting_db_secret: &QUOTING_DB_SECRET
+    name: &QUOTING_DB_SECRET_NAME "${quoting_db_existing_secret}"
+    key: &QUOTING_DB_SECRET_KEY mysql-password
   quoting_db_user: &QUOTING_DB_USER "${quoting_db_user}"
   quoting_db_port: &QUOTING_DB_PORT ${quoting_db_port}
   quoting_db_database: &QUOTING_DB_DATABASE "${quoting_db_database}"

@@ -109,13 +109,13 @@ resource "helm_release" "bof" {
       sim_payee_backend_host = "moja-sim-payeefsp-backend"
       kafka_host = "${var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
       mojaloop_reports_config = local.mojaloop_reports_config
-      reporting_db_host = local.oss_values.central_ledger_db_host
-      reporting_db_port = "3306"
-      reporting_db_user = local.oss_values.central_ledger_db_user
-      reporting_db_database = "central_ledger"
-      reporting_db_secret_name = kubernetes_secret.central-ledger-mysql-secret.metadata[0].name
+      reporting_db_host = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
+      reporting_db_port = var.stateful_resources[local.central_ledger_index].logical_service_port
+      reporting_db_user = var.stateful_resources[local.central_ledger_index].local_resource.mysql_data.user
+      reporting_db_database = var.stateful_resources[local.central_ledger_index].local_resource.mysql_data.database_name
+      reporting_db_secret_name = var.stateful_resources[local.central_ledger_index].generate_secret_name
       reporting_db_secret_key = "mysql-password"
-      reporting_events_mongodb_secret_name = var.stateful_resources[local.rpt_mongodb_resource_index].resource_name
+      reporting_events_mongodb_secret_name = var.stateful_resources[local.rpt_mongodb_resource_index].generate_secret_name
       reporting_events_mongodb_host = "${var.stateful_resources[local.rpt_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
       reporting_events_mongodb_user = var.stateful_resources[local.rpt_mongodb_resource_index].local_resource.mongodb_data.user
       reporting_events_mongodb_database = var.stateful_resources[local.rpt_mongodb_resource_index].local_resource.mongodb_data.database_name
@@ -173,14 +173,16 @@ resource "helm_release" "bof-rules" {
 }
 
 data "vault_generic_secret" "keto_db_password" {
-  path = "${var.stateful_resources[local.keto_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/keto-db"
+  path = "${var.stateful_resources[local.keto_resource_index].generate_secret_vault_base_path}/${var.stateful_resources[local.keto_resource_index].resource_name}/password"
 }
+
 data "vault_generic_secret" "kratos_db_password" {
-  path = "${var.stateful_resources[local.kratos_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/kratos-db"
+  path = "${var.stateful_resources[local.kratos_resource_index].generate_secret_vault_base_path}/${var.stateful_resources[local.kratos_resource_index].resource_name}/password"
 }
 
 locals {
   keto_resource_index = index(var.stateful_resources.*.resource_name, "keto-db")
+  central_ledger_index = index(var.stateful_resources.*.resource_name, "central-ledger-db")
   kratos_resource_index = index(var.stateful_resources.*.resource_name, "kratos-db")
   rpt_mongodb_resource_index = index(var.stateful_resources.*.resource_name, "reporting-events-mongodb")
   mojaloop_reports_config = jsondecode(file("${path.module}/mojaloop-custom-reports/config.json"))

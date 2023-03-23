@@ -150,3 +150,9 @@ variable "available_zones" {
   description = "available zones"
   type        = list(string)
 }
+
+variable "vault_config_operator_helm_chart_version" {
+  type        = string
+  description = "vault_config_operator_helm_chart_version"
+  default     = "0.8.13"
+}

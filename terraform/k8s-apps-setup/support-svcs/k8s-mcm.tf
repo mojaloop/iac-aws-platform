@@ -26,7 +26,7 @@ module "mcm-iskm-key-secret-gen" {
 }
 
 data "vault_generic_secret" "mcm_db_password" {
-  path = "${var.stateful_resources[local.mcm_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/mcm-db"
+  path = "${var.stateful_resources[local.mcm_resource_index].generate_secret_vault_base_path}/${var.stateful_resources[local.mcm_resource_index].resource_name}/password"
 }
 
 resource "helm_release" "mcm-connection-manager" {

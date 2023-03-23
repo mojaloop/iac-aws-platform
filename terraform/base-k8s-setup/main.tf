@@ -38,7 +38,19 @@ resource "helm_release" "deploy_vault" {
   force_update = true
   cleanup_on_fail = true
   timeout    = 300
-  depends_on = [helm_release.deploy_consul, aws_kms_key.vault_unseal_key, helm_release.internal-nginx-ingress-controller]
+  depends_on = [helm_release.deploy_consul, helm_release.internal-nginx-ingress-controller]
+  provider   = helm.helm-main
+}
+
+resource "helm_release" "deploy_vault_config_operator" {
+  name       = "vault_config_operator"
+  repository = "https://redhat-cop.github.io/vault-config-operator"
+  chart      = "vault-config-operator"
+  version    = var.vault_config_operator_helm_chart_version
+  values     = [templatefile("templates/values-config-operator.yaml.tpl", {
+    vault_namespace = helm_release.deploy_vault.metadata.namespace
+  })]
+  timeout    = 300
   provider   = helm.helm-main
 }
 
@@ -80,6 +92,15 @@ resource "null_resource" "tune-secret-engine" {
   provisioner "local-exec" {
     command = <<EOT
 POD=$(kubectl get pod -l app.kubernetes.io/instance=vault -o jsonpath={.items[0].metadata.name})
+kubectl exec -ti $POD -c vault -- sh -c 'cat <<EOT >/home/vault/vault-admin-policy.hcl
+path "/*" {
+  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+}
+EOT'
+kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=${jsondecode(file("${var.static_files_path_location}/vault_seal_key"))["root_token"]} vault policy write vault-admin /home/vault/vault-admin-policy.hcl'
+kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=${jsondecode(file("${var.static_files_path_location}/vault_seal_key"))["root_token"]} vault auth enable kubernetes_op'
+kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=${jsondecode(file("${var.static_files_path_location}/vault_seal_key"))["root_token"]} vault write auth/kubernetes_op/config kubernetes_host=https://kubernetes.default.svc:443'
+kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=${jsondecode(file("${var.static_files_path_location}/vault_seal_key"))["root_token"]} vault write auth/kubernetes_op/role/policy-admin bound_service_account_names=controller-manager,default bound_service_account_namespaces=vault-config-operator,default policies=vault-admin ttl=600s'
 kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=${jsondecode(file("${var.static_files_path_location}/vault_seal_key"))["root_token"]} vault secrets enable --path=secret kv' 
 kubectl exec -ti $POD -c vault -- sh -c 'VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=${jsondecode(file("${var.static_files_path_location}/vault_seal_key"))["root_token"]} vault secrets tune -default-lease-ttl=2m secret/' 
 EOT

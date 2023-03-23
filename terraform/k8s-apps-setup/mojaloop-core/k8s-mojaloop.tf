@@ -116,18 +116,18 @@ resource "helm_release" "mojaloop" {
     templatefile("${path.module}/templates/testing-tool-kit/mojaloop-simulator-v${local.ml_chart_major_version}.yaml.tpl", local.oss_values),
     templatefile("${path.module}/templates/testing-tool-kit/ml-testing-toolkit-v${local.ml_chart_major_version}.yaml.tpl", local.oss_values)
   ]
- 
-  provider = helm.helm-main
+
+  provider   = helm.helm-main
   depends_on = [helm_release.ttksimsredis]
 }
 
 resource "helm_release" "ttksimsredis" {
-  name       = "ttksims-redis"
-  count      = var.ttksims_enabled ? 1 : 0
-  repository = "https://charts.bitnami.com/bitnami"
-  chart      = "redis"
-  version    = "17.3.7"
-  namespace  = "mojaloop"
+  name             = "ttksims-redis"
+  count            = var.ttksims_enabled ? 1 : 0
+  repository       = "https://charts.bitnami.com/bitnami"
+  chart            = "redis"
+  version          = "17.3.7"
+  namespace        = "mojaloop"
   create_namespace = true
   values = [
     templatefile("${path.module}/templates/values-ttksims-redis.yaml.tpl", {})
@@ -135,36 +135,6 @@ resource "helm_release" "ttksimsredis" {
   provider = helm.helm-main
 }
 
-data "vault_generic_secret" "mojaloop_als_db_password" {
-  path = "${var.stateful_resources[local.ml_als_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/account-lookup-db"
-}
-data "vault_generic_secret" "mojaloop_cl_db_password" {
-  path = "${var.stateful_resources[local.ml_cl_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/central-ledger-db"
-}
-data "vault_generic_secret" "mojaloop_als_root_db_password" {
-  path = "${var.stateful_resources[local.ml_als_resource_index].vault_credential_paths.pw_data.root_password_path_prefix}/account-lookup-db"
-}
-data "vault_generic_secret" "mojaloop_cl_root_db_password" {
-  path = "${var.stateful_resources[local.ml_cl_resource_index].vault_credential_paths.pw_data.root_password_path_prefix}/central-ledger-db"
-}
-data "vault_generic_secret" "bulk_mongodb_password" {
-  path = "${var.stateful_resources[local.bulk_mongodb_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/bulk-mongodb"
-}
-data "vault_generic_secret" "ttk_mongodb_password" {
-  path = "${var.stateful_resources[local.ttk_mongodb_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/ttk-mongodb"
-}
-data "vault_generic_secret" "cep_mongodb_password" {
-  path = "${var.stateful_resources[local.cep_mongodb_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/cep-mongodb"
-}
-data "vault_generic_secret" "third_party_auth_db_password" {
-  path = "${var.stateful_resources[local.third_party_auth_db_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/thirdparty-auth-svc-db"
-}
-data "vault_generic_secret" "third_party_consent_oracle_db_password" {
-  path = "${var.stateful_resources[local.third_party_consent_oracle_db_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/mysql-consent-oracle-db"
-}
-data "vault_generic_secret" "third_party_auth_redis_password" {
-  path = "${var.stateful_resources[local.third_party_redis_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/thirdparty-auth-svc-redis"
-}
 locals {
   ml_als_resource_index                        = index(var.stateful_resources.*.resource_name, "account-lookup-db")
   ml_cl_resource_index                         = index(var.stateful_resources.*.resource_name, "central-ledger-db")
@@ -182,22 +152,22 @@ locals {
     name                                        = var.client
     kafka_host                                  = "${var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
     kafka_port                                  = var.stateful_resources[local.mojaloop_kafka_resource_index].logical_service_port
-    account_lookup_db_password                  = data.vault_generic_secret.mojaloop_als_db_password.data.value
+    account_lookup_db_existing_secret           = var.stateful_resources[local.ml_als_resource_index].generate_secret_name
     account_lookup_db_user                      = var.stateful_resources[local.ml_als_resource_index].local_resource.mysql_data.user
     account_lookup_db_host                      = "${var.stateful_resources[local.ml_als_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
     account_lookup_db_port                      = var.stateful_resources[local.ml_als_resource_index].logical_service_port
     account_lookup_db_database                  = var.stateful_resources[local.ml_als_resource_index].local_resource.mysql_data.database_name
-    central_ledger_db_password                  = data.vault_generic_secret.mojaloop_cl_db_password.data.value
+    central_ledger_db_existing_secret           = var.stateful_resources[local.ml_cl_resource_index].generate_secret_name
     central_ledger_db_user                      = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.user
     central_ledger_db_host                      = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
     central_ledger_db_port                      = var.stateful_resources[local.ml_cl_resource_index].logical_service_port
     central_ledger_db_database                  = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.database_name
-    central_settlement_db_password              = data.vault_generic_secret.mojaloop_cl_db_password.data.value
+    central_settlement_db_existing_secret       = var.stateful_resources[local.ml_cl_resource_index].generate_secret_name
     central_settlement_db_user                  = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.user
     central_settlement_db_host                  = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
     central_settlement_db_port                  = var.stateful_resources[local.ml_cl_resource_index].logical_service_port
     central_settlement_db_database              = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.database_name
-    quoting_db_password                         = data.vault_generic_secret.mojaloop_cl_db_password.data.value
+    quoting_db_existing_secret                  = var.stateful_resources[local.ml_cl_resource_index].generate_secret_name
     quoting_db_user                             = var.stateful_resources[local.ml_cl_resource_index].local_resource.mysql_data.user
     quoting_db_host                             = "${var.stateful_resources[local.ml_cl_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
     quoting_db_port                             = var.stateful_resources[local.ml_cl_resource_index].logical_service_port
@@ -205,24 +175,24 @@ locals {
     cep_mongodb_database                        = var.stateful_resources[local.cep_mongodb_resource_index].local_resource.mongodb_data.database_name
     cep_mongodb_user                            = var.stateful_resources[local.cep_mongodb_resource_index].local_resource.mongodb_data.user
     cep_mongodb_host                            = "${var.stateful_resources[local.cep_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
-    cep_mongodb_pass                            = data.vault_generic_secret.cep_mongodb_password.data.value
+    cep_mongodb_existing_secret                 = var.stateful_resources[local.cep_mongodb_resource_index].generate_secret_name
     cep_mongodb_port                            = var.stateful_resources[local.cep_mongodb_resource_index].logical_service_port
     cl_mongodb_database                         = var.stateful_resources[local.bulk_mongodb_resource_index].local_resource.mongodb_data.database_name
     cl_mongodb_user                             = var.stateful_resources[local.bulk_mongodb_resource_index].local_resource.mongodb_data.user
     cl_mongodb_host                             = "${var.stateful_resources[local.bulk_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
-    cl_mongodb_pass                             = data.vault_generic_secret.bulk_mongodb_password.data.value
+    cl_mongodb_existing_secret                  = var.stateful_resources[local.bulk_mongodb_resource_index].generate_secret_name
     cl_mongodb_port                             = var.stateful_resources[local.bulk_mongodb_resource_index].logical_service_port
     ttk_mongodb_database                        = var.stateful_resources[local.ttk_mongodb_resource_index].local_resource.mongodb_data.database_name
     ttk_mongodb_user                            = var.stateful_resources[local.ttk_mongodb_resource_index].local_resource.mongodb_data.user
     ttk_mongodb_host                            = "${var.stateful_resources[local.ttk_mongodb_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
-    ttk_mongodb_pass                            = data.vault_generic_secret.ttk_mongodb_password.data.value
+    ttk_mongodb_existing_secret                 = var.stateful_resources[local.ttk_mongodb_resource_index].generate_secret_name
     ttk_mongodb_port                            = var.stateful_resources[local.ttk_mongodb_resource_index].logical_service_port
-    third_party_consent_db_password             = data.vault_generic_secret.third_party_consent_oracle_db_password.data.value
+    third_party_consent_db_existing_secret      = var.stateful_resources[local.third_party_consent_oracle_db_resource_index].generate_secret_name
     third_party_consent_db_user                 = var.stateful_resources[local.third_party_consent_oracle_db_resource_index].local_resource.mysql_data.user
     third_party_consent_db_host                 = "${var.stateful_resources[local.third_party_consent_oracle_db_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
     third_party_consent_db_port                 = var.stateful_resources[local.third_party_consent_oracle_db_resource_index].logical_service_port
     third_party_consent_db_database             = var.stateful_resources[local.third_party_consent_oracle_db_resource_index].local_resource.mysql_data.database_name
-    third_party_auth_db_password                = data.vault_generic_secret.third_party_auth_db_password.data.value
+    third_party_auth_db_existing_secret         = var.stateful_resources[local.third_party_auth_db_resource_index].generate_secret_name
     third_party_auth_db_user                    = var.stateful_resources[local.third_party_auth_db_resource_index].local_resource.mysql_data.user
     third_party_auth_db_host                    = "${var.stateful_resources[local.third_party_auth_db_resource_index].logical_service_name}.stateful-services.svc.cluster.local"
     third_party_auth_db_port                    = var.stateful_resources[local.third_party_auth_db_resource_index].logical_service_port
@@ -245,39 +215,9 @@ locals {
     storage_class_name                          = var.storage_class_name
     jws_signing_priv_key                        = var.switch_jws_private_key
     ingress_class_name                          = "nginx"
-    private_subdomain 			   = var.private_subdomain
+    private_subdomain                           = var.private_subdomain
     quoting_service_simple_routing_mode_enabled = var.quoting_service_simple_routing_mode_enabled
   }
-}
-
-resource "kubernetes_secret" "central-ledger-mysql-secret" {
-  metadata {
-    name      = "${var.helm_mojaloop_release_name}-centralledger-mysql"
-    namespace = "mojaloop"
-  }
-
-  data = {
-    mysql-root-password = data.vault_generic_secret.mojaloop_cl_root_db_password.data.value
-    mysql-password      = data.vault_generic_secret.mojaloop_cl_db_password.data.value
-  }
-
-  type     = "opaque"
-  provider = kubernetes.k8s-main
-}
-
-resource "kubernetes_secret" "account-lookup-mysql-secret" {
-  metadata {
-    name      = "${var.helm_mojaloop_release_name}-account-lookup-mysql"
-    namespace = "mojaloop"
-  }
-
-  data = {
-    mysql-root-password = data.vault_generic_secret.mojaloop_als_root_db_password.data.value
-    mysql-password      = data.vault_generic_secret.mojaloop_als_db_password.data.value
-  }
-
-  type     = "opaque"
-  provider = kubernetes.k8s-main
 }
 
 /* resource "helm_release" "esp-mojaloop" {

@@ -64,7 +64,7 @@ auth:
   ## @param auth.existingSecret Existing secret with MongoDB(&reg;) credentials (keys: `mongodb-password`, `mongodb-root-password`, ` mongodb-replica-set-key`)
   ## NOTE: When it's set the previous parameters are ignored.
   ##
-  existingSecret: ""
+  existingSecret: ${existing_secret}
 
 persistence:
   ## @param persistence.enabled Enable MongoDB(&reg;) data persistence using PVC

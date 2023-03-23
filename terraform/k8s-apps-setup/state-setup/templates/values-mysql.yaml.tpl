@@ -42,6 +42,8 @@ auth:
   ##
   replicationPassword: ${root_password}
 
+  existingSecret: ${existing_secret}
+
 ## @section MySQL Primary parameters
 
 primary:
@@ -314,5 +316,11 @@ secondary:
 
 initdbScripts:
   # This script enables legacy authentication for MySQL v8. NodeJS MySQL Client currently does not support authentication plugins, reference: https://github.com/mysqljs/mysql/pull/2233
-  enableLegacyAuth.sql: |-
-    ALTER USER '${database_user}'@'%' IDENTIFIED WITH mysql_native_password BY '${password}';
+  enableLegacyAuth.sh: |
+    #!/bin/bash
+    set -e
+    DB_USER=${resource.local_resource.mysql_data.user}
+    echo "******* ALTER USER '$DB_USER' *******"
+    mysql -u root -p$MYSQL_ROOT_PASSWORD -e \
+    "ALTER USER '$DB_USER'@'%' IDENTIFIED WITH mysql_native_password BY '$MYSQL_PASSWORD';
+    echo "******* ALTER USER '$DB_USER' complete *******"
