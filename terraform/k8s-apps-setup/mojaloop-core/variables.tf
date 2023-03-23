@@ -84,6 +84,12 @@ variable "private_helm_repo_read_key" {
   default     = ""
 }
 
+variable "helm_mojaloop_repo" {
+  description = "repo for mojaloop charts"
+  type        = string
+  default     = "https://mojaloop.github.io/helm/repo"
+}
+
 variable "helm_finance_portal_version" {
   description = "version for finance portal helm chart and image tag"
   type        = string

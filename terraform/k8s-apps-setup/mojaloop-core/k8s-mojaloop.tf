@@ -105,7 +105,7 @@ resource "kubernetes_ingress_v1" "wso2-mojaloop-ingress" {
 }
 resource "helm_release" "mojaloop" {
   name             = var.helm_mojaloop_release_name
-  repository       = "http://mojaloop.io/helm/repo"
+  repository       = var.helm_mojaloop_repo
   chart            = "mojaloop"
   version          = var.helm_mojaloop_version
   namespace        = "mojaloop"
