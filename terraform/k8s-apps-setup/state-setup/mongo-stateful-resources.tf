@@ -4,10 +4,12 @@ resource "helm_release" "mongodb" {
   repository       = each.value.local_resource.resource_helm_repo
   chart            = each.value.local_resource.resource_helm_chart
   version          = each.value.local_resource.resource_helm_chart_version
-  namespace        = each.value.resource_namespace
-  create_namespace = true
+  namespace        = kubernetes_namespace.stateful_namespace[each.value.resource_namespace].metadata[0].name
+  create_namespace = false
   values = [
     templatefile("${path.module}/templates/${each.value.local_resource.resource_helm_values_ref}", {
+      password           = ""
+      root_password      = ""
       existing_secret    = each.value.local_resource.mongodb_data.existing_secret
       database_user      = each.value.local_resource.mongodb_data.user
       database_name      = each.value.local_resource.mongodb_data.database_name
@@ -18,4 +20,7 @@ resource "helm_release" "mongodb" {
     })
   ]
   provider = helm.helm-main
+  depends_on = [
+    helm_release.vault_secret_manifests
+  ]
 }

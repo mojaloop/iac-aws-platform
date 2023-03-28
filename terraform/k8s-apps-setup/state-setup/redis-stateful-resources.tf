@@ -4,12 +4,12 @@ resource "helm_release" "redis" {
   repository       = each.value.local_resource.resource_helm_repo
   chart            = each.value.local_resource.resource_helm_chart
   version          = each.value.local_resource.resource_helm_chart_version
-  namespace        = each.value.resource_namespace
-  create_namespace = true
+  namespace        = kubernetes_namespace.stateful_namespace[each.value.resource_namespace].metadata[0].name
+  create_namespace = false
   values = [
     templatefile("${path.module}/templates/${each.value.local_resource.resource_helm_values_ref}", {
       existing_secret     = each.value.local_resource.redis_data.existing_secret
-      existing_secret_key = each.value.local_resource.redis_data.existing_secret_key
+      existing_secret_key = each.value.local_resource.redis_data.password_secret_key
       storage_size        = each.value.local_resource.redis_data.storage_size
       storage_class_name  = var.storage_class_name
       name_override       = each.value.resource_name
@@ -19,4 +19,7 @@ resource "helm_release" "redis" {
     })
   ]
   provider = helm.helm-main
+  depends_on = [
+    helm_release.vault_secret_manifests
+  ]
 }

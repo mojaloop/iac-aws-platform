@@ -19,7 +19,7 @@ auth:
   ## @param auth.rootPassword Password for the `root` user. Ignored if existing secret is provided
   ## ref: https://github.com/bitnami/bitnami-docker-mysql#setting-the-root-password-on-first-run
   ##
-  rootPassword: ${root_password}
+  rootPassword: "${root_password}"
   ## @param auth.database Name for a custom database to create
   ## ref: https://github.com/bitnami/bitnami-docker-mysql/blob/master/README.md#creating-a-database-on-first-run
   ##
@@ -30,7 +30,7 @@ auth:
   username: ${database_user}
   ## @param auth.password Password for the new user. Ignored if existing secret is provided
   ##
-  password: ${password}
+  password: "${password}"
   ## @param auth.replicationUser MySQL replication user
   ## ref: https://github.com/bitnami/bitnami-docker-mysql#setting-up-a-replication-cluster
   ##
@@ -40,9 +40,9 @@ auth:
   replicationUser: replicator
   ## @param auth.replicationPassword MySQL replication user password. Ignored if existing secret is provided
   ##
-  replicationPassword: ${root_password}
+  replicationPassword: "${root_password}"
 
-  existingSecret: ${existing_secret}
+  existingSecret: "${existing_secret}"
 
 ## @section MySQL Primary parameters
 
@@ -50,34 +50,6 @@ primary:
   ## @param primary.configuration [string] Configure MySQL Primary with a custom my.cnf file
   ## ref: https://mysql.com/kb/en/mysql/configuring-mysql-with-mycnf/#example-of-configuration-file
   ##
-  configuration: |-
-    [mysqld]
-    default_authentication_plugin=mysql_native_password
-    skip-name-resolve
-    explicit_defaults_for_timestamp
-    basedir=/opt/bitnami/mysql
-    plugin_dir=/opt/bitnami/mysql/lib/plugin
-    port=3306
-    socket=/opt/bitnami/mysql/tmp/mysql.sock
-    datadir=/bitnami/mysql/data
-    tmpdir=/opt/bitnami/mysql/tmp
-    max_allowed_packet=16M
-    bind-address=0.0.0.0
-    pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
-    log-error=/opt/bitnami/mysql/logs/mysqld.log
-    character-set-server=UTF8
-    collation-server=utf8_general_ci
-
-    [client]
-    port=3306
-    socket=/opt/bitnami/mysql/tmp/mysql.sock
-    default-character-set=UTF8
-    plugin_dir=/opt/bitnami/mysql/lib/plugin
-
-    [manager]
-    port=3306
-    socket=/opt/bitnami/mysql/tmp/mysql.sock
-    pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
 
   ## @param primary.affinity [object] Affinity for MySQL primary pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
@@ -319,8 +291,13 @@ initdbScripts:
   enableLegacyAuth.sh: |
     #!/bin/bash
     set -e
-    DB_USER=${resource.local_resource.mysql_data.user}
-    echo "******* ALTER USER '$DB_USER' *******"
-    mysql -u root -p$MYSQL_ROOT_PASSWORD -e \
-    "ALTER USER '$DB_USER'@'%' IDENTIFIED WITH mysql_native_password BY '$MYSQL_PASSWORD';
-    echo "******* ALTER USER '$DB_USER' complete *******"
+    if [[ "$HOSTNAME" == *primary* ]]; then
+      echo "primary node"
+      DB_USER=${database_user}
+      echo "******* ALTER USER '$DB_USER' *******"
+      mysql -u root -p$MYSQL_ROOT_PASSWORD -e \
+      "ALTER USER '$DB_USER'@'%' IDENTIFIED WITH mysql_native_password BY '$MYSQL_PASSWORD';"
+      echo "******* ALTER USER '$DB_USER' complete *******"
+    else
+      echo "Not primary node"
+    fi

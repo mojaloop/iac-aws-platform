@@ -42,29 +42,24 @@ auth:
   ## @param auth.rootPassword MongoDB(&reg;) root password
   ## ref: https://github.com/bitnami/bitnami-docker-mongodb/blob/master/README.md#setting-the-root-password-on-first-run
   ##
-  rootPassword: ${root_password}
+  rootPassword: "${root_password}"
   ## MongoDB(&reg;) custom users and databases
   ## ref: https://github.com/bitnami/bitnami-docker-mongodb/blob/master/README.md#creating-users-and-databases-on-first-run
   ## @param auth.usernames List of custom users to be created during the initialization
   ## @param auth.passwords List of passwords for the custom users set at `auth.usernames`
   ## @param auth.databases List of custom databases to be created during the initialization
   ##
-  usernames: []
-  passwords: []
-  databases: []
-  ## @param auth.username DEPRECATED: use `auth.usernames` instead
-  ## @param auth.password DEPRECATED: use `auth.passwords` instead
-  ## @param auth.database DEPRECATED: use `auth.databases` instead
-  database: ${database_name}
-  username: ${database_user}
-  password: ${password}
+  usernames: ["${database_user}"]
+  passwords: ["${password}"]
+  databases: ["${database_name}"]
+
   ## @param auth.replicaSetKey Key used for authentication in the replicaset (only when `architecture=replicaset`)
   ##
   replicaSetKey: ""
   ## @param auth.existingSecret Existing secret with MongoDB(&reg;) credentials (keys: `mongodb-password`, `mongodb-root-password`, ` mongodb-replica-set-key`)
   ## NOTE: When it's set the previous parameters are ignored.
   ##
-  existingSecret: ${existing_secret}
+  existingSecret: "${existing_secret}"
 
 persistence:
   ## @param persistence.enabled Enable MongoDB(&reg;) data persistence using PVC
