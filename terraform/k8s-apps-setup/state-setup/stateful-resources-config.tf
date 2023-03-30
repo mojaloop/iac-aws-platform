@@ -1,7 +1,7 @@
-resource "helm_release" "vault_secret_manifests" {
+resource "helm_release" "vault_cr_pwdpolicy" {
   for_each = { for stateful_resource in local.enabled_stateful_resources : stateful_resource.resource_name => stateful_resource}
-  name = "vault-secret-manifests-${each.key}"
-  chart = "${path.module}/vault-crs"
+  name = "vault-cr-pwdpolicy-${each.key}"
+  chart = "${path.module}/vault-cr-pwdpolicy"
   create_namespace = false
   values = [templatefile("${path.module}/templates/values-vault-crs.yaml.tpl", {
     auth_svc_acct = "default"
@@ -9,6 +9,7 @@ resource "helm_release" "vault_secret_manifests" {
     auth_role = "policy-admin"
     resource_type = each.value.resource_type
     namespace = kubernetes_namespace.stateful_namespace[each.value.resource_namespace].metadata[0].name
+    secret_password_policy = templatefile("${path.module}/templates/password-policy.hcl.tpl", { password_length = 20, use_special_chars = false, special_char_list = "!@#$%^&*"})
     vault_base_path = each.value.generate_secret_vault_base_path
     resource_name = each.value.resource_name
     secret_name = each.value.generate_secret_name
@@ -16,6 +17,54 @@ resource "helm_release" "vault_secret_manifests" {
     secret_namespaces = "[${join(",", local.total_secret_namespaces[each.key])}]"
   })]
   provider = helm.helm-main
+}
+
+resource "helm_release" "vault_cr_randomsecret" {
+  for_each = { for stateful_resource in local.enabled_stateful_resources : stateful_resource.resource_name => stateful_resource}
+  name = "vault-cr-randomsecret-${each.key}"
+  chart = "${path.module}/vault-cr-randomsecret"
+  create_namespace = false
+  values = [templatefile("${path.module}/templates/values-vault-crs.yaml.tpl", {
+    auth_svc_acct = "default"
+    auth_path = "kubernetes_op"
+    auth_role = "policy-admin"
+    resource_type = each.value.resource_type
+    namespace = kubernetes_namespace.stateful_namespace[each.value.resource_namespace].metadata[0].name
+    secret_password_policy = templatefile("${path.module}/templates/password-policy.hcl.tpl", { password_length = 20, use_special_chars = false, special_char_list = "!@#$%^&*"})
+    vault_base_path = each.value.generate_secret_vault_base_path
+    resource_name = each.value.resource_name
+    secret_name = each.value.generate_secret_name
+    secret_keys_map  = { for key in each.value.generate_secret_keys : key => "'{{ .dynamicsecret_${replace(key, "-", "_")}.password }}'" }
+    secret_namespaces = "[${join(",", local.total_secret_namespaces[each.key])}]"
+  })]
+  provider = helm.helm-main
+  depends_on = [
+    helm_release.vault_cr_pwdpolicy
+  ]
+}
+
+resource "helm_release" "vault_cr_vaultsecret" {
+  for_each = { for stateful_resource in local.enabled_stateful_resources : stateful_resource.resource_name => stateful_resource}
+  name = "vault-cr-vaultsecret-${each.key}"
+  chart = "${path.module}/vault-cr-vaultsecret"
+  create_namespace = false
+  values = [templatefile("${path.module}/templates/values-vault-crs.yaml.tpl", {
+    auth_svc_acct = "default"
+    auth_path = "kubernetes_op"
+    auth_role = "policy-admin"
+    resource_type = each.value.resource_type
+    namespace = kubernetes_namespace.stateful_namespace[each.value.resource_namespace].metadata[0].name
+    secret_password_policy = templatefile("${path.module}/templates/password-policy.hcl.tpl", { password_length = 20, use_special_chars = false, special_char_list = "!@#$%^&*"})
+    vault_base_path = each.value.generate_secret_vault_base_path
+    resource_name = each.value.resource_name
+    secret_name = each.value.generate_secret_name
+    secret_keys_map  = { for key in each.value.generate_secret_keys : key => "'{{ .dynamicsecret_${replace(key, "-", "_")}.password }}'" }
+    secret_namespaces = "[${join(",", local.total_secret_namespaces[each.key])}]"
+  })]
+  provider = helm.helm-main
+  depends_on = [
+    helm_release.vault_cr_randomsecret
+  ]
 }
 
 locals {

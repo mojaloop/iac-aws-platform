@@ -8,9 +8,10 @@ resource "helm_release" "redis" {
   create_namespace = false
   values = [
     templatefile("${path.module}/templates/${each.value.local_resource.resource_helm_values_ref}", {
-      existing_secret     = each.value.local_resource.redis_data.existing_secret
-      existing_secret_key = each.value.local_resource.redis_data.password_secret_key
+      existing_secret     = each.value.local_resource.redis_data.existing_secret == null ? "" : each.value.local_resource.redis_data.existing_secret
+      existing_secret_key = each.value.local_resource.redis_data.password_secret_key == null ? "" : each.value.local_resource.redis_data.password_secret_key
       storage_size        = each.value.local_resource.redis_data.storage_size
+      auth_enabled        = each.value.local_resource.redis_data.auth_enabled
       storage_class_name  = var.storage_class_name
       name_override       = each.value.resource_name
       service_port        = each.value.local_resource.redis_data.service_port
@@ -20,6 +21,6 @@ resource "helm_release" "redis" {
   ]
   provider = helm.helm-main
   depends_on = [
-    helm_release.vault_secret_manifests
+    helm_release.vault_cr_vaultsecret
   ]
 }

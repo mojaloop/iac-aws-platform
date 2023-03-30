@@ -1,10 +1,10 @@
 include:
-  - remote: 'https://raw.githubusercontent.com/mojaloop/iac-aws-platform/v4.0.0-snapshot.5/gitlab_templates/gitlab_ci_templates/.gitlab-main-ci.yml'
-  - remote: 'https://raw.githubusercontent.com/mojaloop/iac-aws-platform/v4.0.0-snapshot.5/gitlab_templates/gitlab_ci_templates/.gitlab-ops-ci.yml'
-  - remote: 'https://raw.githubusercontent.com/mojaloop/iac-aws-platform/v4.0.0-snapshot.5/gitlab_templates/gitlab_ci_templates/.gitlab-tests-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/mojaloop/iac-aws-platform/v4.0.0/gitlab_templates/gitlab_ci_templates/.gitlab-main-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/mojaloop/iac-aws-platform/v4.0.0/gitlab_templates/gitlab_ci_templates/.gitlab-ops-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/mojaloop/iac-aws-platform/v4.0.0/gitlab_templates/gitlab_ci_templates/.gitlab-tests-ci.yml'
 
 
 variables:
   GIT_SSL_NO_VERIFY: "true"
-  PLATFORM_IAC_IMAGE_VERSION: "4.0.0-snapshot.5"
-  K3S_IAC_IMAGE_VERSION: "0.17.0"
+  PLATFORM_IAC_IMAGE_VERSION: "4.0.0"
+  K3S_IAC_IMAGE_VERSION: "0.19.0"

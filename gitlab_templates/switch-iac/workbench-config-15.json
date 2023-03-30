@@ -1,13 +1,13 @@
 {
   "client": "labs",
-  "environment": "sandbox",
+  "environment": "dev",
   "region": "eu-west-1",
   "AWS_DEFAULT_REGION": "eu-west-1",
   "wso2_mysql_repo_version": "v1.0.0",
   "helm_esp_version": "11.0.1",
   "helm_mcm_connection_manager_version": "0.6.1",
   "helm_nginx_version": "4.3.0",
-  "helm_mojaloop_version": "15.0.0-15728.988248e",
+  "helm_mojaloop_version": "15.0.0",
   "helm_mojaloop_simulator_version": "12.0.0",
   "helm_mojaloop_release_name": "moja",
   "helm_mojaloop_repo": "https://mojaloop.github.io/helm/repo",
@@ -41,7 +41,7 @@
   "grafana_slack_notifier_url": "https://hooks.slack.com/services/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",
   "TAG_ML_GP": "v12.0.4",
   "TAG_TTK_TEST": "15.0.0",
-  "TAG_PM4ML_TTK_TEST": "1.4.1",
+  "TAG_PM4ML_TTK_TEST": "1.4.2",
   "k8s_api_version": "1.24.6",
   "helm_haproxy_version": "1.7.2",
   "helm_keycloak_version": "6.0.0",
@@ -205,17 +205,17 @@
   "external_pm4ml_configs": [],
   "bizops_portal_users": [
     {
-      "username" : "test1",
-      "email" : "test1@test.com"
+      "username": "test1",
+      "email": "test1@test.com"
     },
     {
-      "username" : "test2",
-      "email" : "test2@test.com"
+      "username": "test2",
+      "email": "test2@test.com"
     }
   ],
   "custom_tags": {
-    "mojaloop/cost_center":  "mlf-iac-sandbox",
-    "mojaloop/env": "sandbox",
+    "mojaloop/cost_center": "mlf-iac-dev",
+    "mojaloop/env": "dev",
     "mojaloop/owner": "Samuel-Kummary",
     "hibernation": "no"
   },
@@ -228,34 +228,31 @@
       "logical_service_port": 6379,
       "logical_service_name": "thirdparty-auth-redis",
       "external_service": null,
-      "generate_secret_name": "redis-thirdparty-auth-svc-secret",
-      "generate_secret_keys": [
-          "password"
-      ],
-      "generate_secret_vault_base_path": "/secret/generated",
-      "generate_secret_extra_namespaces": [
-        "mojaloop"
-      ],
+      "generate_secret_name": null,
+      "generate_secret_keys": null,
+      "generate_secret_vault_base_path": null,
+      "generate_secret_extra_namespaces": null,
       "local_resource": {
         "override_service_name": "thirdparty-auth-svc-redis-master",
         "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "redis",
         "resource_helm_chart_version": "17.3.7",
         "resource_helm_values_ref": "values-redis.yaml.tpl",
-        "create_resource_random_password": true,
+        "create_resource_random_password": false,
         "mysql_data": null,
         "mongodb_data": null,
         "kafka_data": null,
         "redis_data": {
-          "existing_secret": "redis-thirdparty-auth-svc-secret",
-          "password_secret_key": "password",
-          "user": "consent-oracle",
+          "auth_enabled": false,
+          "existing_secret": null,
+          "password_secret_key": null,
+          "user": null,
           "user_password": null,
           "storage_size": "8Gi",
           "architecture": "standalone",
           "replica_count": 0,
           "service_port": 6379
-          }
+        }
       }
     },
     {
@@ -268,9 +265,9 @@
       "external_service": null,
       "generate_secret_name": "mysql-auth-svc-secret",
       "generate_secret_keys": [
-          "mysql-password",
-          "mysql-root-password",
-          "mysql-replication-password"
+        "mysql-password",
+        "mysql-root-password",
+        "mysql-replication-password"
       ],
       "generate_secret_vault_base_path": "/secret/generated",
       "generate_secret_extra_namespaces": [
@@ -280,7 +277,7 @@
         "override_service_name": null,
         "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
-        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_chart_version": "9.7.0",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": {
@@ -310,17 +307,19 @@
       "external_service": null,
       "generate_secret_name": "mysql-consent-oracle-secret",
       "generate_secret_keys": [
-          "mysql-password",
-          "mysql-root-password",
-          "mysql-replication-password"
+        "mysql-password",
+        "mysql-root-password",
+        "mysql-replication-password"
       ],
       "generate_secret_vault_base_path": "/secret/generated",
-      "generate_secret_extra_namespaces": null,
+      "generate_secret_extra_namespaces": [
+        "mojaloop"
+      ],
       "local_resource": {
         "override_service_name": null,
         "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
-        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_chart_version": "9.7.0",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": {
@@ -356,7 +355,7 @@
         "override_service_name": null,
         "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
-        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_chart_version": "9.7.0",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": {
@@ -422,9 +421,9 @@
       "external_service": null,
       "generate_secret_name": "mysql-account-lookup-secret",
       "generate_secret_keys": [
-          "mysql-password",
-          "mysql-root-password",
-          "mysql-replication-password"
+        "mysql-password",
+        "mysql-root-password",
+        "mysql-replication-password"
       ],
       "generate_secret_vault_base_path": "/secret/generated",
       "generate_secret_extra_namespaces": [
@@ -434,7 +433,7 @@
         "override_service_name": "account-lookup-db-primary",
         "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
-        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_chart_version": "9.7.0",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": {
@@ -464,9 +463,9 @@
       "external_service": null,
       "generate_secret_name": "mysql-central-ledger-secret",
       "generate_secret_keys": [
-          "mysql-password",
-          "mysql-root-password",
-          "mysql-replication-password"
+        "mysql-password",
+        "mysql-root-password",
+        "mysql-replication-password"
       ],
       "generate_secret_vault_base_path": "/secret/generated",
       "generate_secret_extra_namespaces": [
@@ -476,7 +475,7 @@
         "override_service_name": "central-ledger-db-primary",
         "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
-        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_chart_version": "9.7.0",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": {
@@ -512,7 +511,7 @@
         "override_service_name": null,
         "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
-        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_chart_version": "9.7.0",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": {
@@ -548,7 +547,7 @@
         "override_service_name": null,
         "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mysql",
-        "resource_helm_chart_version": "8.8.23",
+        "resource_helm_chart_version": "9.7.0",
         "resource_helm_values_ref": "values-mysql.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": {
@@ -578,8 +577,8 @@
       "external_service": null,
       "generate_secret_name": "mongodb-bulk-secret",
       "generate_secret_keys": [
-          "mongodb-password",
-          "mongodb-root-password"
+        "mongodb-passwords",
+        "mongodb-root-password"
       ],
       "generate_secret_vault_base_path": "/secret/generated",
       "generate_secret_extra_namespaces": null,
@@ -587,7 +586,7 @@
         "override_service_name": null,
         "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mongodb",
-        "resource_helm_chart_version": "11.0.3",
+        "resource_helm_chart_version": "13.3.1",
         "resource_helm_values_ref": "values-mongodb.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": null,
@@ -614,8 +613,8 @@
       "external_service": null,
       "generate_secret_name": "mongodb-cep-secret",
       "generate_secret_keys": [
-          "mongodb-password",
-          "mongodb-root-password"
+        "mongodb-passwords",
+        "mongodb-root-password"
       ],
       "generate_secret_vault_base_path": "/secret/generated",
       "generate_secret_extra_namespaces": null,
@@ -623,7 +622,7 @@
         "override_service_name": null,
         "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mongodb",
-        "resource_helm_chart_version": "11.0.3",
+        "resource_helm_chart_version": "13.3.1",
         "resource_helm_values_ref": "values-mongodb.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": null,
@@ -650,8 +649,8 @@
       "external_service": null,
       "generate_secret_name": "mongodb-reporting-events-secret",
       "generate_secret_keys": [
-          "mongodb-password",
-          "mongodb-root-password"
+        "mongodb-passwords",
+        "mongodb-root-password"
       ],
       "generate_secret_vault_base_path": "/secret/generated",
       "generate_secret_extra_namespaces": null,
@@ -659,7 +658,7 @@
         "override_service_name": null,
         "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "mongodb",
-        "resource_helm_chart_version": "11.0.3",
+        "resource_helm_chart_version": "13.3.1",
         "resource_helm_values_ref": "values-mongodb.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": null,
@@ -692,7 +691,7 @@
         "override_service_name": null,
         "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
         "resource_helm_chart": "kafka",
-        "resource_helm_chart_version": "15.2.1",
+        "resource_helm_chart_version": "19.0.2",
         "resource_helm_values_ref": "values-kafka.yaml.tpl",
         "create_resource_random_password": true,
         "mysql_data": null,
@@ -701,6 +700,42 @@
           "storage_size": "8Gi",
           "service_port": 9092
         },
+        "redis_data": null
+      }
+    },
+    {
+      "enabled": true,
+      "resource_name": "ttk-mongodb",
+      "resource_namespace": "mojaloop",
+      "resource_type": "mongodb",
+      "logical_service_port": 27017,
+      "logical_service_name": "ttk-mongodb-svc",
+      "external_service": null,
+      "generate_secret_name": "mongodb-ttk-secret",
+      "generate_secret_keys": [
+        "mongodb-passwords",
+        "mongodb-root-password"
+      ],
+      "generate_secret_vault_base_path": "/secret/generated",
+      "generate_secret_extra_namespaces": null,
+      "local_resource": {
+        "override_service_name": null,
+        "resource_helm_repo": "https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami",
+        "resource_helm_chart": "mongodb",
+        "resource_helm_chart_version": "13.3.1",
+        "resource_helm_values_ref": "values-mongodb.yaml.tpl",
+        "create_resource_random_password": true,
+        "mysql_data": null,
+        "mongodb_data": {
+          "existing_secret": "mongodb-ttk-secret",
+          "root_password": null,
+          "user": "ttk",
+          "user_password": null,
+          "database_name": "ttk",
+          "storage_size": "8Gi",
+          "service_port": 27017
+        },
+        "kafka_data": null,
         "redis_data": null
       }
     }

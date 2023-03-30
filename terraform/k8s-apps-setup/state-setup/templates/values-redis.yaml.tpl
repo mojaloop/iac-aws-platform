@@ -110,7 +110,7 @@ architecture: ${architecture}
 auth:
   ## @param auth.enabled Enable password authentication
   ## set to false until 3rd party supports auth
-  enabled: true
+  enabled: ${auth_enabled}
   ## @param auth.sentinel Enable password authentication on sentinels too
   ##
   sentinel: true
@@ -1664,3 +1664,8 @@ useExternalDNS:
   suffix: ""
   annotationKey: external-dns.alpha.kubernetes.io/
   additionalAnnotations: {}
+
+volumePermissions:
+  ## @param volumePermissions.enabled Enable init container that changes the owner and group of the persistent volume(s) mountpoint to `runAsUser:fsGroup`
+  ##
+  enabled: true

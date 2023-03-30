@@ -21,6 +21,6 @@ resource "helm_release" "mongodb" {
   ]
   provider = helm.helm-main
   depends_on = [
-    helm_release.vault_secret_manifests
+    helm_release.vault_cr_vaultsecret
   ]
 }

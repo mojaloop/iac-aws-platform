@@ -225,6 +225,7 @@ variable "stateful_resources" {
         service_port = number
       })
       redis_data = object({
+        auth_enabled = bool
         user_password = string
         existing_secret = string
         password_secret_key = string

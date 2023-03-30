@@ -69,3 +69,7 @@ persistence:
 service:
   ports:
     mongodb: ${service_port}
+volumePermissions:
+  ## @param volumePermissions.enabled Enable init container that changes the owner and group of the persistent volume(s) mountpoint to `runAsUser:fsGroup`
+  ##
+  enabled: true

@@ -11,3 +11,5 @@ secretKeyMap:
 %{ for key, value in secret_keys_map ~}
   ${key}: ${value}
 %{ endfor ~}
+secretPasswordPolicy: |
+  ${indent(2, secret_password_policy)}

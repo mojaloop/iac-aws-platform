@@ -22,7 +22,7 @@ resource "helm_release" "mysql_legacy" {
   ]
   provider = helm.helm-main
   depends_on = [
-    helm_release.vault_secret_manifests
+    helm_release.vault_cr_vaultsecret
   ]
 }
 
@@ -51,7 +51,7 @@ resource "helm_release" "mysql" {
   ]
   provider = helm.helm-main
   depends_on = [
-    helm_release.vault_secret_manifests
+    helm_release.vault_cr_vaultsecret
   ]
 }
 
