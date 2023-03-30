@@ -29,107 +29,6 @@ variables:
     reports:
       junit: gp_report.xml
 
-1. Manual Run PM4ML GP Tests:
-  stage: "Run Tests"
-  extends: .Run PM4ML GP Tests-job-template
-  when: manual
-  except:
-    - schedules
-
-1. Scheduled Run PM4ML GP Tests:
-  stage: "Run Tests"
-  allow_failure: true
-  extends: .Run PM4ML GP Tests-job-template
-  only:
-    refs:
-      - schedules
-    variables:
-      - $SCHEDULE_PM4ML == "PM4ML_GP"
-
-2. Run PM4ML UI Tests:
-  stage: "Run Tests"
-  allow_failure: true
-  when: manual
-  script:
-    - git clone -b MBP-137 https://github.com/pm4ml/mojaloop-payment-manager-ui.git ${CI_IMAGE_PROJECT_DIR}/mojaloop-payment-manager-ui
-    - exit_code=0
-    - cd ${CI_IMAGE_PROJECT_DIR}/mojaloop-payment-manager-ui/ui-tests/tests
-    - echo ${SLACK_TOKEN}
-    - npm install testcafe-reporter-html
-    - echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
-    - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
-    - apt-get update
-    - apt-get install -y google-chrome-stable
-    - npm ci
-    - ENV="other" PM4ML_ENDPOINT=${PM4ML_ENDPOINT} SIM_CORE_CONNECTOR_ENDPOINT=${SIM_CORE_CONNECTOR_ENDPOINT} npm run test:headless | tee report.log || exit_code=$?
-    - cp ${CI_IMAGE_PROJECT_DIR}/mojaloop-payment-manager-ui/ui-tests/tests/report.log ${CI_PROJECT_DIR}/mojaloop-payment-manager-ui_report.log
-  after_script:
-    - curl https://slack.com/api/files.upload
-      -F file=@"mojaloop-payment-manager-ui_report.log"
-      -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}"
-      -F token="${SLACK_TOKEN}"
-      -F title="Run Mojaloop Payment Manager UI Tests"
-      -F filetype="log"
-  artifacts:
-    paths:
-      - mojaloop-payment-manager-ui_report.log
-      - exit $exit_code
-
-# #job template for 4. Run Platform GP Tests:
-# .Run Platform GP Tests-job-template:
-#   script:
-#     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
-#     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
-#     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-#     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
-#     - cp $CI_PROJECT_DIR/tests/Myanmar-Golden-Path.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests
-#     - cd sim_tests
-#     - jq -s '[.[][]]' onboarding_external_pm4ml_output.json onboarding_internal_pm4ml_output.json > /tmp/onboarding_pm4ml_output.json
-#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
-#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
-#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Registration.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json || true
-#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Setup.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
-#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Sim_Backend.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
-#     - newman run Myanmar-Golden-Path.postman_collection.json --ssl-client-cert-list test_cert_list.json --folder feature-tests --insecure -e Lab.postman_environment.json --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/Platform_report.html --reporter-junit-export ${CI_PROJECT_DIR}/alias_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
-#   after_script:
-#     - curl https://slack.com/api/files.upload
-#       -F file=@"Platform_report.html"
-#       -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}"
-#       -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
-#       -F title="Myanmar Goldenpath Test (Postman) Results"
-#       -F filetype="html"
-#   artifacts:
-#     paths:
-#       - Platform_report.html
-      
-# #    - curl https://slack.com/api/files.upload
-# #     -F file=@"alias_report.html"
-# #      -F channels="${SLACK_GITLABCI_GP_REPORTS_CHANNEL_NAME}"
-# #      -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
-# #      -F title="Alias Goldenpath Test (Postman) Results.'${ENVIRONMENT}'-$(date +\"%Y-%m-%d-%H:%M:%S\")"
-# #      -F filetype="html"
-# #  artifacts:
-# #    reports:
-# #      junit: alias_report.xml
-
-
-# 3. Manual Run Platform GP Tests:
-#   stage: "Run Tests"
-#   extends: .Run Platform GP Tests-job-template
-#   when: manual
-#   except:
-#     - schedules
-
-# 3. Scheduled Run Platform GP Tests:
-#   stage: "Run Tests"
-#   allow_failure: true
-#   extends: .Run Platform GP Tests-job-template
-#   only:
-#     refs:
-#       - schedules
-#     variables:
-#       - $SCHEDULE_PLATFORM == "PLAT_GP"
-
 .ttk-snippets:
   # image: &ttk-snippets-image
   #   name: mojaloop/ml-testing-toolkit-client-lib:latest
@@ -214,7 +113,121 @@ variables:
       - ${CI_PROJECT_DIR}/ttk-provisioning-report.html
       - ${CI_PROJECT_DIR}/ttk-goldenpath-report.html
 
-3. Run PM4ML TTK Tests:
+.helm-test-snippets:
+  helm-test-snippets-execute-helm-test: &helm-test-snippets-execute-helm-test
+    - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf test $helm_mojaloop_release_name --filter name=$helm_mojaloop_release_name-$testJobName -n mojaloop || true
+  helm-test-snippets-console-out: &helm-test-snippets-console-out
+    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop logs $helm_mojaloop_release_name-$testJobName
+  helm-test-snippets-download-report: &helm-test-snippets-download-report
+    - |
+      reportUrl=`kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop logs $helm_mojaloop_release_name-$testJobName --tail=20 | grep -E -i -o 'Report saved on TTK backend server successfully and is available at (.*)html' | awk '{print $12}'`
+      wget $reportUrl -O ${CI_PROJECT_DIR}/${testJobName}.html
+  helm-test-snippets-exit-with-code: &helm-test-snippets-exit-with-code
+    - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop get pod $helm_mojaloop_release_name-$testJobName --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+
+
+1. PM4ML - GP Tests:
+  stage: "Run Tests"
+  extends: .Run PM4ML GP Tests-job-template
+  when: manual
+  except:
+    - schedules
+
+1. PM4ML - Scheduled GP Tests:
+  stage: "Run Tests"
+  allow_failure: true
+  extends: .Run PM4ML GP Tests-job-template
+  only:
+    refs:
+      - schedules
+    variables:
+      - $SCHEDULE_PM4ML == "PM4ML_GP"
+
+2. PM4ML - UI Tests:
+  stage: "Run Tests"
+  allow_failure: true
+  when: manual
+  script:
+    - git clone -b MBP-137 https://github.com/pm4ml/mojaloop-payment-manager-ui.git ${CI_IMAGE_PROJECT_DIR}/mojaloop-payment-manager-ui
+    - exit_code=0
+    - cd ${CI_IMAGE_PROJECT_DIR}/mojaloop-payment-manager-ui/ui-tests/tests
+    - echo ${SLACK_TOKEN}
+    - npm install testcafe-reporter-html
+    - echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
+    - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+    - apt-get update
+    - apt-get install -y google-chrome-stable
+    - npm ci
+    - ENV="other" PM4ML_ENDPOINT=${PM4ML_ENDPOINT} SIM_CORE_CONNECTOR_ENDPOINT=${SIM_CORE_CONNECTOR_ENDPOINT} npm run test:headless | tee report.log || exit_code=$?
+    - cp ${CI_IMAGE_PROJECT_DIR}/mojaloop-payment-manager-ui/ui-tests/tests/report.log ${CI_PROJECT_DIR}/mojaloop-payment-manager-ui_report.log
+  after_script:
+    - curl https://slack.com/api/files.upload
+      -F file=@"mojaloop-payment-manager-ui_report.log"
+      -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}"
+      -F token="${SLACK_TOKEN}"
+      -F title="Run Mojaloop Payment Manager UI Tests"
+      -F filetype="log"
+  artifacts:
+    paths:
+      - mojaloop-payment-manager-ui_report.log
+      - exit $exit_code
+
+# #job template for 4. Run Platform GP Tests:
+# .Run Platform GP Tests-job-template:
+#   script:
+#     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/sim_tests/ $CI_IMAGE_PROJECT_DIR/sim_tests --sse
+#     - aws s3 sync s3://${BUCKET}/${TF_VAR_environment}/k8s-cluster/secrets_chart/ $CI_IMAGE_PROJECT_DIR/secrets_chart --sse
+#     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_internal_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+#     - aws s3 cp s3://${BUCKET}/${TF_VAR_environment}/k3saddons/onboarding_external_pm4ml_output.json $CI_IMAGE_PROJECT_DIR/sim_tests
+#     - cp $CI_PROJECT_DIR/tests/Myanmar-Golden-Path.postman_collection.json $CI_IMAGE_PROJECT_DIR/sim_tests
+#     - cd sim_tests
+#     - jq -s '[.[][]]' onboarding_external_pm4ml_output.json onboarding_internal_pm4ml_output.json > /tmp/onboarding_pm4ml_output.json
+#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Deregister_Existing_Oracles.postman_collection.json --insecure -e Lab.postman_environment.json
+#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Central_Ledger.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
+#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Registration.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json || true
+#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Account_Alias_Oracle_Setup.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d /tmp/onboarding_pm4ml_output.json || true
+#     - newman run https://raw.githubusercontent.com/pm4ml/pm4ml-test-scripts/${TAG_PM4ML_GP}/postman/Onboard-Generic-FSP-Sim_Backend.postman_collection.json --insecure -e Lab.postman_environment.json --ssl-client-cert-list test_cert_list.json -d onboarding_internal_pm4ml_output.json || true
+#     - newman run Myanmar-Golden-Path.postman_collection.json --ssl-client-cert-list test_cert_list.json --folder feature-tests --insecure -e Lab.postman_environment.json --reporters html,junit,cli --reporter-html-export ${CI_PROJECT_DIR}/Platform_report.html --reporter-junit-export ${CI_PROJECT_DIR}/alias_report.xml --reporter-html-template ../tests/template-default-colored.hbs -x
+#   after_script:
+#     - curl https://slack.com/api/files.upload
+#       -F file=@"Platform_report.html"
+#       -F channels="${SLACK_GITLABCI_ALERTS_CHANNEL_NAME}"
+#       -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
+#       -F title="Myanmar Goldenpath Test (Postman) Results"
+#       -F filetype="html"
+#   artifacts:
+#     paths:
+#       - Platform_report.html
+      
+# #    - curl https://slack.com/api/files.upload
+# #     -F file=@"alias_report.html"
+# #      -F channels="${SLACK_GITLABCI_GP_REPORTS_CHANNEL_NAME}"
+# #      -F token="${SLACK_GITLABCI_ALERTS_TOKEN}"
+# #      -F title="Alias Goldenpath Test (Postman) Results.'${ENVIRONMENT}'-$(date +\"%Y-%m-%d-%H:%M:%S\")"
+# #      -F filetype="html"
+# #  artifacts:
+# #    reports:
+# #      junit: alias_report.xml
+
+
+# 3. Manual Run Platform GP Tests:
+#   stage: "Run Tests"
+#   extends: .Run Platform GP Tests-job-template
+#   when: manual
+#   except:
+#     - schedules
+
+# 3. Scheduled Run Platform GP Tests:
+#   stage: "Run Tests"
+#   allow_failure: true
+#   extends: .Run Platform GP Tests-job-template
+#   only:
+#     refs:
+#       - schedules
+#     variables:
+#       - $SCHEDULE_PLATFORM == "PLAT_GP"
+
+3. PM4ML - TTK Tests:
   stage: "Run Tests"
   # image: *ttk-snippets-image
   before_script:
@@ -249,21 +262,7 @@ variables:
 #      - ${CI_PROJECT_DIR}/pm4ml-ttk-goldenpath-report.html
   when: manual
 
-4. Run TTK Tests:
-  stage: "Run Tests"
-  # image: *ttk-snippets-image
-  before_script:
-    - echo "running with testing toolkit image"
-  script:
-    - *ttk-snippets-set-env-vars
-    - *ttk-snippets-download-ttk-test-cases
-    - *ttk-snippets-download-default-env
-    - *ttk-snippets-execute-provisioning-collection
-    - *ttk-snippets-execute-golden-path-collection
-  artifacts: *ttk-snippets-artifacts
-  when: manual
-
-5. Run RBAC Tests:
+4. BOF - RBAC Tests:
   stage: "Run Tests"
   script:
     - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf test bof --filter name=bof-rbac-tests -n mojaloop || true
@@ -271,7 +270,7 @@ variables:
     - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop get pod bof-rbac-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
-6. Run Report Tests:
+5. BOF - Report Tests:
   stage: "Run Tests"
   script:
     - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  test bof --filter name=bof-report-tests -n mojaloop || true
@@ -279,7 +278,7 @@ variables:
     - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop get pod bof-report-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
-7. Run MCM Tests:
+6. MCM - Tests:
   stage: "Run Tests"
   script:
     - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  test connection-manager -n mcm || true
@@ -287,38 +286,125 @@ variables:
     - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mcm get pod connection-manager-api-test --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
-9. Run TTK Bulk Tests:
-  stage: "Run Tests"
-  # image: *ttk-snippets-image
-  before_script:
-    - echo "running with testing toolkit image"
-  script:
-    - *ttk-snippets-set-env-vars
-    - *ttk-snippets-download-ttk-test-cases
-    - *ttk-snippets-download-default-env
-    - *ttk-snippets-execute-provisioning-collection
-    - *ttk-snippets-execute-bulk-transfers-collection
-  artifacts: &ttk-snippets-artifacts
-    when: always
-    paths:
-      - ${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html
-  when: manual
 
-10. Run TTK SDK Bulk Tests:
+# 7. ML - GP Tests:
+#   stage: "Run Tests"
+#   # image: *ttk-snippets-image
+#   before_script:
+#     - echo "running with testing toolkit image"
+#   script:
+#     - *ttk-snippets-set-env-vars
+#     - *ttk-snippets-download-ttk-test-cases
+#     - *ttk-snippets-download-default-env
+#     - *ttk-snippets-execute-provisioning-collection
+#     - *ttk-snippets-execute-golden-path-collection
+#   artifacts: *ttk-snippets-artifacts
+#   when: manual
+
+# 8. ML - Bulk Tests:
+#   stage: "Run Tests"
+#   # image: *ttk-snippets-image
+#   before_script:
+#     - echo "running with testing toolkit image"
+#   script:
+#     - *ttk-snippets-set-env-vars
+#     - *ttk-snippets-download-ttk-test-cases
+#     - *ttk-snippets-download-default-env
+#     - *ttk-snippets-execute-provisioning-collection
+#     - *ttk-snippets-execute-bulk-transfers-collection
+#   artifacts: &ttk-snippets-artifacts
+#     when: always
+#     paths:
+#       - ${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html
+#   when: manual
+
+# 9. ML - SDK Bulk Tests:
+#   stage: "Run Tests"
+#   # image: *ttk-snippets-image
+#   before_script:
+#     - echo "running with testing toolkit image"
+#   script:
+#     - *ttk-snippets-set-env-vars
+#     - *ttk-snippets-download-ttk-test-cases
+#     - *ttk-snippets-download-default-env
+#     - *ttk-snippets-download-ttksim1-env
+#     - *ttk-snippets-execute-sdk-bulk-setup-collection
+#     - *ttk-snippets-execute-sdk-bulk-validation-collection
+#   artifacts: &ttk-snippets-artifacts
+#     when: always
+#     paths:
+#       - ${CI_PROJECT_DIR}/ttk-sdk-bulk-setup-report.html
+#       - ${CI_PROJECT_DIR}/ttk-sdk-bulk-val-report.html
+#   when: manual
+
+
+7. ML - GP Tests:
   stage: "Run Tests"
-  # image: *ttk-snippets-image
-  before_script:
-    - echo "running with testing toolkit image"
   script:
-    - *ttk-snippets-set-env-vars
-    - *ttk-snippets-download-ttk-test-cases
-    - *ttk-snippets-download-default-env
-    - *ttk-snippets-download-ttksim1-env
-    - *ttk-snippets-execute-sdk-bulk-setup-collection
-    - *ttk-snippets-execute-sdk-bulk-validation-collection
-  artifacts: &ttk-snippets-artifacts
+    - testJobName=ml-ttk-test-setup
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - testJobName=ml-ttk-test-val-gp
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - *helm-test-snippets-exit-with-code
+  when: manual
+  artifacts:
     when: always
     paths:
-      - ${CI_PROJECT_DIR}/ttk-sdk-bulk-setup-report.html
-      - ${CI_PROJECT_DIR}/ttk-sdk-bulk-val-report.html
+      - ${CI_PROJECT_DIR}/ml-ttk-test-setup.html
+      - ${CI_PROJECT_DIR}/ml-ttk-test-val-gp.html
+
+8. ML - Bulk Tests:
+  stage: "Run Tests"
+  script:
+    - testJobName=ml-ttk-test-val-bulk
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - *helm-test-snippets-exit-with-code
   when: manual
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ml-ttk-test-val-bulk.html
+
+9. ML - Third Party Tests:
+  stage: "Run Tests"
+  script:
+    - testJobName=ml-ttk-test-setup-tp
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - testJobName=ml-ttk-test-val-tp
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - *helm-test-snippets-exit-with-code
+  when: manual
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ml-ttk-test-setup-tp.html
+      - ${CI_PROJECT_DIR}/ml-ttk-test-val-tp.html
+
+10. ML - SDK Bulk Tests:
+  stage: "Run Tests"
+  script:
+    - testJobName=ml-ttk-test-setup-sdk-bulk
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - testJobName=ml-ttk-test-val-sdk-bulk
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - *helm-test-snippets-exit-with-code
+  when: manual
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ml-ttk-test-setup-sdk-bulk.html
+      - ${CI_PROJECT_DIR}/ml-ttk-test-val-sdk-bulk.html

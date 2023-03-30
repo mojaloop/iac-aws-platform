@@ -707,7 +707,11 @@ ml-testing-toolkit:
 ml-ttk-test-setup:
   tests:
     enabled: true
-    weight: -6
+  config:
+    testSuiteName: Provisioning
+    environmentName: ${private_subdomain}
+    saveReport: true
+    saveReportBaseUrl: http://ttkbackend.${private_subdomain}
   parameters:
     <<: *simNames
   testCaseEnvironmentFile:  *ttkInputValues
@@ -715,22 +719,71 @@ ml-ttk-test-setup:
 ml-ttk-test-val-gp:
   tests:
     enabled: true
-    weight: -5
   config:
     testSuiteName: GP Tests
-    environmentName: QA
+    environmentName: ${private_subdomain}
+    saveReport: true
+    saveReportBaseUrl: http://ttkbackend.${private_subdomain}
   parameters:
     <<: *simNames
   testCaseEnvironmentFile:  *ttkInputValues
 
-# ml-ttk-test-val-bulk:
-#   tests:
-#     enabled: true
+ml-ttk-test-val-bulk:
+  tests:
+    enabled: true
+  config:
+    testSuiteName: Bulk Tests
+    environmentName: ${private_subdomain}
+    saveReport: true
+    saveReportBaseUrl: http://ttkbackend.${private_subdomain}
+  parameters:
+    <<: *simNames
+  testCaseEnvironmentFile:  *ttkInputValues
 
-# ml-ttk-test-setup-tp:
-#   tests:
-#     enabled: true
+ml-ttk-test-setup-tp:
+  tests:
+    enabled: true
+  config:
+    testSuiteName: Third Party Provisioning Tests
+    environmentName: ${private_subdomain}
+    saveReport: true
+    saveReportBaseUrl: http://ttkbackend.${private_subdomain}
+  parameters:
+    <<: *simNames
+  testCaseEnvironmentFile:  *ttkInputValues
 
-# ml-ttk-test-val-tp:
-#   tests:
-#     enabled: true
+ml-ttk-test-val-tp:
+  tests:
+    enabled: true
+  config:
+    testSuiteName: Third Party Validation Tests
+    environmentName: ${private_subdomain}
+    saveReport: true
+    saveReportBaseUrl: http://ttkbackend.${private_subdomain}
+  parameters:
+    <<: *simNames
+  testCaseEnvironmentFile:  *ttkInputValues
+
+ml-ttk-test-setup-sdk-bulk:
+  tests:
+    enabled: true
+  config:
+    testSuiteName: SDK Bulk Provisioning Tests
+    environmentName: ${private_subdomain}
+    saveReport: true
+    saveReportBaseUrl: http://ttkbackend.${private_subdomain}
+  parameters:
+    <<: *simNames
+  testCaseEnvironmentFile:  *ttkInputValues
+
+ml-ttk-test-val-sdk-bulk:
+  tests:
+    enabled: true
+  config:
+    testSuiteName: SDK Bulk Validation Tests
+    environmentName: ${private_subdomain}
+    saveReport: true
+    saveReportBaseUrl: http://ttksim1.${private_subdomain}
+  parameters:
+    <<: *simNames
+  testCaseEnvironmentFile:  *ttkInputValues
