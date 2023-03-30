@@ -8,10 +8,10 @@ resource "helm_release" "vault_cr_pwdpolicy" {
     auth_path = "kubernetes_op"
     auth_role = "policy-admin"
     resource_type = each.value.resource_type
-    namespace = kubernetes_namespace.stateful_namespace[each.value.resource_namespace].metadata[0].name
-    secret_password_policy = templatefile("${path.module}/templates/password-policy.hcl.tpl", { password_length = 20, use_special_chars = false, special_char_list = "!@#$%^&*"})
-    vault_base_path = each.value.generate_secret_vault_base_path
     resource_name = each.value.resource_name
+    namespace = kubernetes_namespace.stateful_namespace[each.value.resource_namespace].metadata[0].name
+    secret_password_policy = templatefile("${path.module}/templates/password-policy.hcl.tpl", { password_length = 20, use_special_chars = var.password_policy_use_special_chars, special_char_list = var.password_policy_special_chars})
+    vault_base_path = each.value.generate_secret_vault_base_path
     secret_name = each.value.generate_secret_name
     secret_keys_map  = { for key in each.value.generate_secret_keys : key => "'{{ .dynamicsecret_${replace(key, "-", "_")}.password }}'" }
     secret_namespaces = "[${join(",", local.total_secret_namespaces[each.key])}]"
@@ -29,10 +29,10 @@ resource "helm_release" "vault_cr_randomsecret" {
     auth_path = "kubernetes_op"
     auth_role = "policy-admin"
     resource_type = each.value.resource_type
-    namespace = kubernetes_namespace.stateful_namespace[each.value.resource_namespace].metadata[0].name
-    secret_password_policy = templatefile("${path.module}/templates/password-policy.hcl.tpl", { password_length = 20, use_special_chars = false, special_char_list = "!@#$%^&*"})
-    vault_base_path = each.value.generate_secret_vault_base_path
     resource_name = each.value.resource_name
+    namespace = kubernetes_namespace.stateful_namespace[each.value.resource_namespace].metadata[0].name
+    secret_password_policy = templatefile("${path.module}/templates/password-policy.hcl.tpl", { password_length = 20, use_special_chars = var.password_policy_use_special_chars, special_char_list = var.password_policy_special_chars})
+    vault_base_path = each.value.generate_secret_vault_base_path
     secret_name = each.value.generate_secret_name
     secret_keys_map  = { for key in each.value.generate_secret_keys : key => "'{{ .dynamicsecret_${replace(key, "-", "_")}.password }}'" }
     secret_namespaces = "[${join(",", local.total_secret_namespaces[each.key])}]"
@@ -53,10 +53,10 @@ resource "helm_release" "vault_cr_vaultsecret" {
     auth_path = "kubernetes_op"
     auth_role = "policy-admin"
     resource_type = each.value.resource_type
-    namespace = kubernetes_namespace.stateful_namespace[each.value.resource_namespace].metadata[0].name
-    secret_password_policy = templatefile("${path.module}/templates/password-policy.hcl.tpl", { password_length = 20, use_special_chars = false, special_char_list = "!@#$%^&*"})
-    vault_base_path = each.value.generate_secret_vault_base_path
     resource_name = each.value.resource_name
+    namespace = kubernetes_namespace.stateful_namespace[each.value.resource_namespace].metadata[0].name
+    secret_password_policy = templatefile("${path.module}/templates/password-policy.hcl.tpl", { password_length = 20, use_special_chars = var.password_policy_use_special_chars, special_char_list = var.password_policy_special_chars})
+    vault_base_path = each.value.generate_secret_vault_base_path
     secret_name = each.value.generate_secret_name
     secret_keys_map  = { for key in each.value.generate_secret_keys : key => "'{{ .dynamicsecret_${replace(key, "-", "_")}.password }}'" }
     secret_namespaces = "[${join(",", local.total_secret_namespaces[each.key])}]"

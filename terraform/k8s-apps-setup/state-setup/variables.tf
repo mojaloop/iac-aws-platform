@@ -16,6 +16,17 @@ variable "storage_class_name" {
   default     = "longhorn"
 }
 
+variable "password_policy_special_chars" {
+  description = "special chars for password policies"
+  type        = string
+  default     = "!@#$%^&*"
+}
+
+variable "password_policy_use_special_chars" {
+  description = "use special chars for password policies?"
+  type        = bool
+  default     = true
+}
 
 variable "stateful_resources" {
   description = "stateful resource config data"
