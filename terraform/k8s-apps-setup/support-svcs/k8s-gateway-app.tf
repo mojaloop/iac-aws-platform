@@ -13,10 +13,10 @@ resource "vault_generic_secret" "wso2_admin_password" {
 }
 
 data "vault_generic_secret" "wso2_db_password" {
-  path = "${var.stateful_resources[local.wso2_resource_index].vault_credential_paths.pw_data.user_password_path_prefix}/wso2-db"
+  path = "${var.stateful_resources[local.wso2_resource_index].generate_secret_vault_base_path}/${var.stateful_resources[local.wso2_resource_index].resource_name}/password"
 }
 data "vault_generic_secret" "wso2_root_db_password" {
-  path = "${var.stateful_resources[local.wso2_resource_index].vault_credential_paths.pw_data.root_password_path_prefix}/wso2-db"
+  path = "${var.stateful_resources[local.wso2_resource_index].generate_secret_vault_base_path}/${var.stateful_resources[local.wso2_resource_index].resource_name}/root_password"
 }
 locals {
   wso2_resource_index = index(var.stateful_resources.*.resource_name, "wso2-db")

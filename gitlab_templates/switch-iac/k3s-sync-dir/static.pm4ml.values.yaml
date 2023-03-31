@@ -46,7 +46,7 @@ mojaloop-core-connector:
     repository: pm4ml/wallet-core-connector
     tag: 1.0.34
   env:
-    MLCONN_OUTBOUND_ENDPOINT: "http://{{ item.value.helm_release_name }}-scheme-adapter:4001"
+    MLCONN_OUTBOUND_ENDPOINT: "http://{{ item.value.helm_release_name }}-sdk-scheme-adapter-api-svc:4001"
     BACKEND_ENDPOINT: "http://sim-backend:3000"
   livenessProbe:
     enabled: true
@@ -54,11 +54,12 @@ mojaloop-core-connector:
     enabled: true
 
 scheme-adapter:
-  env:
-    RESOURCE_VERSIONS: transfers=1.1,
-    RESERVE_NOTIFICATION: true
-    AUTO_ACCEPT_PARTY: true
-    AUTO_ACCEPT_QUOTES: true
+  sdk-scheme-adapter-api-svc:
+    env:
+      RESOURCE_VERSIONS: transfers=1.1,
+      RESERVE_NOTIFICATION: true
+      AUTO_ACCEPT_PARTY: true
+      AUTO_ACCEPT_QUOTES: true
 
 sim-backend:
   rules: |-

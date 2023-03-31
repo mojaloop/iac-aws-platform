@@ -29,14 +29,111 @@ variables:
     reports:
       junit: gp_report.xml
 
-1. Manual Run PM4ML GP Tests:
+.ttk-snippets:
+  # image: &ttk-snippets-image
+  #   name: mojaloop/ml-testing-toolkit-client-lib:latest
+  set-env-vars: &ttk-snippets-set-env-vars
+    # - export TERRAFORM_VERSION=1.0.5
+    # - export GLIBC_VER=2.34-r0
+    # - apk --no-cache add binutils curl jq && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk && apk add --no-cache glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip && unzip awscliv2.zip && aws/install && rm -rf awscliv2.zip aws /usr/local/aws-cli/v2/*/dist/aws_completer /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index /usr/local/aws-cli/v2/*/dist/awscli/examples glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk /var/cache/apk/*
+    # - wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/bin/ && rm /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+    - export bucket=$REMOTE_STATE_BUCKET
+    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
+    - export TTK_TESTCASES_VERSION=${TAG_TTK_TEST}
+    - export PM4ML_TTK_TESTCASES_VERSION=${TAG_PM4ML_TTK_TEST}
+    - export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+    - export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    - export AWS_DEFAULT_REGION=${region}
+    - aws s3 sync s3://$bucket/$environment ./k8ss3/ --sse || true
+    - export private_subdomain=$(terraform output -state=k8ss3/base-infra-aws/terraform.tfstate private_subdomain | tr -d '"')
+    - export public_subdomain=$(terraform output -state=k8ss3/base-infra-aws/terraform.tfstate public_subdomain | tr -d '"')
+    - export ttkBackendUrl=http://ttkbackend.${private_subdomain};
+    - export ttkSim1TtkBackendUrl=http://ttksim1.${private_subdomain};
+    - export pm4mlTtkSim1TtkBackendUrl=http://ttk.pm4mlttksim1.${client}${environment}k3s.${public_subdomain};
+    - npm install @mojaloop/ml-testing-toolkit-client-lib --global
+  download-ttk-test-cases: &ttk-snippets-download-ttk-test-cases
+    - |
+      cd /tmp;
+      export testCasesZipUrl=https://github.com/mojaloop/testing-toolkit-test-cases/archive/refs/tags/v${TTK_TESTCASES_VERSION}.zip;
+      echo "Downloading the test collection from $testCasesZipUrl";
+      wget $testCasesZipUrl -O downloaded-test-collections.zip;
+      mkdir tmp_test_cases;
+      unzip -d tmp_test_cases -o downloaded-test-collections.zip;
+      rm downloaded-test-collections.zip
+  download-default-env: &ttk-snippets-download-default-env
+    - |
+      echo "Downloading the default environment file...";
+      cd /tmp;
+      wget -O user_config.json $ttkBackendUrl/api/config/user;
+      defaultEnvFileName=`node -pe 'JSON.parse(process.argv[1]).runtime.DEFAULT_ENVIRONMENT_FILE_NAME' "$(cat user_config.json)"`;
+      wget -O environment_http_response.json $ttkBackendUrl/api/samples/loadFolderWise?environment=examples/environments/$defaultEnvFileName;
+      node -pe 'JSON.stringify({inputValues: JSON.parse(process.argv[1]).body.environment})' "$(cat environment_http_response.json)" > cli-testcase-environment.json;
+  execute-provisioning-collection: &ttk-snippets-execute-provisioning-collection
+    - |
+      cd /tmp;
+      export provisioningTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/provisioning;
+      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$provisioningTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-provisioning-report.html || true;
+      echo "Done";
+  execute-golden-path-collection: &ttk-snippets-execute-golden-path-collection
+    - |
+      cd /tmp;
+      export goldenPathTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/golden_path;
+      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$goldenPathTestCasesPathInZip -u $ttkBackendUrl --save-report true --report-name "golden_path_$CI_JOB_ID" --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-goldenpath-report.html;
+      echo "Done";
+  execute-bulk-transfers-collection: &ttk-snippets-execute-bulk-transfers-collection
+    - |
+      cd /tmp;
+      export bulkTransfersTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/other_tests/bulk_transfers;
+      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$bulkTransfersTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html;
+      echo "Done";
+  download-ttksim1-env: &ttk-snippets-download-ttksim1-env
+    - |
+      echo "Downloading the default environment file...";
+      cd /tmp;
+      wget -O user_config.json $ttkSim1TtkBackendUrl/api/config/user;
+      defaultEnvFileName=`node -pe 'JSON.parse(process.argv[1]).runtime.DEFAULT_ENVIRONMENT_FILE_NAME' "$(cat user_config.json)"`;
+      wget -O environment_http_response.json $ttkSim1TtkBackendUrl/api/samples/loadFolderWise?environment=examples/environments/$defaultEnvFileName;
+      node -pe 'JSON.stringify({inputValues: JSON.parse(process.argv[1]).body.environment})' "$(cat environment_http_response.json)" > cli-ttksim1-environment.json;
+  execute-sdk-bulk-setup-collection: &ttk-snippets-execute-sdk-bulk-setup-collection
+    - |
+      cd /tmp;
+      export sdkBulkSetupTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/provisioning_sdkbulk;
+      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$sdkBulkSetupTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-sdk-bulk-setup-report.html || true;
+      echo "Done";
+  execute-sdk-bulk-validation-collection: &ttk-snippets-execute-sdk-bulk-validation-collection
+    - |
+      cd /tmp;
+      export sdkBulkValTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/sdk-bulk;
+      ml-ttk-cli -e cli-ttksim1-environment.json -i tmp_test_cases/$sdkBulkValTestCasesPathInZip -u $ttkSim1TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-sdk-bulk-val-report.html;
+      echo "Done";
+  artifacts: &ttk-snippets-artifacts
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ttk-provisioning-report.html
+      - ${CI_PROJECT_DIR}/ttk-goldenpath-report.html
+
+.helm-test-snippets:
+  helm-test-snippets-execute-helm-test: &helm-test-snippets-execute-helm-test
+    - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf test $helm_mojaloop_release_name --filter name=$helm_mojaloop_release_name-$testJobName -n mojaloop || true
+  helm-test-snippets-console-out: &helm-test-snippets-console-out
+    - kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop logs $helm_mojaloop_release_name-$testJobName
+  helm-test-snippets-download-report: &helm-test-snippets-download-report
+    - |
+      reportUrl=`kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop logs $helm_mojaloop_release_name-$testJobName --tail=20 | grep -E -i -o 'Report saved on TTK backend server successfully and is available at (.*)html' | awk '{print $12}'`
+      wget $reportUrl -O ${CI_PROJECT_DIR}/${testJobName}.html
+  helm-test-snippets-exit-with-code: &helm-test-snippets-exit-with-code
+    - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop get pod $helm_mojaloop_release_name-$testJobName --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
+
+
+1. PM4ML - GP Tests:
   stage: "Run Tests"
   extends: .Run PM4ML GP Tests-job-template
   when: manual
   except:
     - schedules
 
-1. Scheduled Run PM4ML GP Tests:
+1. PM4ML - Scheduled GP Tests:
   stage: "Run Tests"
   allow_failure: true
   extends: .Run PM4ML GP Tests-job-template
@@ -46,7 +143,7 @@ variables:
     variables:
       - $SCHEDULE_PM4ML == "PM4ML_GP"
 
-2. Run PM4ML UI Tests:
+2. PM4ML - UI Tests:
   stage: "Run Tests"
   allow_failure: true
   when: manual
@@ -130,91 +227,7 @@ variables:
 #     variables:
 #       - $SCHEDULE_PLATFORM == "PLAT_GP"
 
-.ttk-snippets:
-  # image: &ttk-snippets-image
-  #   name: mojaloop/ml-testing-toolkit-client-lib:latest
-  set-env-vars: &ttk-snippets-set-env-vars
-    # - export TERRAFORM_VERSION=1.0.5
-    # - export GLIBC_VER=2.34-r0
-    # - apk --no-cache add binutils curl jq && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-${GLIBC_VER}.apk && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VER}/glibc-bin-${GLIBC_VER}.apk && apk add --no-cache glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip && unzip awscliv2.zip && aws/install && rm -rf awscliv2.zip aws /usr/local/aws-cli/v2/*/dist/aws_completer /usr/local/aws-cli/v2/*/dist/awscli/data/ac.index /usr/local/aws-cli/v2/*/dist/awscli/examples glibc-${GLIBC_VER}.apk glibc-bin-${GLIBC_VER}.apk /var/cache/apk/*
-    # - wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/bin/ && rm /tmp/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-    - export bucket=$REMOTE_STATE_BUCKET
-    - for var in $(jq -r 'to_entries[] | "\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - for var in $(jq -r 'to_entries[] | "TF_VAR_\(.key)=\(.value)\n"' ./workbench-config.json); do export $var; done
-    - export TTK_TESTCASES_VERSION=${TAG_TTK_TEST}
-    - export PM4ML_TTK_TESTCASES_VERSION=${TAG_PM4ML_TTK_TEST}
-    - export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-    - export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-    - export AWS_DEFAULT_REGION=${region}
-    - aws s3 sync s3://$bucket/$environment ./k8ss3/ --sse || true
-    - export private_subdomain=$(terraform output -state=k8ss3/base-infra-aws/terraform.tfstate private_subdomain | tr -d '"')
-    - export public_subdomain=$(terraform output -state=k8ss3/base-infra-aws/terraform.tfstate public_subdomain | tr -d '"')
-    - export ttkBackendUrl=http://ttkbackend.${private_subdomain};
-    - export ttkSim1TtkBackendUrl=http://ttksim1.${private_subdomain};
-    - export pm4mlTtkSim1TtkBackendUrl=http://ttk.pm4mlttksim1.${client}${environment}k3s.${public_subdomain};
-    - npm install @mojaloop/ml-testing-toolkit-client-lib --global
-  download-ttk-test-cases: &ttk-snippets-download-ttk-test-cases
-    - |
-      cd /tmp;
-      export testCasesZipUrl=https://github.com/mojaloop/testing-toolkit-test-cases/archive/refs/tags/v${TTK_TESTCASES_VERSION}.zip;
-      echo "Downloading the test collection from $testCasesZipUrl";
-      wget $testCasesZipUrl -O downloaded-test-collections.zip;
-      mkdir tmp_test_cases;
-      unzip -d tmp_test_cases -o downloaded-test-collections.zip;
-      rm downloaded-test-collections.zip
-  download-default-env: &ttk-snippets-download-default-env
-    - |
-      echo "Downloading the default environment file...";
-      cd /tmp;
-      wget -O user_config.json $ttkBackendUrl/api/config/user;
-      defaultEnvFileName=`node -pe 'JSON.parse(process.argv[1]).runtime.DEFAULT_ENVIRONMENT_FILE_NAME' "$(cat user_config.json)"`;
-      wget -O environment_http_response.json $ttkBackendUrl/api/samples/loadFolderWise?environment=examples/environments/$defaultEnvFileName;
-      node -pe 'JSON.stringify({inputValues: JSON.parse(process.argv[1]).body.environment})' "$(cat environment_http_response.json)" > cli-testcase-environment.json;
-  execute-provisioning-collection: &ttk-snippets-execute-provisioning-collection
-    - |
-      cd /tmp;
-      export provisioningTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/provisioning;
-      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$provisioningTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-provisioning-report.html || true;
-      echo "Done";
-  execute-golden-path-collection: &ttk-snippets-execute-golden-path-collection
-    - |
-      cd /tmp;
-      export goldenPathTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/golden_path;
-      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$goldenPathTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-goldenpath-report.html;
-      echo "Done";
-  execute-bulk-transfers-collection: &ttk-snippets-execute-bulk-transfers-collection
-    - |
-      cd /tmp;
-      export bulkTransfersTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/other_tests/bulk_transfers;
-      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$bulkTransfersTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html;
-      echo "Done";
-  download-ttksim1-env: &ttk-snippets-download-ttksim1-env
-    - |
-      echo "Downloading the default environment file...";
-      cd /tmp;
-      wget -O user_config.json $ttkSim1TtkBackendUrl/api/config/user;
-      defaultEnvFileName=`node -pe 'JSON.parse(process.argv[1]).runtime.DEFAULT_ENVIRONMENT_FILE_NAME' "$(cat user_config.json)"`;
-      wget -O environment_http_response.json $ttkSim1TtkBackendUrl/api/samples/loadFolderWise?environment=examples/environments/$defaultEnvFileName;
-      node -pe 'JSON.stringify({inputValues: JSON.parse(process.argv[1]).body.environment})' "$(cat environment_http_response.json)" > cli-ttksim1-environment.json;
-  execute-sdk-bulk-setup-collection: &ttk-snippets-execute-sdk-bulk-setup-collection
-    - |
-      cd /tmp;
-      export sdkBulkSetupTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/provisioning_sdkbulk;
-      ml-ttk-cli -e cli-testcase-environment.json -i tmp_test_cases/$sdkBulkSetupTestCasesPathInZip -u $ttkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-sdk-bulk-setup-report.html || true;
-      echo "Done";
-  execute-sdk-bulk-validation-collection: &ttk-snippets-execute-sdk-bulk-validation-collection
-    - |
-      cd /tmp;
-      export sdkBulkValTestCasesPathInZip=testing-toolkit-test-cases-${TTK_TESTCASES_VERSION}/collections/hub/sdk-bulk;
-      ml-ttk-cli -e cli-ttksim1-environment.json -i tmp_test_cases/$sdkBulkValTestCasesPathInZip -u $ttkSim1TtkBackendUrl --report-format html --report-target file://${CI_PROJECT_DIR}/ttk-sdk-bulk-val-report.html;
-      echo "Done";
-  artifacts: &ttk-snippets-artifacts
-    when: always
-    paths:
-      - ${CI_PROJECT_DIR}/ttk-provisioning-report.html
-      - ${CI_PROJECT_DIR}/ttk-goldenpath-report.html
-
-3. Run PM4ML TTK Tests:
+3. PM4ML - TTK Tests:
   stage: "Run Tests"
   # image: *ttk-snippets-image
   before_script:
@@ -249,21 +262,7 @@ variables:
 #      - ${CI_PROJECT_DIR}/pm4ml-ttk-goldenpath-report.html
   when: manual
 
-4. Run TTK Tests:
-  stage: "Run Tests"
-  # image: *ttk-snippets-image
-  before_script:
-    - echo "running with testing toolkit image"
-  script:
-    - *ttk-snippets-set-env-vars
-    - *ttk-snippets-download-ttk-test-cases
-    - *ttk-snippets-download-default-env
-    - *ttk-snippets-execute-provisioning-collection
-    - *ttk-snippets-execute-golden-path-collection
-  artifacts: *ttk-snippets-artifacts
-  when: manual
-
-5. Run RBAC Tests:
+4. BOF - RBAC Tests:
   stage: "Run Tests"
   script:
     - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf test bof --filter name=bof-rbac-tests -n mojaloop || true
@@ -271,7 +270,7 @@ variables:
     - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop get pod bof-rbac-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
-6. Run Report Tests:
+5. BOF - Report Tests:
   stage: "Run Tests"
   script:
     - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  test bof --filter name=bof-report-tests -n mojaloop || true
@@ -279,7 +278,7 @@ variables:
     - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mojaloop get pod bof-report-tests --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
-7. Run MCM Tests:
+6. MCM - Tests:
   stage: "Run Tests"
   script:
     - helm --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  test connection-manager -n mcm || true
@@ -287,38 +286,125 @@ variables:
     - exit `kubectl --kubeconfig=$ENV_S3_DIR/k8s/admin.conf  -n mcm get pod connection-manager-api-test --output="jsonpath={.status.containerStatuses[].state.terminated.exitCode}"`
   when: manual
 
-9. Run TTK Bulk Tests:
-  stage: "Run Tests"
-  # image: *ttk-snippets-image
-  before_script:
-    - echo "running with testing toolkit image"
-  script:
-    - *ttk-snippets-set-env-vars
-    - *ttk-snippets-download-ttk-test-cases
-    - *ttk-snippets-download-default-env
-    - *ttk-snippets-execute-provisioning-collection
-    - *ttk-snippets-execute-bulk-transfers-collection
-  artifacts: &ttk-snippets-artifacts
-    when: always
-    paths:
-      - ${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html
-  when: manual
 
-10. Run TTK SDK Bulk Tests:
+# 7. ML - GP Tests:
+#   stage: "Run Tests"
+#   # image: *ttk-snippets-image
+#   before_script:
+#     - echo "running with testing toolkit image"
+#   script:
+#     - *ttk-snippets-set-env-vars
+#     - *ttk-snippets-download-ttk-test-cases
+#     - *ttk-snippets-download-default-env
+#     - *ttk-snippets-execute-provisioning-collection
+#     - *ttk-snippets-execute-golden-path-collection
+#   artifacts: *ttk-snippets-artifacts
+#   when: manual
+
+# 8. ML - Bulk Tests:
+#   stage: "Run Tests"
+#   # image: *ttk-snippets-image
+#   before_script:
+#     - echo "running with testing toolkit image"
+#   script:
+#     - *ttk-snippets-set-env-vars
+#     - *ttk-snippets-download-ttk-test-cases
+#     - *ttk-snippets-download-default-env
+#     - *ttk-snippets-execute-provisioning-collection
+#     - *ttk-snippets-execute-bulk-transfers-collection
+#   artifacts: &ttk-snippets-artifacts
+#     when: always
+#     paths:
+#       - ${CI_PROJECT_DIR}/ttk-bulk-transfers-report.html
+#   when: manual
+
+# 9. ML - SDK Bulk Tests:
+#   stage: "Run Tests"
+#   # image: *ttk-snippets-image
+#   before_script:
+#     - echo "running with testing toolkit image"
+#   script:
+#     - *ttk-snippets-set-env-vars
+#     - *ttk-snippets-download-ttk-test-cases
+#     - *ttk-snippets-download-default-env
+#     - *ttk-snippets-download-ttksim1-env
+#     - *ttk-snippets-execute-sdk-bulk-setup-collection
+#     - *ttk-snippets-execute-sdk-bulk-validation-collection
+#   artifacts: &ttk-snippets-artifacts
+#     when: always
+#     paths:
+#       - ${CI_PROJECT_DIR}/ttk-sdk-bulk-setup-report.html
+#       - ${CI_PROJECT_DIR}/ttk-sdk-bulk-val-report.html
+#   when: manual
+
+
+7. ML - GP Tests:
   stage: "Run Tests"
-  # image: *ttk-snippets-image
-  before_script:
-    - echo "running with testing toolkit image"
   script:
-    - *ttk-snippets-set-env-vars
-    - *ttk-snippets-download-ttk-test-cases
-    - *ttk-snippets-download-default-env
-    - *ttk-snippets-download-ttksim1-env
-    - *ttk-snippets-execute-sdk-bulk-setup-collection
-    - *ttk-snippets-execute-sdk-bulk-validation-collection
-  artifacts: &ttk-snippets-artifacts
+    - testJobName=ml-ttk-test-setup
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - testJobName=ml-ttk-test-val-gp
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - *helm-test-snippets-exit-with-code
+  when: manual
+  artifacts:
     when: always
     paths:
-      - ${CI_PROJECT_DIR}/ttk-sdk-bulk-setup-report.html
-      - ${CI_PROJECT_DIR}/ttk-sdk-bulk-val-report.html
+      - ${CI_PROJECT_DIR}/ml-ttk-test-setup.html
+      - ${CI_PROJECT_DIR}/ml-ttk-test-val-gp.html
+
+8. ML - Bulk Tests:
+  stage: "Run Tests"
+  script:
+    - testJobName=ml-ttk-test-val-bulk
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - *helm-test-snippets-exit-with-code
   when: manual
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ml-ttk-test-val-bulk.html
+
+9. ML - Third Party Tests:
+  stage: "Run Tests"
+  script:
+    - testJobName=ml-ttk-test-setup-tp
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - testJobName=ml-ttk-test-val-tp
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - *helm-test-snippets-exit-with-code
+  when: manual
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ml-ttk-test-setup-tp.html
+      - ${CI_PROJECT_DIR}/ml-ttk-test-val-tp.html
+
+10. ML - SDK Bulk Tests:
+  stage: "Run Tests"
+  script:
+    - testJobName=ml-ttk-test-setup-sdk-bulk
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - testJobName=ml-ttk-test-val-sdk-bulk
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - *helm-test-snippets-exit-with-code
+  when: manual
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ml-ttk-test-setup-sdk-bulk.html
+      - ${CI_PROJECT_DIR}/ml-ttk-test-val-sdk-bulk.html

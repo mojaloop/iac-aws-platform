@@ -16,24 +16,35 @@ variable "storage_class_name" {
   default     = "longhorn"
 }
 
+variable "password_policy_special_chars" {
+  description = "special chars for password policies"
+  type        = string
+  default     = "!@#$%^&*"
+}
+
+variable "password_policy_use_special_chars" {
+  description = "use special chars for password policies?"
+  type        = bool
+  default     = true
+}
+
 variable "stateful_resources" {
   description = "stateful resource config data"
   type = list(object({
     enabled = bool
     resource_name     = string
     resource_namespace   = string
+    resource_type = string
     logical_service_port = number
     logical_service_name = string
-    vault_credential_paths = object({
-      pw_data = object({
-        user_password_path_prefix = string
-        root_password_path_prefix = string
-      })
-    }) 
     external_service = object({
       external_endpoint = string
       external_credentials = string
     })
+    generate_secret_name = string
+    generate_secret_keys = list(string)
+    generate_secret_vault_base_path = string
+    generate_secret_extra_namespaces = list(string)
     local_resource = object({
       override_service_name = string
       resource_helm_repo = string
@@ -42,6 +53,8 @@ variable "stateful_resources" {
       resource_helm_values_ref = string
       create_resource_random_password = bool
       mysql_data = object({
+        is_legacy = bool
+        existing_secret = string
         root_password = string
         user = string
         user_password = string
@@ -52,6 +65,7 @@ variable "stateful_resources" {
         service_port = number
       })
       mongodb_data = object({
+        existing_secret = string
         root_password = string
         user = string
         user_password = string
@@ -64,7 +78,10 @@ variable "stateful_resources" {
         service_port = number
       })
       redis_data = object({
+        auth_enabled = bool
         user_password = string
+        existing_secret = string
+        password_secret_key = string
         user = string
         storage_size = string
         architecture = string

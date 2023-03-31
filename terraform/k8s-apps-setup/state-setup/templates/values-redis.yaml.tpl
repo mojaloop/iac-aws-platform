@@ -17,8 +17,7 @@ global:
   ##
   imagePullSecrets: []
   storageClass: ${storage_class_name}
-  redis:
-    password: ${password}
+
 
 ## @section Common parameters
 ##
@@ -111,7 +110,7 @@ architecture: ${architecture}
 auth:
   ## @param auth.enabled Enable password authentication
   ## set to false until 3rd party supports auth
-  enabled: false
+  enabled: ${auth_enabled}
   ## @param auth.sentinel Enable password authentication on sentinels too
   ##
   sentinel: true
@@ -122,11 +121,11 @@ auth:
   ## @param auth.existingSecret The name of an existing secret with Redis&reg; credentials
   ## NOTE: When it's set, the previous `auth.password` parameter is ignored
   ##
-  existingSecret: ""
+  existingSecret: "${existing_secret}"
   ## @param auth.existingSecretPasswordKey Password key to be retrieved from existing secret
   ## NOTE: ignored unless `auth.existingSecret` parameter is set
   ##
-  existingSecretPasswordKey: ""
+  existingSecretPasswordKey: "${existing_secret_key}"
   ## @param auth.usePasswordFiles Mount credentials as files instead of using an environment variable
   ##
   usePasswordFiles: false
@@ -1665,3 +1664,8 @@ useExternalDNS:
   suffix: ""
   annotationKey: external-dns.alpha.kubernetes.io/
   additionalAnnotations: {}
+
+volumePermissions:
+  ## @param volumePermissions.enabled Enable init container that changes the owner and group of the persistent volume(s) mountpoint to `runAsUser:fsGroup`
+  ##
+  enabled: true
