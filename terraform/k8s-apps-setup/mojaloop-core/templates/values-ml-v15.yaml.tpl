@@ -786,4 +786,4 @@ ml-ttk-test-val-sdk-bulk:
     saveReportBaseUrl: http://ttksim1.${private_subdomain}
   parameters:
     <<: *simNames
-  testCaseEnvironmentFile:  *ttkInputValues
+  testCaseEnvironmentFile:  *ttksim1InputValues
