@@ -67,7 +67,7 @@
   "ttksims_enabled": "true",
   "quoting_service_simple_routing_mode_enabled": "false",
   "vault_config_operator_helm_chart_version": "0.8.13",
-  "password_policy_use_special_chars": "true",
+  "password_policy_use_special_chars": "false",
   "internal_pm4ml_configs": [
     {
       "DFSP_NAME": "pm4mlreceiverfsp",
