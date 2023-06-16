@@ -314,9 +314,11 @@ security-role-perm-operator-svc:
 reporting-events-processor-svc:
   enabled: true
   kafka:
-    topic: topic-event
-    consumerGroup: group
-    clientId: client-id
+    host: ${kafka_host}
+    port: 9092
+    topicEvent: topic-event
+    consumerGroup: reporting_events_processor_consumer_group
+    clientId: reporting_events_processor_consumer
 
 reporting-hub-bop-experience-api-svc:
   enabled: true
