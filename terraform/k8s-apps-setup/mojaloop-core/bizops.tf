@@ -124,7 +124,7 @@ resource "helm_release" "bof" {
       test_user_password = vault_generic_secret.bizops_portal_user_password["test1"].data.value
       report_tests_payer = "payerfsp"
       report_tests_payee = "payeefsp"
-      report_tests_currency = "USD"
+      report_tests_currency = var.ttk_test_currency1
     })
   ]
   provider = helm.helm-main
