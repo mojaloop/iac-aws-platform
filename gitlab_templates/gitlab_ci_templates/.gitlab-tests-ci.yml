@@ -148,7 +148,7 @@ variables:
   allow_failure: true
   when: manual
   script:
-    - git clone -b MBP-137 https://github.com/pm4ml/mojaloop-payment-manager-ui.git ${CI_IMAGE_PROJECT_DIR}/mojaloop-payment-manager-ui
+    - git clone -b master https://github.com/pm4ml/mojaloop-payment-manager-ui.git ${CI_IMAGE_PROJECT_DIR}/mojaloop-payment-manager-ui
     - exit_code=0
     - cd ${CI_IMAGE_PROJECT_DIR}/mojaloop-payment-manager-ui/ui-tests/tests
     - echo ${SLACK_TOKEN}
