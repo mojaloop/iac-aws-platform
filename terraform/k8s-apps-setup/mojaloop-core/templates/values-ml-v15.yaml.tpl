@@ -787,3 +787,27 @@ ml-ttk-test-val-sdk-bulk:
   parameters:
     <<: *simNames
   testCaseEnvironmentFile:  *ttksim1InputValues
+
+ml-ttk-test-val-sdk-r2p:
+  tests:
+    enabled: true
+  config:
+    testSuiteName: SDK Request To Pay Tests
+    environmentName: ${private_subdomain}
+    saveReport: true
+    saveReportBaseUrl: http://ttksim1.${private_subdomain}
+  parameters:
+    <<: *simNames
+  testCaseEnvironmentFile:  *ttksim1InputValues
+
+ml-ttk-test-cleanup:
+  tests:
+    enabled: true
+  config:
+    testSuiteName: Post Cleanup
+    environmentName: ${private_subdomain}
+    saveReport: true
+    saveReportBaseUrl: http://ttkbackend.${private_subdomain}
+  parameters:
+    <<: *simNames
+  testCaseEnvironmentFile:  *ttkInputValues
