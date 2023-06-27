@@ -408,3 +408,31 @@ variables:
     paths:
       - ${CI_PROJECT_DIR}/ml-ttk-test-setup-sdk-bulk.html
       - ${CI_PROJECT_DIR}/ml-ttk-test-val-sdk-bulk.html
+
+11. ML - SDK Request To Pay Tests:
+  stage: "Run Tests"
+  script:
+    - testJobName=ml-ttk-test-val-sdk-r2p
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - *helm-test-snippets-exit-with-code
+  when: manual
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ml-ttk-test-val-sdk-r2p.html
+
+12. ML - Post Cleanup Tests:
+  stage: "Run Tests"
+  script:
+    - testJobName=ml-ttk-test-cleanup	
+    - *helm-test-snippets-execute-helm-test
+    - *helm-test-snippets-console-out
+    - *helm-test-snippets-download-report
+    - *helm-test-snippets-exit-with-code
+  when: manual
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/ml-ttk-test-cleanup.html
