@@ -528,7 +528,10 @@ mojaloop-ttk-simulators:
             "inputValues": {
               "TTKSIM1_CURRENCY": "${ttk_test_currency1}",
               "TTKSIM2_CURRENCY": "${ttk_test_currency1}",
-              "TTKSIM3_CURRENCY": "${ttk_test_currency1}"
+              "TTKSIM3_CURRENCY": "${ttk_test_currency1}",
+              "TTKSIM1_FSPID": "ttksim1",
+              "TTKSIM2_FSPID": "ttksim2",
+              "TTKSIM3_FSPID": "ttksim3"
             }
           }
         config:
@@ -573,7 +576,7 @@ mojaloop-ttk-simulators:
           enabled: true
           hosts:
             ui:
-              host: ttksim2.${private_subdomain}s
+              host: ttksim2.${private_subdomain}
         config:
           API_BASE_URL: http://ttksim2.${private_subdomain}
 
